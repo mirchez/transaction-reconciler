@@ -1,0 +1,48 @@
+==========================================
+                RECEIPT
+==========================================
+
+Tech Solutions Inc.
+123 Innovation Drive
+San Francisco, CA 94103
+Tel: (415) 555-0123
+Email: sales@techsolutions.com
+
+Date: 2024-01-15
+Time: 10:45 AM
+Receipt #: TSI-2024-0115
+
+------------------------------------------
+
+ITEMS PURCHASED:
+
+Software License (Annual)           $299.99
+- Professional Edition
+- 1 User License
+- 12 Months Access
+
+Premium Support Package              $49.99
+- Priority Email Support
+- Phone Support
+- 24/7 Access
+
+------------------------------------------
+
+Subtotal:                          $349.98
+Sales Tax (8.5%):                   $29.75
+                                   --------
+TOTAL:                             $379.73
+
+------------------------------------------
+
+Payment Method: Credit Card ****1234
+Transaction ID: TXN-20240115-1045
+
+Thank you for your purchase!
+Please keep this receipt for your records.
+
+==========================================
+
+Note: This is a sample receipt file.
+To use with the PDF upload feature, save this
+as a PDF file using any PDF creator tool.

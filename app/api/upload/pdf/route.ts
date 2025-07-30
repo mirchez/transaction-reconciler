@@ -68,12 +68,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const results: UploadResponse = {
+    const results: UploadResponse & { extractedData?: any[] } = {
       success: true,
       message: "",
       processed: 0,
       failed: 0,
       errors: [],
+      extractedData: [],
     };
 
     // Process each PDF
@@ -122,12 +123,19 @@ export async function POST(request: NextRequest) {
         }
 
         // Save to database
-        await prisma.ledgerEntry.create({
+        const savedEntry = await prisma.ledgerEntry.create({
           data: {
             ...validationResult.data,
             userId: "demo-user", // TODO: Replace with actual user ID from auth
             matched: false,
           },
+        });
+
+        // Add to extracted data for display
+        results.extractedData?.push({
+          fileName: file.name,
+          ...validationResult.data,
+          id: savedEntry.id,
         });
 
         results.processed = (results.processed || 0) + 1;

@@ -20,17 +20,33 @@ export default function HomePage() {
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [csvModalOpen, setCsvModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [stats, setStats] = useState([
+    { label: "Matched", value: 0, variant: "default" },
+    { label: "Ledger Only", value: 0, variant: "warning" },
+    { label: "Bank Only", value: 0, variant: "info" },
+  ]);
   
   // Only render modals after component mounts to avoid SSR issues
   useEffect(() => {
     setMounted(true);
+    fetchStats();
   }, []);
 
-  const stats = [
-    { label: "Matched", value: 24, variant: "default" },
-    { label: "Ledger Only", value: 3, variant: "warning" },
-    { label: "Bank Only", value: 7, variant: "info" },
-  ];
+  const fetchStats = async () => {
+    try {
+      const response = await fetch("/api/stats");
+      if (response.ok) {
+        const data = await response.json();
+        setStats([
+          { label: "Matched", value: data.matched, variant: "default" },
+          { label: "Ledger Only", value: data.ledgerOnly, variant: "warning" },
+          { label: "Bank Only", value: data.bankOnly, variant: "info" },
+        ]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch stats:", error);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -248,8 +264,26 @@ export default function HomePage() {
       {/* Upload Modals - Only render after mount to avoid SSR issues */}
       {mounted && (
         <>
-          <UploadPdfModal open={pdfModalOpen} onOpenChange={setPdfModalOpen} />
-          <UploadCsvModal open={csvModalOpen} onOpenChange={setCsvModalOpen} />
+          <UploadPdfModal 
+            open={pdfModalOpen} 
+            onOpenChange={(open) => {
+              setPdfModalOpen(open);
+              if (!open) {
+                // Refresh stats when modal closes
+                fetchStats();
+              }
+            }} 
+          />
+          <UploadCsvModal 
+            open={csvModalOpen} 
+            onOpenChange={(open) => {
+              setCsvModalOpen(open);
+              if (!open) {
+                // Refresh stats when modal closes
+                fetchStats();
+              }
+            }} 
+          />
         </>
       )}
     </div>

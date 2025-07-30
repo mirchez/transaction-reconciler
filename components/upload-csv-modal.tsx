@@ -2,10 +2,11 @@
 
 import type React from "react";
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Upload, Loader2, AlertCircle } from "lucide-react";
+import { Upload, Loader2, AlertCircle, Download } from "lucide-react";
 import { toast } from "sonner";
 import { MAX_FILE_SIZE, ALLOWED_CSV_TYPES, type CSVRow } from "@/lib/types/transactions";
 import Papa from "papaparse";
@@ -22,8 +23,10 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [parseError, setParseError] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const router = useRouter();
 
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,6 +123,15 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
     setIsProcessing(true);
 
     try {
+      // Create a session first
+      if (!sessionId) {
+        const sessionResponse = await fetch("/api/session", {
+          method: "POST",
+        });
+        const session = await sessionResponse.json();
+        setSessionId(session.id);
+      }
+
       const formData = new FormData();
       formData.append("file", selectedFile);
 
@@ -132,9 +144,9 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
 
       if (result.success) {
         toast.success(result.message);
-        // Close modal on success
+        // Redirect to transaction detail page
         setTimeout(() => {
-          handleClose();
+          router.push(`/transaction/${sessionId || 'latest'}`);
         }, 1500);
       } else {
         toast.error(result.message || "Failed to process CSV");
@@ -159,6 +171,7 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
       setFileName("");
       setSelectedFile(null);
       setParseError(null);
+      setSessionId(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -192,6 +205,25 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Example Download Section */}
+          <div className="bg-muted/50 p-4 rounded-none border border-muted">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-foreground">Need a template?</p>
+                <p className="text-sm text-muted-foreground">Download an example CSV file with the correct format</p>
+              </div>
+              <a href="/example-bank-statement.csv" download>
+                <Button
+                  variant="outline"
+                  size="sm"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Example CSV
+                </Button>
+              </a>
+            </div>
+          </div>
+
           {/* Upload Zone */}
           <div className="border-2 border-dashed border-muted rounded-none p-8 text-center hover:border-primary/50 transition-colors bg-card">
             <div className="mb-6">

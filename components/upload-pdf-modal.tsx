@@ -2,19 +2,30 @@
 
 import type React from "react";
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Upload, CheckCircle, XCircle, Loader2, FileText } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Upload, CheckCircle, XCircle, Loader2, FileText, Download, Calendar, DollarSign, Building } from "lucide-react";
 import { toast } from "sonner";
 import { MAX_FILE_SIZE, ALLOWED_PDF_TYPES } from "@/lib/types/transactions";
+import { jsPDF } from "jspdf";
+
+interface ExtractedData {
+  date: string;
+  amount: number;
+  vendor: string;
+  category?: string;
+}
 
 interface UploadedFile {
   id: string;
   name: string;
   size: string;
-  status: "parsing" | "success" | "error";
+  status: "pending" | "parsing" | "success" | "error";
   transactions?: number;
+  extractedData?: ExtractedData[];
 }
 
 interface UploadPdfModalProps {
@@ -25,7 +36,9 @@ interface UploadPdfModalProps {
 export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = Array.from(event.target.files || []);
@@ -75,6 +88,15 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
     setIsProcessing(true);
     
     try {
+      // Create a session first
+      if (!sessionId) {
+        const sessionResponse = await fetch("/api/session", {
+          method: "POST",
+        });
+        const session = await sessionResponse.json();
+        setSessionId(session.id);
+      }
+
       const formData = new FormData();
       const fileInput = fileInputRef.current;
       
@@ -112,10 +134,22 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
               const hasError = result.errors?.some((e: any) => 
                 f.name === e.error?.split(":")[0]?.replace("File ", "")
               );
+              
+              // Extract data for successful files
+              const extractedData = hasError ? undefined : result.extractedData?.filter((d: any) => 
+                d.fileName === f.name
+              ).map((d: any) => ({
+                date: new Date(d.date).toLocaleDateString(),
+                amount: d.amount,
+                vendor: d.vendor,
+                category: d.category,
+              }));
+              
               return {
                 ...f,
                 status: hasError ? "error" : "success",
-                transactions: hasError ? undefined : 1,
+                transactions: extractedData?.length || (hasError ? undefined : 1),
+                extractedData,
               };
             }
             return f;
@@ -124,6 +158,11 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
 
         if (result.processed > 0) {
           toast.success(result.message);
+          
+          // Redirect to transaction detail page after a short delay
+          setTimeout(() => {
+            router.push(`/transaction/${sessionId || 'latest'}`);
+          }, 1500);
         }
         if (result.failed > 0) {
           toast.error(`Failed to process ${result.failed} file(s)`);
@@ -160,6 +199,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
   const handleClose = () => {
     if (!isProcessing) {
       clearFiles();
+      setSessionId(null);
       onOpenChange(false);
     }
   };
@@ -219,6 +259,103 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Example Download Section */}
+          <div className="bg-muted/50 p-4 rounded-none border border-muted">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-foreground">New to this?</p>
+                <p className="text-sm text-muted-foreground">Download an example PDF receipt to see the expected format</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  // Create a proper PDF receipt
+                  const doc = new jsPDF();
+                  
+                  // Header
+                  doc.setFontSize(24);
+                  doc.text('RECEIPT', 105, 20, { align: 'center' });
+                  
+                  // Company info
+                  doc.setFontSize(16);
+                  doc.text('Tech Solutions Inc.', 105, 35, { align: 'center' });
+                  doc.setFontSize(10);
+                  doc.text('123 Business Ave, Suite 100', 105, 42, { align: 'center' });
+                  doc.text('San Francisco, CA 94105', 105, 48, { align: 'center' });
+                  doc.text('Phone: (555) 123-4567', 105, 54, { align: 'center' });
+                  
+                  // Line separator
+                  doc.line(20, 60, 190, 60);
+                  
+                  // Receipt details
+                  doc.setFontSize(12);
+                  doc.text('Receipt #: RCP-2024-0115', 20, 70);
+                  doc.text('Date: January 15, 2024', 20, 78);
+                  doc.text('Time: 2:30 PM', 20, 86);
+                  
+                  // Line separator
+                  doc.line(20, 92, 190, 92);
+                  
+                  // Items
+                  doc.setFontSize(12);
+                  doc.text('ITEMS', 20, 102);
+                  doc.setFontSize(10);
+                  
+                  // Item 1
+                  doc.text('Software License - Professional', 20, 112);
+                  doc.text('1 x $299.99', 40, 120);
+                  doc.text('$299.99', 170, 120, { align: 'right' });
+                  
+                  // Item 2
+                  doc.text('Support Package - 1 Year', 20, 130);
+                  doc.text('1 x $49.99', 40, 138);
+                  doc.text('$49.99', 170, 138, { align: 'right' });
+                  
+                  // Item 3
+                  doc.text('Training Session - Online', 20, 148);
+                  doc.text('2 x $75.00', 40, 156);
+                  doc.text('$150.00', 170, 156, { align: 'right' });
+                  
+                  // Line separator
+                  doc.line(20, 162, 190, 162);
+                  
+                  // Totals
+                  doc.setFontSize(10);
+                  doc.text('Subtotal:', 130, 172);
+                  doc.text('$499.98', 170, 172, { align: 'right' });
+                  
+                  doc.text('Tax (8.5%):', 130, 180);
+                  doc.text('$42.50', 170, 180, { align: 'right' });
+                  
+                  doc.setFontSize(12);
+                  doc.setFont(undefined, 'bold');
+                  doc.text('Total:', 130, 190);
+                  doc.text('$542.48', 170, 190, { align: 'right' });
+                  
+                  // Payment info
+                  doc.setFont(undefined, 'normal');
+                  doc.setFontSize(10);
+                  doc.text('Payment Method: Credit Card ****1234', 20, 205);
+                  doc.text('Transaction ID: TXN-2024-0115-001', 20, 213);
+                  
+                  // Footer
+                  doc.line(20, 220, 190, 220);
+                  doc.setFontSize(10);
+                  doc.text('Thank you for your purchase!', 105, 230, { align: 'center' });
+                  doc.text('Please keep this receipt for your records', 105, 238, { align: 'center' });
+                  
+                  // Save the PDF
+                  doc.save('example-receipt.pdf');
+                  toast.success("Example PDF receipt downloaded");
+                }}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Example PDF
+              </Button>
+            </div>
+          </div>
+
           {/* Upload Zone */}
           <div className="border-2 border-dashed border-muted rounded-none p-8 sm:p-12 text-center hover:border-primary/50 transition-colors bg-card">
             <div className="mb-6">
@@ -259,28 +396,56 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
               </h3>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {files.map((file) => (
-                  <div
-                    key={file.id}
-                    className="flex items-center justify-between p-3 bg-muted rounded-none"
-                  >
-                    <div className="flex items-center gap-3">
-                      {file.status === "pending" ? (
-                        <FileText className="w-4 h-4 text-muted-foreground" />
-                      ) : (
-                        getStatusIcon(file.status)
-                      )}
-                      <div>
-                        <p className="font-medium text-sm text-foreground">
-                          {file.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {file.size}
-                          {file.transactions &&
-                            ` • ${file.transactions} transaction(s) extracted`}
-                        </p>
+                  <div key={file.id} className="space-y-2">
+                    <div className="flex items-center justify-between p-3 bg-muted rounded-none">
+                      <div className="flex items-center gap-3">
+                        {file.status === "pending" ? (
+                          <FileText className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          getStatusIcon(file.status)
+                        )}
+                        <div>
+                          <p className="font-medium text-sm text-foreground">
+                            {file.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {file.size}
+                            {file.transactions &&
+                              ` • ${file.transactions} transaction(s) extracted`}
+                          </p>
+                        </div>
                       </div>
+                      {getStatusBadge(file.status)}
                     </div>
-                    {getStatusBadge(file.status)}
+                    
+                    {/* Show extracted data for successful files */}
+                    {file.status === "success" && file.extractedData && file.extractedData.length > 0 && (
+                      <div className="ml-4 mr-4 mb-2">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Extracted Data:</p>
+                        <div className="border border-border rounded-none overflow-hidden">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="h-8">
+                                <TableHead className="text-xs h-8 py-1">Date</TableHead>
+                                <TableHead className="text-xs h-8 py-1">Vendor</TableHead>
+                                <TableHead className="text-xs h-8 py-1 text-right">Amount</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {file.extractedData.map((data, idx) => (
+                                <TableRow key={idx} className="h-8">
+                                  <TableCell className="text-xs h-8 py-1">{data.date}</TableCell>
+                                  <TableCell className="text-xs h-8 py-1">{data.vendor}</TableCell>
+                                  <TableCell className="text-xs h-8 py-1 text-right font-medium">
+                                    ${data.amount.toFixed(2)}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
