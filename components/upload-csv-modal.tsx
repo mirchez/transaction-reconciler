@@ -1,17 +1,15 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Upload } from "lucide-react";
+import { Upload, Loader2, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
+import { MAX_FILE_SIZE, ALLOWED_CSV_TYPES, type CSVRow } from "@/lib/types/transactions";
+import Papa from "papaparse";
 
-interface CSVRow {
-  date: string;
-  amount: string;
-  description: string;
-}
 
 interface UploadCsvModalProps {
   open: boolean;
@@ -21,38 +19,150 @@ interface UploadCsvModalProps {
 export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
   const [csvData, setCsvData] = useState<CSVRow[]>([]);
   const [fileName, setFileName] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const mockCSVData: CSVRow[] = [
-    {
-      date: "2024-01-15",
-      amount: "-$45.67",
-      description: "STARBUCKS COFFEE #1234",
-    },
-    {
-      date: "2024-01-14",
-      amount: "-$123.45",
-      description: "AMAZON.COM PURCHASE",
-    },
-    {
-      date: "2024-01-13",
-      amount: "+$2,500.00",
-      description: "SALARY DEPOSIT - ACME CORP",
-    },
-    {
-      date: "2024-01-12",
-      amount: "-$89.99",
-      description: "GROCERY STORE PURCHASE",
-    },
-    { date: "2024-01-11", amount: "-$25.00", description: "GAS STATION FUEL" },
-  ];
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      setFileName(file.name);
-      setTimeout(() => {
-        setCsvData(mockCSVData);
-      }, 1000);
+    if (!file) return;
+
+    // Reset state
+    setCsvData([]);
+    setParseError(null);
+
+    // Validate file
+    if (!file.type.includes("csv") && !file.name.endsWith(".csv")) {
+      toast.error("Please select a CSV file");
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("File size exceeds 10MB limit");
+      return;
+    }
+
+    setFileName(file.name);
+    setSelectedFile(file);
+    setIsParsing(true);
+
+    try {
+      const text = await file.text();
+      
+      Papa.parse(text, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: (header) => header.trim().toLowerCase(),
+        complete: (results) => {
+          if (results.errors.length > 0) {
+            setParseError(results.errors[0].message);
+            toast.error("Failed to parse CSV file");
+            setIsParsing(false);
+            return;
+          }
+
+          // Transform data to display format
+          const transformedData: CSVRow[] = results.data.map((row: any) => {
+            // Try to find date, amount, and description columns
+            let date = row.date || row.Date || row.transaction_date || row["transaction date"] || "";
+            let amount = row.amount || row.Amount || row.debit || row.credit || row.Debit || row.Credit || "";
+            let description = row.description || row.Description || row.merchant || row.Merchant || row.details || row.Details || "";
+
+            // If columns not found, try by index
+            if (!date && !amount && !description) {
+              const values = Object.values(row);
+              if (values.length >= 3) {
+                date = values[0] as string;
+                description = values[1] as string;
+                amount = values[2] as string;
+              }
+            }
+
+            return {
+              date: date.toString(),
+              amount: amount.toString(),
+              description: description.toString(),
+            };
+          }).filter(row => row.date || row.amount || row.description); // Filter out empty rows
+
+          if (transformedData.length === 0) {
+            setParseError("No valid data found in CSV file");
+            toast.error("No valid data found in CSV file");
+          } else {
+            setCsvData(transformedData.slice(0, 10)); // Show first 10 rows as preview
+            toast.success(`Found ${results.data.length} transactions`);
+          }
+          setIsParsing(false);
+        },
+        error: (error) => {
+          setParseError(error.message);
+          toast.error("Failed to parse CSV file");
+          setIsParsing(false);
+        },
+      });
+    } catch (error) {
+      console.error("File read error:", error);
+      setParseError("Failed to read file");
+      toast.error("Failed to read file");
+      setIsParsing(false);
+    }
+  };
+
+  const processStatement = async () => {
+    if (!selectedFile) {
+      toast.error("No file selected");
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const response = await fetch("/api/upload/csv", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(result.message);
+        // Close modal on success
+        setTimeout(() => {
+          handleClose();
+        }, 1500);
+      } else {
+        toast.error(result.message || "Failed to process CSV");
+        if (result.errors && result.errors.length > 0) {
+          // Show first few errors
+          result.errors.slice(0, 3).forEach((err: any) => {
+            toast.error(`Row ${err.row}: ${err.error}`);
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload CSV file");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (!isProcessing && !isParsing) {
+      setCsvData([]);
+      setFileName("");
+      setSelectedFile(null);
+      setParseError(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      onOpenChange(false);
     }
   };
 
@@ -72,7 +182,7 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
+    <Dialog open={open} onOpenChange={handleClose} modal={true}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Upload Bank Statement</DialogTitle>
@@ -92,11 +202,13 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
               <p className="text-sm text-muted-foreground">or click to browse</p>
             </div>
             <input
+              ref={fileInputRef}
               type="file"
               accept=".csv"
               onChange={handleFileUpload}
               className="hidden"
               id="csv-upload-modal"
+              disabled={isProcessing || isParsing}
             />
             <label htmlFor="csv-upload-modal">
               <Button
@@ -111,13 +223,26 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
             </label>
           </div>
 
+          {/* Error Message */}
+          {parseError && (
+            <div className="flex items-center gap-2 p-4 bg-destructive/10 border border-destructive/20 rounded text-destructive">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <p className="text-sm">{parseError}</p>
+            </div>
+          )}
+
           {/* Preview Table */}
-          {csvData.length > 0 && (
+          {isParsing ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">Parsing CSV...</span>
+            </div>
+          ) : csvData.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-foreground">Preview</h3>
                 <p className="text-sm text-muted-foreground">
-                  {csvData.length} transactions
+                  Showing {csvData.length} of {selectedFile ? "many" : "0"} transactions
                 </p>
               </div>
               <div className="border border-border rounded-none overflow-hidden bg-card">
@@ -159,13 +284,25 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
 
           {/* Actions */}
           <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              disabled={isProcessing || isParsing}
+            >
               Cancel
             </Button>
             <Button
-              disabled={csvData.length === 0}
+              onClick={processStatement}
+              disabled={csvData.length === 0 || isProcessing || isParsing || !!parseError}
             >
-              Process Statement
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "Process Statement"
+              )}
             </Button>
           </div>
         </div>
