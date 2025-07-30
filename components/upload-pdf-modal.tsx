@@ -105,7 +105,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
 
         <div className="space-y-6">
           {/* Upload Zone */}
-          <div className="border-2 border-dashed border-muted rounded-lg p-8 sm:p-12 text-center hover:border-primary/50 transition-colors bg-card">
+          <div className="border-2 border-dashed border-muted rounded-none p-8 sm:p-12 text-center hover:border-primary/50 transition-colors bg-card">
             <div className="mb-6">
               <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
               <p className="text-lg font-medium text-foreground mb-2">
@@ -144,7 +144,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                 {files.map((file) => (
                   <div
                     key={file.id}
-                    className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                    className="flex items-center justify-between p-3 bg-muted rounded-none"
                   >
                     <div className="flex items-center gap-3">
                       {getStatusIcon(file.status)}

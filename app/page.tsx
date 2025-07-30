@@ -48,7 +48,7 @@ export default function HomePage() {
                   alt="Minerva"
                   width={32}
                   height={32}
-                  className="rounded-lg dark:brightness-110 brightness-90 contrast-125"
+                  className="dark:brightness-110 brightness-90 contrast-125"
                 />
               </div>
               <span className="font-semibold text-lg tracking-tight">
@@ -83,7 +83,7 @@ export default function HomePage() {
               {/* PDF Upload Card */}
               <Card className="group hover:shadow-xl transition-all duration-200 border-muted bg-card">
                 <CardHeader className="space-y-1">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <div className="w-12 h-12 rounded-none bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                     <FileText className="w-6 h-6 text-primary" />
                   </div>
                   <CardTitle className="text-2xl">PDF Receipts</CardTitle>
@@ -93,7 +93,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center hover:border-primary/50 transition-colors bg-muted">
+                    <div className="border-2 border-dashed border-muted rounded-none p-8 text-center hover:border-primary/50 transition-colors bg-muted">
                       <Upload className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
                       <p className="text-sm text-muted-foreground mb-2">
                         Drag and drop files here, or click to browse
@@ -116,7 +116,7 @@ export default function HomePage() {
               {/* CSV Upload Card */}
               <Card className="group hover:shadow-xl transition-all duration-200 border-muted bg-card">
                 <CardHeader className="space-y-1">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <div className="w-12 h-12 rounded-none bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                     <TrendingUp className="w-6 h-6 text-primary" />
                   </div>
                   <CardTitle className="text-2xl">Bank Statement</CardTitle>
@@ -126,7 +126,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center hover:border-primary/50 transition-colors bg-muted">
+                    <div className="border-2 border-dashed border-muted rounded-none p-8 text-center hover:border-primary/50 transition-colors bg-muted">
                       <Upload className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
                       <p className="text-sm text-muted-foreground mb-2">
                         Drag and drop files here, or click to browse
@@ -216,7 +216,7 @@ export default function HomePage() {
                   alt="Minerva"
                   width={20}
                   height={20}
-                  className="rounded dark:brightness-110 brightness-90 contrast-125"
+                  className="dark:brightness-110 brightness-90 contrast-125"
                 />
               </div>
               <span>© 2024 Minerva — Powered by AI</span>

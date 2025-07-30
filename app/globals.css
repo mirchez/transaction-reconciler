@@ -25,7 +25,7 @@
     --border: 213 16% 85%; /* #CBD5E1 */
     --input: 213 16% 85%; /* #CBD5E1 */
     --ring: 169 48% 40%; /* Mint tone for focus */
-    --radius: 0.625rem;
+    --radius: 0rem; /* Sharp edges by default */
     
     /* Chart colors */
     --chart-1: 169 48% 71%; /* Mint variations */

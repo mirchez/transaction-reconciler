@@ -85,6 +85,31 @@ The entire UI should feel:
 - 📱 Responsive and clean
 - ✅ Actionable and intuitive
 - ✨ Scalable and maintainable
+- 🔲 **Sharp and modern with minimal rounded corners**
+
+## Visual Style Guidelines
+
+### ⚡ SHARP EDGES ARE MANDATORY
+
+- **ALL cards must have sharp edges** - No rounded corners on cards whatsoever
+- **ALL buttons must have sharp edges** - Use `rounded-none` on every button
+- **ALL inputs must have sharp edges** - Text fields, selects, textareas all sharp
+- **ALL modals/dialogs must have sharp edges** - No rounded corners on popups
+- **ALL containers must have sharp edges** - Sections, divs, wrappers all sharp
+
+### 🎯 Exceptions (use rounded ONLY in these cases):
+
+1. **Avatar images** - Can use `rounded-full` for profile pictures
+2. **Status badges/pills** - Small inline badges can use `rounded-sm` (0.125rem) 
+3. **Progress indicators** - Progress bars can have `rounded-sm` ends
+4. **Tooltips** - Small floating tooltips can have `rounded-sm`
+5. **Radio buttons/checkboxes** - Keep their natural rounded shape
+
+### ❌ NEVER use:
+- `rounded-lg`, `rounded-md`, `rounded-xl`, `rounded-2xl` etc.
+- Any border radius on cards, panels, or major containers
+- Rounded corners on buttons (always `rounded-none`)
+- Default shadcn/ui rounded corners - always override with `rounded-none`
 
 ---
 
@@ -225,6 +250,10 @@ The scope is limited, but we're aiming for **production-level quality** and arch
 - Always ensure light/dark theme compatibility
 - **Cards must always use `bg-card` (never transparent or bg-card/50)**
 - Card backgrounds should be clearly distinct from page backgrounds
+- **MANDATORY Sharp Edges**: ALL cards, buttons, inputs, modals MUST use `rounded-none`
+- **No Border Radius on Cards**: Cards should NEVER have rounded corners
+- **Override ALL defaults**: Replace every `rounded-*` class with `rounded-none`
+- **Exceptions are rare**: Only avatars, small badges, and specific micro-components can have minimal rounding
 
 ---
 
@@ -273,6 +302,71 @@ The scope is limited, but we're aiming for **production-level quality** and arch
 - Spot unused code or style leaks
 
 Let me know if you'd like to continue working under this structure or refine any pattern further.
+
+## 🔴 CRITICAL: Sharp Edge Implementation
+
+### Examples of CORRECT sharp implementation:
+
+```jsx
+// ✅ CORRECT - Cards with sharp edges
+<Card className="rounded-none bg-card border-muted">
+  <CardHeader className="rounded-none">
+    <CardTitle>Transaction Details</CardTitle>
+  </CardHeader>
+</Card>
+
+// ✅ CORRECT - Buttons with sharp edges
+<Button className="rounded-none" variant="default">
+  Upload Files
+</Button>
+
+// ✅ CORRECT - Inputs with sharp edges
+<Input className="rounded-none" type="text" />
+
+// ✅ CORRECT - Dialogs with sharp edges
+<DialogContent className="rounded-none">
+  <DialogHeader>Upload Receipt</DialogHeader>
+</DialogContent>
+```
+
+### Examples of INCORRECT rounded implementation:
+
+```jsx
+// ❌ WRONG - Never use rounded on cards
+<Card className="rounded-lg"> 
+
+// ❌ WRONG - Never use rounded on buttons
+<Button className="rounded-md">
+
+// ❌ WRONG - Never use default shadcn rounded corners
+<Card> // This will have default rounded corners - ALWAYS override
+```
+
+## Border Radius Configuration
+
+To implement sharp edges throughout the UI:
+
+1. **Update CSS Variable** in `app/globals.css`:
+   ```css
+   --radius: 0rem; /* Sharp edges by default */
+   ```
+
+2. **Update Tailwind Config** in `tailwind.config.ts`:
+   ```javascript
+   borderRadius: {
+     lg: "0",         /* Sharp edges */
+     md: "0",         /* Sharp edges */
+     sm: "0.125rem",  /* Minimal rounding when needed */
+   }
+   ```
+
+3. **Component Implementation Rules**:
+   - **ALWAYS add `rounded-none`** to Card, Button, Input, Dialog, Select, Textarea components
+   - **Search and replace** all `rounded-lg`, `rounded-md` with `rounded-none`
+   - **Card components**: Must use `className="rounded-none"` without exception
+   - **Button components**: Must use `className="rounded-none"` on all variants
+   - **Form elements**: All inputs, selects, textareas must be sharp
+   - **Only allow rounding** on: avatars (`rounded-full`), small badges (`rounded-sm`), tooltips (`rounded-sm`)
 
 ## Commands
 

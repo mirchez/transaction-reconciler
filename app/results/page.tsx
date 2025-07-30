@@ -192,7 +192,7 @@ export default function ResultsPage() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8 p-6 bg-muted/30 rounded-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8 p-6 bg-muted/30 rounded-none">
             <Card className="bg-card border-muted">
               <CardContent className="p-6">
                 <div className="text-center">

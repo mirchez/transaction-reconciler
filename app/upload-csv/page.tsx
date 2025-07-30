@@ -105,7 +105,7 @@ export default function CSVUploadPage() {
           {/* Upload Zone */}
           <Card className="bg-card border-muted mb-8">
             <CardContent className="p-8 sm:p-12">
-              <div className="border-2 border-dashed border-muted rounded-lg p-8 sm:p-16 text-center hover:border-primary/50 transition-colors bg-background/50">
+              <div className="border-2 border-dashed border-muted rounded-none p-8 sm:p-16 text-center hover:border-primary/50 transition-colors bg-background/50">
                 <div className="mb-6">
                   <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                   <p className="text-lg font-medium text-foreground mb-2">
@@ -145,7 +145,7 @@ export default function CSVUploadPage() {
                     {csvData.length} transactions
                   </p>
                 </div>
-                <div className="border border-border rounded-lg overflow-hidden bg-background/50">
+                <div className="border border-border rounded-none overflow-hidden bg-background/50">
                   <Table>
                     <TableHeader>
                       <TableRow>

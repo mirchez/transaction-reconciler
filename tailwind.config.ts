@@ -64,9 +64,10 @@ const config = {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: "0",         /* Sharp edges */
+        md: "0",         /* Sharp edges */
+        sm: "0",         /* Sharp edges - use rounded-none */
+        none: "0",       /* Explicit sharp edges */
       },
       keyframes: {
         "accordion-down": {
