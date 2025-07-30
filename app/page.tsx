@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -19,6 +19,12 @@ import { UploadCsvModal } from "@/components/upload-csv-modal";
 export default function HomePage() {
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [csvModalOpen, setCsvModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  
+  // Only render modals after component mounts to avoid SSR issues
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const stats = [
     { label: "Matched", value: 24, variant: "default" },
@@ -239,9 +245,13 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {/* Upload Modals */}
-      <UploadPdfModal open={pdfModalOpen} onOpenChange={setPdfModalOpen} />
-      <UploadCsvModal open={csvModalOpen} onOpenChange={setCsvModalOpen} />
+      {/* Upload Modals - Only render after mount to avoid SSR issues */}
+      {mounted && (
+        <>
+          <UploadPdfModal open={pdfModalOpen} onOpenChange={setPdfModalOpen} />
+          <UploadCsvModal open={csvModalOpen} onOpenChange={setCsvModalOpen} />
+        </>
+      )}
     </div>
   );
 }
