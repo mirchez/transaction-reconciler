@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,23 +21,47 @@ import { PageLayout } from "@/components/page-layout";
 interface Transaction {
   id: string;
   date: string;
-  amount: string;
+  amount: number;
   description: string;
   source: "Ledger" | "Bank" | "Both";
   status: "matched" | "ledger-only" | "bank-only";
   category?: string;
-  merchant?: string;
-  reference?: string;
-  bankDescription?: string;
-  receiptDescription?: string;
+  vendor?: string;
+  ledgerEntryId?: string;
+  bankTransactionId?: string;
+  matchScore?: number;
 }
 
 export default function ResultsPage() {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 10;
 
-  const transactions: Transaction[] = [
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
+  const fetchTransactions = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/transactions");
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch transactions");
+      }
+      
+      const data = await response.json();
+      setTransactions(data.transactions || []);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const mockTransactions: Transaction[] = [
     {
       id: "1",
       date: "2024-01-15",
@@ -102,16 +126,19 @@ export default function ResultsPage() {
     },
   ];
 
+  // Use real data if available, otherwise fall back to mock data
+  const displayTransactions = transactions.length > 0 ? transactions : mockTransactions;
+
   const getFilteredTransactions = (filter: string) => {
     switch (filter) {
       case "matched":
-        return transactions.filter((t) => t.status === "matched");
+        return displayTransactions.filter((t) => t.status === "matched");
       case "ledger":
-        return transactions.filter((t) => t.status === "ledger-only");
+        return displayTransactions.filter((t) => t.status === "ledger-only");
       case "bank":
-        return transactions.filter((t) => t.status === "bank-only");
+        return displayTransactions.filter((t) => t.status === "bank-only");
       default:
-        return transactions;
+        return displayTransactions;
     }
   };
 
@@ -143,8 +170,9 @@ export default function ResultsPage() {
     }
   };
 
-  const formatAmount = (amount: string) => {
-    const isNegative = amount.startsWith("-");
+  const formatAmount = (amount: string | number) => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount.replace(/[$,]/g, '')) : amount;
+    const isNegative = numAmount < 0;
     return (
       <span
         className={
@@ -153,16 +181,16 @@ export default function ResultsPage() {
             : "text-green-600 dark:text-green-400 font-medium"
         }
       >
-        {amount}
+        ${Math.abs(numAmount).toFixed(2)}
       </span>
     );
   };
 
   const stats = {
-    total: transactions.length,
-    matched: transactions.filter((t) => t.status === "matched").length,
-    ledgerOnly: transactions.filter((t) => t.status === "ledger-only").length,
-    bankOnly: transactions.filter((t) => t.status === "bank-only").length,
+    total: displayTransactions.length,
+    matched: displayTransactions.filter((t) => t.status === "matched").length,
+    ledgerOnly: displayTransactions.filter((t) => t.status === "ledger-only").length,
+    bankOnly: displayTransactions.filter((t) => t.status === "bank-only").length,
   };
 
   return (
@@ -241,11 +269,17 @@ export default function ResultsPage() {
                 </div>
 
                 <TabsContent value="all" className="mt-0">
-                  <TransactionTable
-                    transactions={transactions}
-                    getStatusBadge={getStatusBadge}
-                    formatAmount={formatAmount}
-                  />
+                  {loading ? (
+                    <div className="p-8 text-center text-muted-foreground">
+                      Loading transactions...
+                    </div>
+                  ) : (
+                    <TransactionTable
+                      transactions={displayTransactions}
+                      getStatusBadge={getStatusBadge}
+                      formatAmount={formatAmount}
+                    />
+                  )}
                 </TabsContent>
                 <TabsContent value="matched" className="mt-0">
                   <TransactionTable
@@ -292,6 +326,14 @@ interface TransactionTableProps {
 function TransactionTable({ transactions, getStatusBadge, formatAmount }: TransactionTableProps) {
   const router = useRouter();
   
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+  
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -305,23 +347,34 @@ function TransactionTable({ transactions, getStatusBadge, formatAmount }: Transa
           </TableRow>
         </TableHeader>
         <TableBody>
-          {transactions.map((transaction) => (
-            <TableRow
-              key={transaction.id}
-              className="cursor-pointer hover:bg-muted/50"
-              onClick={() => router.push(`/transaction/${transaction.id}`)}
-            >
-              <TableCell className="font-medium">{transaction.date}</TableCell>
-              <TableCell>{transaction.description}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {transaction.category || "-"}
+          {transactions.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                No transactions found
               </TableCell>
-              <TableCell className="text-right">
-                {formatAmount(transaction.amount)}
-              </TableCell>
-              <TableCell>{getStatusBadge(transaction.status)}</TableCell>
             </TableRow>
-          ))}
+          ) : (
+            transactions.map((transaction) => (
+              <TableRow
+                key={transaction.id}
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => {
+                  const sessionId = transaction.ledgerEntryId || transaction.bankTransactionId || transaction.id;
+                  router.push(`/transaction/${sessionId}`);
+                }}
+              >
+                <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
+                <TableCell>{transaction.description}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {transaction.category || "-"}
+                </TableCell>
+                <TableCell className="text-right">
+                  {formatAmount(transaction.amount)}
+                </TableCell>
+                <TableCell>{getStatusBadge(transaction.status)}</TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

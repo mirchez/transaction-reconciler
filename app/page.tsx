@@ -29,22 +29,42 @@ export default function HomePage() {
   // Only render modals after component mounts to avoid SSR issues
   useEffect(() => {
     setMounted(true);
-    fetchStats();
   }, []);
+  
+  useEffect(() => {
+    // Only fetch stats after component is mounted to avoid SSR issues
+    if (mounted) {
+      fetchStats();
+    }
+  }, [mounted]);
 
   const fetchStats = async () => {
     try {
       const response = await fetch("/api/stats");
+      
+      // Check content type
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("Invalid content type:", contentType);
+        console.error("Response status:", response.status);
+        const text = await response.text();
+        console.error("Response body:", text.substring(0, 200));
+        return;
+      }
+      
       if (response.ok) {
         const data = await response.json();
         setStats([
-          { label: "Matched", value: data.matched, variant: "default" },
-          { label: "Ledger Only", value: data.ledgerOnly, variant: "warning" },
-          { label: "Bank Only", value: data.bankOnly, variant: "info" },
+          { label: "Matched", value: data.matched || 0, variant: "default" },
+          { label: "Ledger Only", value: data.ledgerOnly || 0, variant: "warning" },
+          { label: "Bank Only", value: data.bankOnly || 0, variant: "info" },
         ]);
+      } else {
+        console.error("Stats API error:", response.status, response.statusText);
       }
     } catch (error) {
       console.error("Failed to fetch stats:", error);
+      // Keep default values on error
     }
   };
 
