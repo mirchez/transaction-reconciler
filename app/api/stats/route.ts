@@ -5,25 +5,19 @@ export async function GET() {
   console.log("Stats API called");
   
   try {
-    const userId = "demo-user"; // TODO: Replace with actual user ID from auth
-
     // Get counts for each type
     const [matchedCount, ledgerOnlyCount, bankOnlyCount] = await Promise.all([
       // Count matched transactions (both ledger and bank entries that are matched)
-      prisma.matchLog.count({
-        where: { userId },
-      }),
+      prisma.matchLog.count(),
       // Count ledger entries that are not matched
       prisma.ledgerEntry.count({
         where: {
-          userId,
           matched: false,
         },
       }),
       // Count bank transactions that are not matched
       prisma.bankTransaction.count({
         where: {
-          userId,
           matched: false,
         },
       }),

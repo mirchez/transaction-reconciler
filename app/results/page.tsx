@@ -49,13 +49,17 @@ export default function ResultsPage() {
       const response = await fetch("/api/transactions");
       
       if (!response.ok) {
+        console.error("Failed to fetch transactions:", response.status, response.statusText);
         throw new Error("Failed to fetch transactions");
       }
       
       const data = await response.json();
+      console.log("Fetched transactions:", data);
       setTransactions(data.transactions || []);
     } catch (error) {
       console.error("Error fetching transactions:", error);
+      // Don't show mock data on error, just leave empty
+      setTransactions([]);
     } finally {
       setLoading(false);
     }

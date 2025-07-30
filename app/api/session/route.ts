@@ -4,21 +4,19 @@ import { prisma } from "@/lib/db";
 // Create a new upload session
 export async function POST(request: NextRequest) {
   try {
-    const userId = "demo-user"; // TODO: Replace with actual user ID from auth
     
     // Create a unique session ID
     const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     // Get current transaction counts to track what was uploaded in this session
     const [ledgerCount, bankCount] = await Promise.all([
-      prisma.ledgerEntry.count({ where: { userId } }),
-      prisma.bankTransaction.count({ where: { userId } }),
+      prisma.ledgerEntry.count(),
+      prisma.bankTransaction.count(),
     ]);
     
     // Store session info (in production, you'd use a session store or database)
     const session = {
       id: sessionId,
-      userId,
       startLedgerCount: ledgerCount,
       startBankCount: bankCount,
       createdAt: new Date().toISOString(),
@@ -47,20 +45,15 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    const userId = "demo-user"; // TODO: Replace with actual user ID from auth
-    
-    // Get all transactions for this user
+    // Get all transactions
     const [ledgerEntries, bankTransactions, matches] = await Promise.all([
       prisma.ledgerEntry.findMany({
-        where: { userId },
         orderBy: { createdAt: "desc" },
       }),
       prisma.bankTransaction.findMany({
-        where: { userId },
         orderBy: { createdAt: "desc" },
       }),
       prisma.matchLog.findMany({
-        where: { userId },
         include: {
           ledgerEntry: true,
           bankTransaction: true,

@@ -3,20 +3,16 @@ import { prisma } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = "demo-user"; // TODO: Replace with actual user ID from auth
     
     // Fetch all data
     const [ledgerEntries, bankTransactions, matches] = await Promise.all([
       prisma.ledgerEntry.findMany({
-        where: { userId },
         orderBy: { date: "desc" },
       }),
       prisma.bankTransaction.findMany({
-        where: { userId },
         orderBy: { date: "desc" },
       }),
       prisma.matchLog.findMany({
-        where: { userId },
         include: {
           ledgerEntry: true,
           bankTransaction: true,

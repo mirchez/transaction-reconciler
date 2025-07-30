@@ -26,10 +26,7 @@ export async function POST(req: Request) {
   }
 
   const entry = await prisma.ledgerEntry.create({
-    data: {
-      ...result.data,
-      userId: "demo-user",
-    },
+    data: result.data,
   });
 
   return NextResponse.json(entry, { status: 201 });

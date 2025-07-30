@@ -12,7 +12,6 @@ datasource db {
 
 model LedgerEntry {
   id        String   @id @default(cuid())
-  userId    String   // Clerk user ID, o custom ID
   date      DateTime
   amount    Decimal  @db.Decimal(12, 2)
   vendor    String
@@ -26,7 +25,6 @@ model LedgerEntry {
 
 model BankTransaction {
   id          String   @id @default(cuid())
-  userId      String
   date        DateTime
   amount      Decimal  @db.Decimal(12, 2)
   description String
@@ -41,7 +39,6 @@ model MatchLog {
   id                 String   @id @default(cuid())
   ledgerEntryId      String
   bankTransactionId  String
-  userId             String
   matchScore         Float?   // Si usás fuzzy matching por texto/fecha/monto
   createdAt          DateTime @default(now())
 

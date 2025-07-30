@@ -211,8 +211,6 @@ export async function POST(request: NextRequest) {
           category: extractedData.category || "General",
         };
 
-        console.log("Extracted data:", ledgerData); // Debug log
-
         // Validate the extracted data
         const validationResult = LedgerEntrySchema.safeParse(ledgerData);
 
@@ -233,7 +231,6 @@ export async function POST(request: NextRequest) {
         const savedEntry = await prisma.ledgerEntry.create({
           data: {
             ...validationResult.data,
-            userId: "demo-user", // TODO: Replace with actual user ID from auth
             matched: false,
           },
         });
@@ -241,7 +238,6 @@ export async function POST(request: NextRequest) {
         // Check for matching bank transactions
         const matchingTransactions = await prisma.bankTransaction.findMany({
           where: {
-            userId: "demo-user",
             matched: false,
             amount: {
               equals: validationResult.data.amount,
@@ -267,7 +263,6 @@ export async function POST(request: NextRequest) {
             data: {
               ledgerEntryId: savedEntry.id,
               bankTransactionId: bestMatch.id,
-              userId: "demo-user",
               matchScore: 0.9, // High confidence for exact amount match
             },
           });

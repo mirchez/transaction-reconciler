@@ -60,7 +60,16 @@ export default function TransactionDetailPage() {
       const response = await fetch(`/api/transaction/${params.id}`);
       
       if (!response.ok) {
-        throw new Error("Failed to fetch transaction data");
+        // Try to get error details from response
+        let errorMessage = "Failed to fetch transaction data";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // If response is not JSON, use status text
+          errorMessage = `${errorMessage} (${response.status} ${response.statusText})`;
+        }
+        throw new Error(errorMessage);
       }
       
       const data = await response.json();

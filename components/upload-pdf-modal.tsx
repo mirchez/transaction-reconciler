@@ -159,10 +159,10 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
         if (result.processed > 0) {
           toast.success(result.message);
           
-          // Redirect to transaction detail page with session ID
-          const redirectSessionId = result.sessionId || sessionId;
+          // Redirect to results page to see all transactions
           setTimeout(() => {
-            router.push(`/transaction/${redirectSessionId}`);
+            router.push('/results');
+            onOpenChange(false); // Close the modal
           }, 1500);
         }
         if (result.failed > 0) {

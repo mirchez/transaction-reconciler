@@ -177,7 +177,6 @@ export async function POST(request: NextRequest) {
         await prisma.bankTransaction.create({
           data: {
             ...bankValidation.data,
-            userId: "demo-user", // TODO: Replace with actual user ID from auth
             matched: false,
           },
         });

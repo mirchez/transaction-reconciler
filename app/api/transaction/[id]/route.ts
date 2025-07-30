@@ -7,7 +7,8 @@ export async function GET(
 ) {
   try {
     const { id } = params;
-    const userId = "demo-user"; // TODO: Replace with actual user ID from auth
+    
+    console.log("Fetching transaction with ID:", id);
     
     // First try to find a match by ID
     const match = await prisma.matchLog.findFirst({
@@ -16,8 +17,7 @@ export async function GET(
           { id },
           { ledgerEntryId: id },
           { bankTransactionId: id }
-        ],
-        userId
+        ]
       },
       include: {
         ledgerEntry: true,
@@ -41,13 +41,13 @@ export async function GET(
     
     // Try to find a ledger entry
     const ledgerEntry = await prisma.ledgerEntry.findFirst({
-      where: { id, userId }
+      where: { id }
     });
     
     if (ledgerEntry) {
       // Check if this entry has any matches
       const relatedMatches = await prisma.matchLog.findMany({
-        where: { ledgerEntryId: id, userId },
+        where: { ledgerEntryId: id },
         include: { bankTransaction: true },
         orderBy: { matchScore: 'desc' }
       });
@@ -61,13 +61,13 @@ export async function GET(
     
     // Try to find a bank transaction
     const bankTransaction = await prisma.bankTransaction.findFirst({
-      where: { id, userId }
+      where: { id }
     });
     
     if (bankTransaction) {
       // Check if this transaction has any matches
       const relatedMatches = await prisma.matchLog.findMany({
-        where: { bankTransactionId: id, userId },
+        where: { bankTransactionId: id },
         include: { ledgerEntry: true },
         orderBy: { matchScore: 'desc' }
       });
@@ -87,6 +87,17 @@ export async function GET(
     
   } catch (error) {
     console.error("Error fetching transaction:", error);
+    
+    // Check if it's a Prisma error about missing userId
+    if (error instanceof Error && error.message.includes('userId')) {
+      return NextResponse.json(
+        { 
+          error: "Database schema mismatch. Please run 'pnpm prisma generate' and 'pnpm prisma migrate dev' to update the database schema." 
+        },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json(
       { error: "Failed to fetch transaction details" },
       { status: 500 }

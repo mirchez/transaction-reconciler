@@ -27,10 +27,7 @@ export async function POST(req: Request) {
   }
 
   const tx = await prisma.bankTransaction.create({
-    data: {
-      ...result.data,
-      userId: "demo-user",
-    },
+    data: result.data,
   });
 
   return NextResponse.json(tx, { status: 201 });

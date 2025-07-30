@@ -4,13 +4,11 @@ import { prisma } from "@/lib/db";
 // This endpoint creates test data for development
 export async function POST(request: NextRequest) {
   try {
-    const userId = "demo-user";
     
     // Create test ledger entries
     const ledgerEntries = await Promise.all([
       prisma.ledgerEntry.create({
         data: {
-          userId,
           date: new Date("2024-01-15"),
           amount: 542.48,
           vendor: "Tech Solutions Inc.",
@@ -20,7 +18,6 @@ export async function POST(request: NextRequest) {
       }),
       prisma.ledgerEntry.create({
         data: {
-          userId,
           date: new Date("2024-01-14"),
           amount: 123.45,
           vendor: "Office Supplies Co.",
@@ -34,7 +31,6 @@ export async function POST(request: NextRequest) {
     const bankTransactions = await Promise.all([
       prisma.bankTransaction.create({
         data: {
-          userId,
           date: new Date("2024-01-15"),
           amount: 542.48,
           description: "TECH SOLUTIONS INC",
@@ -43,7 +39,6 @@ export async function POST(request: NextRequest) {
       }),
       prisma.bankTransaction.create({
         data: {
-          userId,
           date: new Date("2024-01-16"),
           amount: 89.99,
           description: "AMAZON PURCHASE",
@@ -55,7 +50,6 @@ export async function POST(request: NextRequest) {
     // Create a match for the first entries
     await prisma.matchLog.create({
       data: {
-        userId,
         ledgerEntryId: ledgerEntries[0].id,
         bankTransactionId: bankTransactions[0].id,
         matchScore: 0.95,
@@ -95,12 +89,10 @@ export async function POST(request: NextRequest) {
 // Delete all test data
 export async function DELETE(request: NextRequest) {
   try {
-    const userId = "demo-user";
-    
     // Delete in correct order due to foreign key constraints
-    await prisma.matchLog.deleteMany({ where: { userId } });
-    await prisma.ledgerEntry.deleteMany({ where: { userId } });
-    await prisma.bankTransaction.deleteMany({ where: { userId } });
+    await prisma.matchLog.deleteMany({});
+    await prisma.ledgerEntry.deleteMany({});
+    await prisma.bankTransaction.deleteMany({});
     
     return NextResponse.json({
       success: true,

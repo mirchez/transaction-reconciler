@@ -144,9 +144,10 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
 
       if (result.success) {
         toast.success(result.message);
-        // Redirect to transaction detail page
+        // Redirect to results page to see all transactions
         setTimeout(() => {
-          router.push(`/transaction/${sessionId || 'latest'}`);
+          router.push('/results');
+          onOpenChange(false); // Close the modal
         }, 1500);
       } else {
         toast.error(result.message || "Failed to process CSV");
