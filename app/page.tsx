@@ -129,7 +129,10 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-muted rounded-none p-8 text-center hover:border-primary/50 transition-colors bg-muted">
+                    <div 
+                      className="border-2 border-dashed border-muted rounded-none p-8 text-center hover:border-primary/50 transition-colors bg-muted cursor-pointer"
+                      onClick={() => setPdfModalOpen(true)}
+                    >
                       <Upload className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
                       <p className="text-sm text-muted-foreground mb-2">
                         Drag and drop files here, or click to browse
@@ -162,7 +165,10 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-muted rounded-none p-8 text-center hover:border-primary/50 transition-colors bg-muted">
+                    <div 
+                      className="border-2 border-dashed border-muted rounded-none p-8 text-center hover:border-primary/50 transition-colors bg-muted cursor-pointer"
+                      onClick={() => setCsvModalOpen(true)}
+                    >
                       <Upload className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
                       <p className="text-sm text-muted-foreground mb-2">
                         Drag and drop files here, or click to browse

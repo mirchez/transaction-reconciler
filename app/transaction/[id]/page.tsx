@@ -84,22 +84,17 @@ export default function TransactionDetailPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const monthLong = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    
     return {
-      full: date.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }),
-      short: date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      }),
-      time: date.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+      full: `${weekdays[date.getDay()]}, ${monthLong[date.getMonth()]} ${date.getDate()}, ${year}`,
+      short: `${monthNames[date.getMonth()]} ${date.getDate()}, ${year}`,
+      time: `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
     };
   };
 

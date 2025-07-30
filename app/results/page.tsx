@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, FileText, TrendingUp } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, FileText, TrendingUp, Upload } from "lucide-react";
 import { PageLayout } from "@/components/page-layout";
 
 interface Transaction {
@@ -65,73 +65,8 @@ export default function ResultsPage() {
     }
   };
 
-  const mockTransactions: Transaction[] = [
-    {
-      id: "1",
-      date: "2024-01-15",
-      amount: "-$45.67",
-      description: "STARBUCKS COFFEE #1234",
-      source: "Both",
-      status: "matched",
-      category: "Food & Dining",
-      merchant: "Starbucks",
-      reference: "TXN001234",
-      bankDescription: "STARBUCKS COFFEE #1234",
-      receiptDescription: "Coffee and pastry purchase",
-    },
-    {
-      id: "2",
-      date: "2024-01-14",
-      amount: "-$123.45",
-      description: "AMAZON.COM PURCHASE",
-      source: "Both",
-      status: "matched",
-      category: "Shopping",
-      merchant: "Amazon",
-      reference: "TXN001235",
-      bankDescription: "AMAZON.COM PURCHASE",
-      receiptDescription: "Office supplies and books",
-    },
-    {
-      id: "3",
-      date: "2024-01-13",
-      amount: "-$89.99",
-      description: "Office Supplies Receipt",
-      source: "Ledger",
-      status: "ledger-only",
-      category: "Business",
-      merchant: "Office Depot",
-      reference: "RCP001236",
-      receiptDescription: "Printer paper, pens, and folders",
-    },
-    {
-      id: "4",
-      date: "2024-01-12",
-      amount: "-$25.00",
-      description: "GAS STATION FUEL",
-      source: "Bank",
-      status: "bank-only",
-      category: "Transportation",
-      merchant: "Shell",
-      reference: "TXN001237",
-      bankDescription: "GAS STATION FUEL",
-    },
-    {
-      id: "5",
-      date: "2024-01-11",
-      amount: "-$67.89",
-      description: "Restaurant Dinner Receipt",
-      source: "Ledger",
-      status: "ledger-only",
-      category: "Food & Dining",
-      merchant: "The Italian Place",
-      reference: "RCP001238",
-      receiptDescription: "Dinner for two with wine",
-    },
-  ];
-
-  // Use real data if available, otherwise fall back to mock data
-  const displayTransactions = transactions.length > 0 ? transactions : mockTransactions;
+  // Only use real data from the database, no mock data
+  const displayTransactions = transactions;
 
   const getFilteredTransactions = (filter: string) => {
     switch (filter) {
@@ -259,7 +194,30 @@ export default function ResultsPage() {
             </Card>
           </div>
 
-          {/* Tabs and Table */}
+          {/* Empty State or Tabs and Table */}
+          {displayTransactions.length === 0 ? (
+            <Card className="bg-card border-muted shadow-sm">
+              <CardContent className="p-12 text-center">
+                <div className="max-w-md mx-auto space-y-4">
+                  <div className="w-16 h-16 mx-auto bg-muted rounded-none flex items-center justify-center">
+                    <FileText className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">No Receipts Yet!</h3>
+                  <p className="text-muted-foreground">
+                    Upload your receipts and bank statements to start reconciling transactions.
+                  </p>
+                  <div className="pt-4">
+                    <Link href="/">
+                      <Button>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Files
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
           <Card className="bg-card border-muted shadow-sm">
             <CardContent className="p-0">
               <Tabs defaultValue="all" className="w-full">
@@ -309,6 +267,7 @@ export default function ResultsPage() {
               </Tabs>
             </CardContent>
           </Card>
+          )}
 
           {/* Actions */}
           <div className="flex justify-end gap-4 mt-8">
@@ -331,11 +290,16 @@ function TransactionTable({ transactions, getStatusBadge, formatAmount }: Transa
   const router = useRouter();
   
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    try {
+      // Use a consistent date format to avoid hydration issues
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch {
+      return dateString;
+    }
   };
   
   return (

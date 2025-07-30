@@ -289,7 +289,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                   // Line separator
                   doc.line(20, 60, 190, 60);
                   
-                  // Receipt details
+                  // Receipt details (matching CSV date)
                   doc.setFontSize(12);
                   doc.text('Receipt #: RCP-2024-0115', 20, 70);
                   doc.text('Date: January 15, 2024', 20, 78);
@@ -321,7 +321,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                   // Line separator
                   doc.line(20, 162, 190, 162);
                   
-                  // Totals
+                  // Totals (matching the CSV bank transaction)
                   doc.setFontSize(10);
                   doc.text('Subtotal:', 130, 172);
                   doc.text('$499.98', 170, 172, { align: 'right' });
