@@ -204,6 +204,11 @@ The scope is limited, but we're aiming for **production-level quality** and arch
 - Use loading/skeleton states for async flows
 - Buttons must follow proper `variant` and `size` structure
 - Prefer `useForm()` + controlled inputs for file upload forms
+- **CRITICAL**: All layouts must be centered and responsive with mobile-first design
+  - Always use responsive utilities (sm:, md:, lg:, xl:)
+  - Design for mobile screens first, then enhance for larger screens
+  - Use container classes with proper padding for centered layouts
+  - Test all components on mobile viewports first
 
 ---
 
