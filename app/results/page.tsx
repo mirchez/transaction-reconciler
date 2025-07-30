@@ -359,8 +359,7 @@ function TransactionTable({ transactions, getStatusBadge, formatAmount }: Transa
                 key={transaction.id}
                 className="cursor-pointer hover:bg-muted/50"
                 onClick={() => {
-                  const sessionId = transaction.ledgerEntryId || transaction.bankTransactionId || transaction.id;
-                  router.push(`/transaction/${sessionId}`);
+                  router.push(`/transaction/${transaction.id}`);
                 }}
               >
                 <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
