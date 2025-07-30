@@ -14,7 +14,7 @@ The objective is to **build a production-grade system** with excellent product i
 
 Build a system that:
 
-- 📥 Reads incoming emails and checks for attached PDF receipts *(simulated via manual upload)*
+- 📥 Reads incoming emails and checks for attached PDF receipts _(simulated via manual upload)_
 - 📄 Parses the receipts and stores the details in a database table called `ledger`
 - 🧾 Shows the ledger in a simple user interface
 - 📤 Allows uploading a bank statement CSV with a few transactions
@@ -32,11 +32,12 @@ Build a system that:
 # Product & UX Requirements
 
 Minerva emphasized:
-- Good product instincts  
-- UX awareness  
-- Good eye for design  
-- Smooth, reliable, simple and minimalist UI  
-- Scalability and clean architecture  
+
+- Good product instincts
+- UX awareness
+- Good eye for design
+- Smooth, reliable, simple and minimalist UI
+- Scalability and clean architecture
 - Fast iteration, excellent structure
 
 ---
@@ -58,7 +59,7 @@ Minerva emphasized:
 - **Minerva branding**: Available in `/public/`
   - `minerva-logo.avif` - Minerva logo
   - `minerva.avif` - Minerva branding asset
-  
+
 Use these when displaying Minerva branding in the UI.
 
 ---
@@ -69,8 +70,9 @@ We're using **shadcn/ui components** exclusively for the entire interface.
 These are already available in `components/ui/`.
 
 You may:
-- Extend existing components inside that folder  
-- Create new components in `components/` if needed  
+
+- Extend existing components inside that folder
+- Create new components in `components/` if needed
 - Prioritize consistency and polish
 
 ---
@@ -78,9 +80,10 @@ You may:
 # Design Principles
 
 The entire UI should feel:
-- 🧘‍♂️ Smooth and minimal  
-- 📱 Responsive and clean  
-- ✅ Actionable and intuitive  
+
+- 🧘‍♂️ Smooth and minimal
+- 📱 Responsive and clean
+- ✅ Actionable and intuitive
 - ✨ Scalable and maintainable
 
 ---
@@ -145,6 +148,7 @@ The scope is limited, but we're aiming for **production-level quality** and arch
 ## 🔧 Architecture Guidelines Claude Should Follow
 
 ### 1. Folder Structure
+
 - All components should live under `/components/`
 - Use `/components/ui/` only for Shadcn components
 - Organize by domain when possible (e.g., `/features/ledger`, `/features/comparison`)
@@ -154,6 +158,7 @@ The scope is limited, but we're aiming for **production-level quality** and arch
 ---
 
 ### 2. Component Architecture
+
 - Use Shadcn/UI components for all UI elements
 - Prefer **composition over duplication**
 - All new UI elements should reuse existing primitives (`button`, `input`, `table`, etc.)
@@ -164,14 +169,17 @@ The scope is limited, but we're aiming for **production-level quality** and arch
 ### 3. Data Handling & State
 
 #### Server-First
+
 - Use **Server Components** by default (`app/upload/page.tsx`)
 - Fetch data with async functions inside page-level components
 
 #### Client State
+
 - For **data fetching and caching**, we're using `@tanstack/react-query`
 - Prefer `useQuery` and `useMutation` hooks for data that needs client-side updates or status
 
 #### URL as State
+
 - If any state is shareable (tab, filter, pagination), keep it in the URL
 - Example: `/results?filter=ledger&page=2`
 
@@ -223,6 +231,7 @@ The scope is limited, but we're aiming for **production-level quality** and arch
 ---
 
 ### 8. Git & Review
+
 - This repo will be reviewed using Claude Code
 - You may generate or edit code, but stick to the structure and decisions defined here
 - Leave comments when:
@@ -265,6 +274,7 @@ pnpm prisma migrate reset   # Reset database (warning: deletes all data)
 This is a **Transaction Reconciliation** application built with Next.js 15 App Router, designed to match bank transactions with ledger entries (receipts/invoices).
 
 ### Core Architecture Pattern
+
 - **Next.js App Router** with Server Components by default
 - **File-based routing** in `app/` directory
 - **API routes** colocated with pages
@@ -273,12 +283,14 @@ This is a **Transaction Reconciliation** application built with Next.js 15 App R
 - **shadcn/ui components** built on Radix UI primitives
 
 ### Key Data Flow
+
 1. Users upload PDF receipts → Creates `LedgerEntry` records
-2. Users upload CSV bank statements → Creates `BankTransaction` records  
+2. Users upload CSV bank statements → Creates `BankTransaction` records
 3. System matches transactions → Creates `MatchLog` records with match scores
 4. Users review and confirm matches via the UI
 
 ### Database Models (Prisma)
+
 - **LedgerEntry**: Receipt/invoice records (vendor, amount, date, category)
 - **BankTransaction**: Bank statement entries (description, amount, date)
 - **MatchLog**: Links matched entries with confidence scores
@@ -292,12 +304,14 @@ This is a **Transaction Reconciliation** application built with Next.js 15 App R
 5. **Database**: Requires PostgreSQL with `DATABASE_URL` environment variable
 
 ### UI Component System
+
 - Over 40 pre-built shadcn/ui components in `components/ui/`
 - Components use CVA (class-variance-authority) for variant styling
 - Tailwind CSS v4 with PostCSS for styling
 - Dark mode support via next-themes
 
 ### Development Workflow
+
 1. Always run `pnpm prisma generate` after modifying `schema.prisma`
 2. Use `pnpm prisma migrate dev` to create migrations during development
 3. Components should follow existing patterns in `components/ui/`
