@@ -13,7 +13,11 @@ import {
   Tag,
   FileText,
   CreditCard,
+  CheckCircle2,
+  AlertCircle,
+  TrendingUp,
 } from "lucide-react";
+import { PageLayout } from "@/components/page-layout";
 
 interface Transaction {
   id: string;
@@ -41,14 +45,16 @@ export default function TransactionDetailPage() {
 
   if (!transaction) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-        <div className="text-center">
-          <p className="text-slate-600 mb-4">Transaction not found</p>
-          <Link href="/results">
-            <Button variant="outline">Back to Results</Button>
-          </Link>
+      <PageLayout>
+        <div className="flex-1 flex items-center justify-center px-4">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">Transaction not found</p>
+            <Link href="/results">
+              <Button variant="outline">Back to Results</Button>
+            </Link>
+          </div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
@@ -56,20 +62,23 @@ export default function TransactionDetailPage() {
     switch (status) {
       case "matched":
         return (
-          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
-            ✓ Matched
+          <Badge className="bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800">
+            <CheckCircle2 className="w-3 h-3 mr-1" />
+            Matched
           </Badge>
         );
       case "ledger-only":
         return (
-          <Badge variant="secondary" className="bg-slate-100 text-slate-700">
-            📄 Ledger Only
+          <Badge className="bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800">
+            <FileText className="w-3 h-3 mr-1" />
+            Ledger Only
           </Badge>
         );
       case "bank-only":
         return (
-          <Badge className="bg-blue-50 text-blue-700 border-blue-200">
-            💰 Bank Only
+          <Badge className="bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
+            <TrendingUp className="w-3 h-3 mr-1" />
+            Bank Only
           </Badge>
         );
       default:
@@ -83,7 +92,7 @@ export default function TransactionDetailPage() {
     return (
       <span
         className={`text-xl sm:text-2xl font-medium ${
-          isNegative ? "text-slate-900" : "text-emerald-600"
+          isNegative ? "text-foreground" : "text-green-600 dark:text-green-400"
         }`}
       >
         {isNegative ? "-" : "+"}
@@ -111,15 +120,16 @@ export default function TransactionDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
+    <PageLayout>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16">
+        <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8 sm:mb-12">
           <Link href="/results">
             <Button
               variant="ghost"
               size="sm"
-              className="text-slate-600 hover:text-slate-900"
+              className="text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Back to Results</span>
@@ -127,24 +137,24 @@ export default function TransactionDetailPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-light text-slate-900">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">
               Transaction Details
             </h1>
-            <p className="text-slate-600 mt-2 text-sm sm:text-base">
+            <p className="text-muted-foreground mt-1">
               Complete information for this transaction
             </p>
           </div>
         </div>
 
         {/* Main Transaction Info */}
-        <Card className="border-0 shadow-sm bg-white mb-6 sm:mb-8">
+        <Card className="bg-card border-muted mb-6 sm:mb-8">
           <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div className="flex-1">
-                <CardTitle className="text-lg sm:text-xl font-medium text-slate-900 mb-2 leading-tight">
+                <CardTitle className="text-lg sm:text-xl font-medium text-foreground mb-2 leading-tight">
                   {transaction.description}
                 </CardTitle>
-                <div className="flex items-center gap-2 text-slate-600">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   {getSourceIcon(transaction.source)}
                   <span className="text-sm">{transaction.source}</span>
                 </div>
@@ -160,25 +170,25 @@ export default function TransactionDetailPage() {
               {/* Basic Information */}
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-sm font-medium text-slate-900 mb-4">
+                  <h3 className="text-sm font-medium text-foreground mb-4">
                     Basic Information
                   </h3>
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <Calendar className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                      <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                       <div>
-                        <p className="text-sm text-slate-600">Date</p>
-                        <p className="font-medium text-slate-900">
+                        <p className="text-sm text-muted-foreground">Date</p>
+                        <p className="font-medium text-foreground">
                           {transaction.date}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <DollarSign className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                      <DollarSign className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                       <div>
-                        <p className="text-sm text-slate-600">Amount</p>
-                        <p className="font-medium text-slate-900">
+                        <p className="text-sm text-muted-foreground">Amount</p>
+                        <p className="font-medium text-foreground">
                           {transaction.amount}
                         </p>
                       </div>
@@ -186,10 +196,10 @@ export default function TransactionDetailPage() {
 
                     {transaction.category && (
                       <div className="flex items-center gap-3">
-                        <Tag className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                        <Tag className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                         <div>
-                          <p className="text-sm text-slate-600">Category</p>
-                          <p className="font-medium text-slate-900">
+                          <p className="text-sm text-muted-foreground">Category</p>
+                          <p className="font-medium text-foreground">
                             {transaction.category}
                           </p>
                         </div>
@@ -198,10 +208,10 @@ export default function TransactionDetailPage() {
 
                     {transaction.merchant && (
                       <div className="flex items-center gap-3">
-                        <Building className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                        <Building className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                         <div>
-                          <p className="text-sm text-slate-600">Merchant</p>
-                          <p className="font-medium text-slate-900">
+                          <p className="text-sm text-muted-foreground">Merchant</p>
+                          <p className="font-medium text-foreground">
                             {transaction.merchant}
                           </p>
                         </div>
@@ -214,26 +224,26 @@ export default function TransactionDetailPage() {
               {/* Reference Information */}
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-sm font-medium text-slate-900 mb-4">
+                  <h3 className="text-sm font-medium text-foreground mb-4">
                     Reference Information
                   </h3>
                   <div className="space-y-4">
                     {transaction.reference && (
                       <div>
-                        <p className="text-sm text-slate-600">Reference ID</p>
-                        <p className="font-mono text-sm bg-slate-50 px-3 py-2 rounded border break-all">
+                        <p className="text-sm text-muted-foreground">Reference ID</p>
+                        <p className="font-mono text-sm bg-muted/50 px-3 py-2 rounded border break-all">
                           {transaction.reference}
                         </p>
                       </div>
                     )}
 
                     <div>
-                      <p className="text-sm text-slate-600">Source</p>
+                      <p className="text-sm text-muted-foreground">Source</p>
                       <div className="flex items-center gap-2 mt-1">
                         {getSourceIcon(transaction.source)}
                         <Badge
                           variant="outline"
-                          className="border-slate-200 text-slate-600"
+                          className="border-border text-muted-foreground"
                         >
                           {transaction.source}
                         </Badge>
@@ -241,7 +251,7 @@ export default function TransactionDetailPage() {
                     </div>
 
                     <div>
-                      <p className="text-sm text-slate-600">Match Status</p>
+                      <p className="text-sm text-muted-foreground">Match Status</p>
                       <div className="mt-1">
                         {getStatusBadge(transaction.status)}
                       </div>
@@ -257,30 +267,30 @@ export default function TransactionDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {/* Bank Statement Details */}
           {(transaction.source === "Bank" || transaction.source === "Both") && (
-            <Card className="border-0 shadow-sm bg-white">
+            <Card className="bg-card border-muted">
               <CardHeader className="pb-4">
-                <CardTitle className="text-base sm:text-lg font-medium text-slate-900 flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-slate-600" />
+                <CardTitle className="text-base sm:text-lg font-medium text-foreground flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-muted-foreground" />
                   Bank Statement
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm text-slate-600">Description</p>
-                    <p className="font-medium text-slate-900 mt-1 break-words">
+                    <p className="text-sm text-muted-foreground">Description</p>
+                    <p className="font-medium text-foreground mt-1 break-words">
                       {transaction.bankDescription || transaction.description}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-600">Amount</p>
-                    <p className="font-medium text-slate-900 mt-1">
+                    <p className="text-sm text-muted-foreground">Amount</p>
+                    <p className="font-medium text-foreground mt-1">
                       {transaction.amount}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-600">Date</p>
-                    <p className="font-medium text-slate-900 mt-1">
+                    <p className="text-sm text-muted-foreground">Date</p>
+                    <p className="font-medium text-foreground mt-1">
                       {transaction.date}
                     </p>
                   </div>
@@ -292,38 +302,38 @@ export default function TransactionDetailPage() {
           {/* Receipt Details */}
           {(transaction.source === "Ledger" ||
             transaction.source === "Both") && (
-            <Card className="border-0 shadow-sm bg-white">
+            <Card className="bg-card border-muted">
               <CardHeader className="pb-4">
-                <CardTitle className="text-base sm:text-lg font-medium text-slate-900 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-slate-600" />
+                <CardTitle className="text-base sm:text-lg font-medium text-foreground flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-muted-foreground" />
                   Receipt/Ledger
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm text-slate-600">Description</p>
-                    <p className="font-medium text-slate-900 mt-1 break-words">
+                    <p className="text-sm text-muted-foreground">Description</p>
+                    <p className="font-medium text-foreground mt-1 break-words">
                       {transaction.receiptDescription ||
                         transaction.description}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-600">Amount</p>
-                    <p className="font-medium text-slate-900 mt-1">
+                    <p className="text-sm text-muted-foreground">Amount</p>
+                    <p className="font-medium text-foreground mt-1">
                       {transaction.amount}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-600">Date</p>
-                    <p className="font-medium text-slate-900 mt-1">
+                    <p className="text-sm text-muted-foreground">Date</p>
+                    <p className="font-medium text-foreground mt-1">
                       {transaction.date}
                     </p>
                   </div>
                   {transaction.merchant && (
                     <div>
-                      <p className="text-sm text-slate-600">Merchant</p>
-                      <p className="font-medium text-slate-900 mt-1">
+                      <p className="text-sm text-muted-foreground">Merchant</p>
+                      <p className="font-medium text-foreground mt-1">
                         {transaction.merchant}
                       </p>
                     </div>
@@ -337,12 +347,13 @@ export default function TransactionDetailPage() {
         {/* Actions */}
         <div className="mt-8 sm:mt-12 flex justify-center">
           <Link href="/results">
-            <Button className="bg-slate-900 hover:bg-slate-800 text-white px-6 sm:px-8 w-full sm:w-auto">
+            <Button className="px-6 sm:px-8 w-full sm:w-auto">
               Back to All Transactions
             </Button>
           </Link>
         </div>
+        </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

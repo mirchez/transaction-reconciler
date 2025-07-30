@@ -1,0 +1,15 @@
+
+Tailwind Extended Color Tokens for Dark Mode UI
+===============================================
+
+| Usage              | Token                  | HEX       | Description                          |
+|--------------------|------------------------|-----------|--------------------------------------|
+| Background Base    | bg-background          | #0A0A0A   | Main page background                 |
+| Surface Low        | bg-muted               | #121212   | Section wrappers / containers        |
+| Surface Medium     | bg-card                | #1C1C1C   | Cards, text blocks                   |
+| Surface Elevated   | bg-popover             | #222222   | Modals, dropdowns, overlays          |
+| Borders            | border-muted           | #2C2C2C   | Subtle borders                       |
+| Text Primary       | text-foreground        | #E5E5E5   | Main content text                    |
+| Text Muted         | text-muted-foreground  | #A1A1AA   | Secondary/descriptive text          |
+
+Use these tokens with Tailwind CSS classes to build a visually layered and accessible dark mode interface.

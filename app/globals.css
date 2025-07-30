@@ -95,23 +95,23 @@ layer base {
   
   /* Light mode colors based on CLAUDE.md palette */
   --background: 0 0% 100%; /* #FFFFFF */
-  --foreground: 0 0% 12.2%; /* #1F1F1F */
-  --card: 210 20% 98%; /* #F9FAFB */
-  --card-foreground: 0 0% 12.2%; /* #1F1F1F */
-  --popover: 0 0% 100%; /* #FFFFFF */
-  --popover-foreground: 0 0% 12.2%; /* #1F1F1F */
+  --foreground: 210 25% 16%; /* #1F2937 */
+  --card: 210 40% 96%; /* #F1F5F9 */
+  --card-foreground: 210 25% 16%; /* #1F2937 */
+  --popover: 220 20% 92%; /* #E2E8F0 */
+  --popover-foreground: 210 25% 16%; /* #1F2937 */
   --primary: 169 48% 40%; /* Mint tone #B4E3DB base */
   --primary-foreground: 0 0% 100%; /* White text on primary */
   --secondary: 169 20% 92%; /* Light mint for secondary */
   --secondary-foreground: 172 91% 24%; /* Dark mint #0F766E */
-  --muted: 210 16.7% 97.6%; /* Light gray */
-  --muted-foreground: 0 0% 45.1%; /* Medium gray */
+  --muted: 210 20% 98%; /* #F9FAFB */
+  --muted-foreground: 217 10% 46%; /* #6B7280 */
   --accent: 208 100% 78%; /* Sky blue #8BC5FF */
   --accent-foreground: 172 91% 24%; /* Dark mint */
   --destructive: 0 93% 94%; /* Soft red #FEE2E2 */
   --destructive-foreground: 0 84.2% 45%; /* Darker red for text */
-  --border: 220 14.3% 90.2%; /* #E5E7EB */
-  --input: 220 14.3% 90.2%; /* #E5E7EB */
+  --border: 213 16% 85%; /* #CBD5E1 */
+  --input: 213 16% 85%; /* #CBD5E1 */
   --ring: 169 48% 40%; /* Mint tone for focus */
   
   /* Chart colors */
@@ -123,25 +123,25 @@ layer base {
 }
 
 .dark {
-  /* Dark mode colors with good contrast */
-  --background: 0 0% 7.1%; /* Very dark gray */
-  --foreground: 0 0% 95%; /* Almost white */
-  --card: 0 0% 11%; /* Slightly lighter than background */
-  --card-foreground: 0 0% 95%; /* Almost white */
-  --popover: 0 0% 11%; /* Same as card */
-  --popover-foreground: 0 0% 95%; /* Almost white */
+  /* Dark mode colors based on CLAUDE.md palette */
+  --background: 0 0% 4%; /* #0A0A0A */
+  --foreground: 0 0% 90%; /* #E5E5E5 */
+  --card: 0 0% 11%; /* #1C1C1C */
+  --card-foreground: 0 0% 90%; /* #E5E5E5 */
+  --popover: 0 0% 13.3%; /* #222222 */
+  --popover-foreground: 0 0% 90%; /* #E5E5E5 */
   --primary: 169 48% 71%; /* Lighter mint for dark mode */
-  --primary-foreground: 0 0% 7.1%; /* Dark text on primary */
+  --primary-foreground: 0 0% 4%; /* Dark text on primary */
   --secondary: 169 20% 20%; /* Dark mint variant */
-  --secondary-foreground: 0 0% 95%; /* Light text */
-  --muted: 0 0% 15%; /* Muted dark gray */
-  --muted-foreground: 0 0% 65%; /* Muted light gray */
+  --secondary-foreground: 0 0% 90%; /* Light text */
+  --muted: 0 0% 7%; /* #121212 */
+  --muted-foreground: 240 3% 65%; /* #A1A1AA */
   --accent: 208 100% 78%; /* Keep sky blue */
-  --accent-foreground: 0 0% 7.1%; /* Dark text on accent */
+  --accent-foreground: 0 0% 4%; /* Dark text on accent */
   --destructive: 0 84.2% 45%; /* Stronger red for dark mode */
-  --destructive-foreground: 0 0% 95%; /* Light text */
-  --border: 0 0% 20%; /* Subtle borders */
-  --input: 0 0% 20%; /* Same as border */
+  --destructive-foreground: 0 0% 90%; /* Light text */
+  --border: 0 0% 17.3%; /* #2C2C2C */
+  --input: 0 0% 17.3%; /* #2C2C2C */
   --ring: 169 48% 71%; /* Mint tone for focus */
   
   /* Chart colors for dark mode */
@@ -158,6 +158,16 @@ layer base {
   }
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Ensure body is not scrollable when dialog is open */
+  body:has([data-state="open"]) {
+    overflow: hidden;
+  }
+  
+  /* Ensure proper modal layering */
+  [data-radix-popper-content-wrapper] {
+    isolation: isolate;
   }
 }
 

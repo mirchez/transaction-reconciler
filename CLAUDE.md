@@ -88,17 +88,38 @@ The entire UI should feel:
 
 ---
 
-# Color Palette (soft, neutral, clean)
+# Color Palette
 
-- `#B4E3DB` – Primary (mint tone)
-- `#0F766E` – Primary dark
-- `#8BC5FF` – Accent (sky blue)
-- `#FFFFFF` – Background
-- `#F9FAFB` – Surface (cards)
-- `#1F1F1F` – Text
-- `#E5E7EB` – Borders
-- `#FEE2E2` – Soft red (error)
-- `#DCFCE7` – Soft green (success)
+## Tailwind Light Mode Color Tokens
+
+| Usage              | Token                  | HEX       | Description                          |
+|--------------------|------------------------|-----------|--------------------------------------|
+| Background Base    | bg-background          | #FFFFFF   | Main page background                 |
+| Surface Low        | bg-muted               | #F9FAFB   | Section wrappers / containers        |
+| Surface Medium     | bg-card                | #F1F5F9   | Cards, text blocks                   |
+| Surface Elevated   | bg-popover             | #E2E8F0   | Modals, dropdowns, overlays          |
+| Borders            | border-muted           | #CBD5E1   | Subtle borders                       |
+| Text Primary       | text-foreground        | #1F2937   | Main content text                    |
+| Text Muted         | text-muted-foreground  | #6B7280   | Secondary/descriptive text           |
+| Primary            | bg-primary             | #B4E3DB   | Primary brand color (mint)           |
+| Primary Dark       | bg-primary-foreground  | #0F766E   | Primary dark                         |
+| Accent             | bg-accent              | #8BC5FF   | Accent (sky blue)                    |
+| Error              | bg-destructive         | #FEE2E2   | Soft red (error)                     |
+| Success            | bg-success             | #DCFCE7   | Soft green (success)                 |
+
+## Tailwind Dark Mode Color Tokens
+
+| Usage              | Token                  | HEX       | Description                          |
+|--------------------|------------------------|-----------|--------------------------------------|
+| Background Base    | bg-background          | #0A0A0A   | Main page background                 |
+| Surface Low        | bg-muted               | #121212   | Section wrappers / containers        |
+| Surface Medium     | bg-card                | #1C1C1C   | Cards, text blocks                   |
+| Surface Elevated   | bg-popover             | #222222   | Modals, dropdowns, overlays          |
+| Borders            | border-muted           | #2C2C2C   | Subtle borders                       |
+| Text Primary       | text-foreground        | #E5E5E5   | Main content text                    |
+| Text Muted         | text-muted-foreground  | #A1A1AA   | Secondary/descriptive text           |
+
+**Important**: Cards should always have a background color (bg-card) that is different from the page background (bg-background) and should never be transparent. Use bg-card for all card components.
 
 ---
 
@@ -202,6 +223,8 @@ The scope is limited, but we're aiming for **production-level quality** and arch
   - `bg-muted`, `text-muted-foreground`
   - `bg-card`, `text-card-foreground`
 - Always ensure light/dark theme compatibility
+- **Cards must always use `bg-card` (never transparent or bg-card/50)**
+- Card backgrounds should be clearly distinct from page backgrounds
 
 ---
 
