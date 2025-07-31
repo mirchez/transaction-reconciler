@@ -25,8 +25,9 @@ export async function GET(request: NextRequest) {
     };
 
     // Get recent processed PDFs from database
-    const recentLedgerEntries = await prisma.ledgerEntry.findMany({
+    const recentLedgerEntries = await prisma.ledger.findMany({
       where: {
+        userEmail: email,
         createdAt: {
           gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
         },

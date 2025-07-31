@@ -20,7 +20,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
   const checkMutation = useGmailCheck(email);
   const disconnectMutation = useGmailDisconnect();
 
-  const handleCheckNow = () => {
+  const handleCheckNow = async () => {
     checkMutation.mutate();
   };
 
@@ -138,6 +138,25 @@ export function GmailStatus({ email }: GmailStatusProps) {
         </CardContent>
       </Card>
 
+      {/* Últimos resultados del check */}
+      {checkMutation.isSuccess && checkMutation.data && (
+        <Card className="rounded-lg bg-muted/50 border-border">
+          <CardContent className="p-4">
+            <h4 className="font-medium mb-2">Last Check Results</h4>
+            <div className="space-y-1 text-sm text-muted-foreground">
+              <p>📧 Checked {checkMutation.data.totalChecked} emails</p>
+              {checkMutation.data.emailsWithPdfs > 0 && (
+                <p>📎 Found {checkMutation.data.emailsWithPdfs} emails with PDFs</p>
+              )}
+              {checkMutation.data.processed > 0 && (
+                <p className="text-green-600 dark:text-green-400">
+                  ✅ Processed {checkMutation.data.processed} new PDFs
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

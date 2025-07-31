@@ -10,6 +10,8 @@ import { Upload, Loader2, AlertCircle, Download } from "lucide-react";
 import { toast } from "sonner";
 import { MAX_FILE_SIZE, ALLOWED_CSV_TYPES, type CSVRow } from "@/lib/types/transactions";
 import Papa from "papaparse";
+import { useGmailStatus } from "@/hooks/use-gmail";
+import { useQueryClient } from "@tanstack/react-query";
 
 
 interface UploadCsvModalProps {
@@ -29,6 +31,8 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const router = useRouter();
+  const { data: gmailStatus } = useGmailStatus();
+  const queryClient = useQueryClient();
 
 
   const processFile = async (file: File) => {
@@ -176,6 +180,7 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
 
       const formData = new FormData();
       formData.append("file", selectedFile);
+      formData.append("email", gmailStatus?.email || "");
 
       const response = await fetch("/api/upload/csv", {
         method: "POST",
@@ -186,11 +191,10 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
 
       if (result.success) {
         toast.success(result.message);
-        // Refresh the page to see updated transactions
-        setTimeout(() => {
-          window.location.reload();
-          onOpenChange(false); // Close the modal
-        }, 1500);
+        // Invalidate queries to refresh data smoothly
+        await queryClient.invalidateQueries({ queryKey: ["transactions"] });
+        await queryClient.invalidateQueries({ queryKey: ["gmail-status"] });
+        onOpenChange(false); // Close the modal
       } else {
         toast.error(result.message || "Failed to process CSV");
         if (result.errors && result.errors.length > 0) {

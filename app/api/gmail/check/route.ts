@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       const response = await gmail.users.messages.list({
         userId: "me",
         q: `is:unread has:attachment filename:pdf after:${gmailDateQuery}`,
-        maxResults: 10 // Increase limit since we're filtering by time
+        maxResults: 20
       });
       messages = response.data.messages || [];
       console.log(`📧 Found ${messages.length} unread emails with PDFs from last 5 minutes`);
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
       const response = await gmail.users.messages.list({
         userId: "me",
         q: `is:unread after:${gmailDateQuery}`,
-        maxResults: 10,
+        maxResults: 20,
       });
       messages = response.data.messages || [];
       console.log(`📧 Found ${messages.length} unread emails from last 5 minutes`);
@@ -75,6 +75,7 @@ export async function POST(request: Request) {
     const processedPdfs: any[] = [];
     const emailsFound: any[] = [];
     const successfullyProcessedMessageIds: string[] = [];
+    const failedPdfs: any[] = [];
 
     for (const message of messages) {
       if (!message.id) continue;
@@ -181,11 +182,12 @@ export async function POST(request: Request) {
                   type: "application/pdf",
                   lastModified: Date.now()
                 });
-                formData.append("files", file);
+                formData.append("file", file);
+                formData.append("email", email); // Add the user email
 
                 // Call our PDF processing endpoint
                 const processResponse = await fetch(
-                  `${process.env.NEXT_PUBLIC_APP_URL}/api/upload/pdf`,
+                  `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/upload/pdf`,
                   {
                     method: "POST",
                     body: formData,
@@ -199,33 +201,46 @@ export async function POST(request: Request) {
                 if (processResponse.ok) {
                   const result = await processResponse.json();
                   
-                  // Check if it was a duplicate
-                  if (result.failed > 0 && result.errors?.some((e: any) => e.error.includes("Duplicate"))) {
-                    console.log(`   ⚠️  PDF already exists: ${pdfAttachment.filename} - Skipped`);
-                  } else if (result.processed > 0) {
-                    processedPdfs.push({
-                      filename: pdfAttachment.filename,
-                      messageId: message.id,
-                      result,
-                    });
-                    console.log(`   ✅ PDF processed successfully: ${pdfAttachment.filename}`);
-                    if (result.extractedData?.[0]) {
-                      const data = result.extractedData[0];
-                      console.log(`      Amount: $${data.amount}, Vendor: ${data.vendor}`);
-                      if (result.matchingTransactions?.length > 0) {
-                        console.log(`      🔗 Found ${result.matchingTransactions.length} matching bank transactions`);
-                      }
-                    }
-                    // Track successfully processed message
-                    if (!successfullyProcessedMessageIds.includes(message.id)) {
-                      successfullyProcessedMessageIds.push(message.id);
-                    }
+                  // Successfully processed receipt
+                  processedPdfs.push({
+                    filename: pdfAttachment.filename,
+                    messageId: message.id,
+                    result,
+                  });
+                  console.log(`   ✅ PDF processed successfully: ${pdfAttachment.filename}`);
+                  
+                  // Track successfully processed message
+                  if (!successfullyProcessedMessageIds.includes(message.id)) {
+                    successfullyProcessedMessageIds.push(message.id);
                   }
                 } else {
-                  const errorText = await processResponse.text();
-                  console.log(`   ❌ Failed to process PDF: ${pdfAttachment.filename}`);
-                  console.log(`      Status: ${processResponse.status}`);
-                  console.log(`      Error: ${errorText}`);
+                  const errorResponse = await processResponse.json();
+                  
+                  if (errorResponse.isReceipt === false) {
+                    console.log(`   ⚠️  Not a receipt: ${pdfAttachment.filename}`);
+                    console.log(`      ${errorResponse.message}`);
+                    failedPdfs.push({
+                      filename: pdfAttachment.filename,
+                      reason: "Not a receipt",
+                      message: errorResponse.message
+                    });
+                  } else if (errorResponse.isValid === false) {
+                    console.log(`   ⚠️  Invalid receipt: ${pdfAttachment.filename}`);
+                    console.log(`      Missing: ${Object.keys(errorResponse.missingFields || {}).filter(k => errorResponse.missingFields[k]).join(", ")}`);
+                    failedPdfs.push({
+                      filename: pdfAttachment.filename,
+                      reason: "Invalid receipt",
+                      message: `Missing: ${Object.keys(errorResponse.missingFields || {}).filter(k => errorResponse.missingFields[k]).join(", ")}`
+                    });
+                  } else {
+                    console.log(`   ❌ Failed to process PDF: ${pdfAttachment.filename}`);
+                    console.log(`      Error: ${errorResponse.error || errorResponse.message}`);
+                    failedPdfs.push({
+                      filename: pdfAttachment.filename,
+                      reason: "Processing error",
+                      message: errorResponse.error || errorResponse.message
+                    });
+                  }
                 }
               }
             } catch (error: any) {
@@ -309,11 +324,21 @@ export async function POST(request: Request) {
     const response = {
       processed: processedPdfs.length,
       pdfs: processedPdfs,
+      failedPdfs: failedPdfs,
       stats: emailStats,
       emailsFound: emailsFound.length,
       emails: emailsFound,
       emailsWithAttachments: emailsFound.filter(e => e.hasAttachments).length,
       emailsWithPdfs: emailsFound.filter(e => e.pdfAttachments.length > 0).length,
+      newEmails: processedPdfs.length, // Para compatibilidad con el frontend
+      totalChecked: messages.length,
+      message: processedPdfs.length > 0 ? 
+        `Processed ${processedPdfs.length} PDF${processedPdfs.length > 1 ? 's' : ''} successfully` : 
+        failedPdfs.length > 0 ?
+          `Found ${failedPdfs.length} PDF${failedPdfs.length > 1 ? 's' : ''} but they were not valid receipts` :
+        messages.length > 0 ? 
+          "Found emails but no new PDFs to process" : 
+          "No unread emails found"
     };
     
     console.log(`\n📊 Summary: ${messages.length} emails | ${response.emailsWithPdfs} with PDFs | ${processedPdfs.length} processed`);

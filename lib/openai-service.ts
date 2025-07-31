@@ -1,6 +1,5 @@
 import OpenAI from "openai";
 import { z } from "zod";
-import { LedgerEntrySchema } from "@/lib/types/transactions";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -8,60 +7,102 @@ const openai = new OpenAI({
 });
 
 // Schema for OpenAI response
-const OpenAIParsedReceiptSchema = z.object({
-  date: z.string().describe("ISO datetime string format YYYY-MM-DDTHH:mm:ss.sssZ"),
-  amount: z.number().positive().describe("Total amount as a positive number"),
-  vendor: z.string().min(1).describe("Vendor or merchant name"),
-  category: z.string().optional().describe("Category: Software, Training, Support, Hardware, Office, or General"),
-  confidence: z.number().min(0).max(1).describe("Confidence score between 0 and 1"),
-  rawData: z.object({
-    items: z.array(z.object({
-      description: z.string(),
-      amount: z.number().optional(),
-    })).optional(),
-    taxAmount: z.number().optional(),
-    subtotal: z.number().optional(),
-  }).optional(),
+const LedgerExtractionSchema = z.object({
+  isLedgerEntry: z.boolean(),
+  date: z.string().optional(),
+  type: z.string().optional(),
+  num: z.string().optional().nullable(),
+  name: z.string().optional().nullable(),
+  description: z.string().optional(),
+  account: z.string().optional().nullable(),
+  split: z.string().optional().nullable(),
+  debit: z.number().optional().nullable(),
+  credit: z.number().optional().nullable(),
+  balance: z.number().optional().nullable(),
+  confidence: z.number().min(0).max(1),
 });
 
-export type ParsedReceipt = z.infer<typeof OpenAIParsedReceiptSchema>;
+export type LedgerExtraction = z.infer<typeof LedgerExtractionSchema>;
 
-export async function parseReceiptWithOpenAI(pdfText: string): Promise<ParsedReceipt> {
+const SYSTEM_PROMPT = `You are an expert accounting assistant helping small businesses manage their bookkeeping. Your role is to analyze ANY document and extract financial/accounting information if present.
+
+IMPORTANT: Any document that contains transaction data (date, amount, vendor/party) should be processed, not just traditional receipts or invoices. This includes:
+- Receipts, invoices, bills, statements
+- Financial reports, summaries, ledgers
+- Transaction lists, payment confirmations
+- Any document with financial data
+
+For documents with financial data, extract:
+1. Date - Transaction date in YYYY-MM-DD format. Look for dates like "Date:", "Invoice Date:", "Transaction Date:", or at the top of receipts
+2. Type - Document type: Receipt, Invoice, Bill, Statement, Credit Note, etc.
+3. Number - Reference number, invoice #, receipt #, order #, etc.
+4. Name - Vendor/merchant name (company who issued the document)
+5. Description - Clear description of what was purchased/paid
+6. Account - Categorize intelligently:
+   - Food & Dining (restaurants, cafes, groceries)
+   - Transportation (uber, taxi, gas, parking)
+   - Office Supplies (stationery, equipment)
+   - Technology (software, subscriptions, hardware)
+   - Travel (hotels, flights)
+   - Utilities (electricity, water, internet)
+   - Professional Services (consulting, legal, accounting)
+   - Marketing & Advertising
+   - Rent & Lease
+   - Other Expenses
+7. Debit - Amount paid/spent (always positive)
+8. Credit - Amount received/refunded (always positive)
+
+IMPORTANT RULES:
+- Set isLedgerEntry to TRUE if you can extract: amount AND vendor/party name
+- Look for the TOTAL, AMOUNT DUE, GRAND TOTAL, or BALANCE DUE for the amount
+- For regular purchases/expenses: use debit field
+- For refunds/returns/credits: use credit field
+- Extract vendor name from logo, header, or "from" field
+- If date is unclear, use today's date
+- Confidence: 0-1 based on data quality and completeness
+- Even if it's not a traditional receipt, if it has financial data, process it
+
+Respond with JSON:
+{
+  "isLedgerEntry": true/false,
+  "date": "YYYY-MM-DD",
+  "type": "Receipt",
+  "num": "reference number or null",
+  "name": "Vendor Name",
+  "description": "Clear description of purchase",
+  "account": "Appropriate category",
+  "split": null,
+  "debit": 123.45,
+  "credit": null,
+  "balance": null,
+  "confidence": 0.95,
+  "rawData": "relevant extracted text snippets"
+}`;
+
+export async function extractLedgerDataWithOpenAI(pdfText: string): Promise<LedgerExtraction> {
   try {
-    const systemPrompt = `You are a receipt parsing assistant. Extract structured data from receipt text and return it in JSON format.
-    
-    Rules:
-    1. Extract the vendor/merchant name (clean, without address or extra info)
-    2. Find the total amount (not subtotal, the final total after tax)
-    3. Extract the transaction date and convert to ISO 8601 format
-    4. Categorize based on keywords: Software, Training, Support, Hardware, Office, or General
-    5. Provide a confidence score (0-1) based on how clearly the data was found
-    6. Include raw data like line items, tax, and subtotal if available
-    
-    Return ONLY valid JSON with this structure:
-    {
-      "date": "YYYY-MM-DDTHH:mm:ss.sssZ",
-      "amount": number,
-      "vendor": "string",
-      "category": "string",
-      "confidence": number,
-      "rawData": {
-        "items": [{"description": "string", "amount": number}],
-        "taxAmount": number,
-        "subtotal": number
-      }
-    }`;
+    if (!process.env.OPENAI_API_KEY) {
+      console.log("⚠️ OpenAI API key not found, using fallback parsing");
+      return fallbackLedgerParsing(pdfText);
+    }
 
-    const userPrompt = `Parse this receipt text and extract the transaction details. Return ONLY JSON, no other text:\n\n${pdfText}`;
+    console.log("🤖 Analyzing document with OpenAI...");
+    
+    // Truncate very long PDFs to avoid token limits
+    const maxLength = 4000;
+    const textToAnalyze = pdfText.length > maxLength 
+      ? pdfText.substring(0, maxLength) + "\n... (truncated)"
+      : pdfText;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: `Analyze this document and extract accounting data:\n\n${textToAnalyze}` }
       ],
       temperature: 0.1,
       max_tokens: 1000,
+      response_format: { type: "json_object" }
     });
 
     const responseText = completion.choices[0]?.message?.content;
@@ -70,72 +111,150 @@ export async function parseReceiptWithOpenAI(pdfText: string): Promise<ParsedRec
     }
 
     const parsedData = JSON.parse(responseText);
+    console.log("✅ OpenAI analysis complete:", {
+      isLedgerEntry: parsedData.isLedgerEntry,
+      type: parsedData.type,
+      vendor: parsedData.name,
+      amount: parsedData.debit || parsedData.credit,
+      confidence: parsedData.confidence
+    });
     
-    // Validate with Zod schema
-    const validatedData = OpenAIParsedReceiptSchema.parse(parsedData);
+    // Validate against schema
+    const validatedData = LedgerExtractionSchema.parse(parsedData);
+    
+    // Override isLedgerEntry if we have the required data
+    const hasAmount = validatedData.debit || validatedData.credit;
+    const hasVendor = validatedData.name && validatedData.name.trim() !== "";
+    
+    // If we have amount and vendor, it's valid for ledger regardless of document type
+    if (hasAmount && hasVendor) {
+      console.log("✅ Document has required ledger data, marking as valid");
+      return {
+        ...validatedData,
+        isLedgerEntry: true,  // Override to true since we have the data we need
+        confidence: Math.max(validatedData.confidence, 0.8)
+      };
+    }
+    
+    // If marked as ledger entry but missing data, invalidate
+    if (validatedData.isLedgerEntry && (!hasAmount || !hasVendor)) {
+      console.log("⚠️ Document marked as ledger but missing required fields:", { hasAmount, hasVendor });
+      return {
+        ...validatedData,
+        isLedgerEntry: false,
+        confidence: 0.3
+      };
+    }
     
     return validatedData;
   } catch (error) {
-    console.error("OpenAI parsing error:", error);
-    
-    // Fallback to regex-based parsing if OpenAI fails
-    return fallbackParsing(pdfText);
+    console.error("❌ OpenAI parsing error:", error);
+    console.log("⚠️ Falling back to local parser...");
+    return fallbackLedgerParsing(pdfText);
   }
 }
 
-function fallbackParsing(text: string): ParsedReceipt {
+function fallbackLedgerParsing(text: string): LedgerExtraction {
+  // Look for common receipt patterns
+  const isReceipt = /receipt|invoice|bill|total|amount|payment/i.test(text);
+  
+  if (!isReceipt) {
+    return {
+      isLedgerEntry: false,
+      confidence: 0.9
+    };
+  }
+
   // Extract amount
-  const amountMatch = text.match(/(?:total|amount due|balance due)[\s:]*\$?([\d,]+\.?\d*)/i);
-  const amount = amountMatch 
-    ? parseFloat(amountMatch[1].replace(/,/g, ''))
-    : 0;
+  const totalMatch = text.match(/(?:total|amount due|balance due|grand total)[\s:]*\$?([\d,]+\.?\d*)/i);
+  const amountMatch = totalMatch || text.match(/\$?([\d,]+\.?\d*)/);
+  const amount = amountMatch ? parseFloat(amountMatch[1].replace(/,/g, '')) : 0;
 
   // Extract date
-  const dateMatch = text.match(/(?:date|issued|transaction)[\s:]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i);
-  const date = dateMatch
-    ? new Date(dateMatch[1]).toISOString()
-    : new Date().toISOString();
+  const datePatterns = [
+    /(?:date|issued|transaction)[\s:]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+    /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/,
+    /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},?\s+\d{4}/i
+  ];
+  
+  let dateStr = new Date().toISOString().split('T')[0];
+  for (const pattern of datePatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      try {
+        const parsed = new Date(match[1]);
+        if (!isNaN(parsed.getTime())) {
+          dateStr = parsed.toISOString().split('T')[0];
+          break;
+        }
+      } catch {}
+    }
+  }
 
-  // Extract vendor (first line that's not numeric/date)
+  // Extract vendor
   const lines = text.split('\n').filter(line => line.trim());
   const vendor = lines.find(line => 
     line.length > 2 && 
     !line.match(/^\d/) && 
-    !line.match(/date|receipt|invoice/i)
+    !line.match(/date|receipt|invoice|total|amount/i)
   ) || "Unknown Vendor";
 
+  // Extract invoice/receipt number
+  const numMatch = text.match(/(?:invoice|receipt|order|reference|#)[\s:]*([A-Z0-9\-]+)/i);
+  const num = numMatch ? numMatch[1] : null;
+
   // Categorize
-  const categoryKeywords = {
-    Software: /software|app|license|subscription|saas/i,
-    Training: /training|course|education|workshop|seminar/i,
-    Support: /support|maintenance|service|consulting/i,
-    Hardware: /hardware|equipment|device|computer|laptop/i,
-    Office: /office|supplies|stationery|furniture/i,
+  const categories = {
+    "Food & Dining": /restaurant|food|dining|cafe|coffee|meal|lunch|dinner|breakfast/i,
+    "Transportation": /uber|lyft|taxi|gas|fuel|parking|toll/i,
+    "Office Supplies": /office|supplies|staples|paper|ink|stationery/i,
+    "Technology": /software|hardware|computer|laptop|subscription|app/i,
+    "Travel": /hotel|flight|airline|travel|lodging/i,
+    "Entertainment": /movie|theater|concert|entertainment/i,
+    "Healthcare": /pharmacy|medical|doctor|hospital|clinic/i,
+    "Utilities": /electric|gas|water|internet|phone|utility/i,
   };
 
-  let category = "General";
-  for (const [cat, regex] of Object.entries(categoryKeywords)) {
+  let account = "General Expense";
+  for (const [cat, regex] of Object.entries(categories)) {
     if (regex.test(text)) {
-      category = cat;
+      account = cat;
       break;
     }
   }
 
   return {
-    date,
-    amount,
-    vendor: vendor.trim(),
-    category,
-    confidence: 0.5, // Lower confidence for fallback
+    isLedgerEntry: true,
+    date: dateStr,
+    type: "Receipt",
+    num: num,
+    name: vendor.trim(),
+    description: `Purchase from ${vendor.trim()}`,
+    account: account,
+    split: null,
+    debit: amount,
+    credit: null,
+    balance: null,
+    confidence: 0.7
   };
 }
 
-// Function to validate if parsed data meets requirements
-export function validateParsedReceipt(data: ParsedReceipt): boolean {
-  return (
-    data.amount > 0 &&
-    data.vendor.length > 0 &&
-    data.vendor !== "Unknown Vendor" &&
-    !isNaN(new Date(data.date).getTime())
-  );
+// Legacy functions for backward compatibility
+export async function parseReceiptWithOpenAI(pdfText: string): Promise<any> {
+  const result = await extractLedgerDataWithOpenAI(pdfText);
+  if (!result.isLedgerEntry) {
+    throw new Error("Not a valid receipt or ledger entry");
+  }
+  
+  return {
+    date: result.date ? new Date(result.date).toISOString() : new Date().toISOString(),
+    amount: result.debit || result.credit || 0,
+    vendor: result.name || "Unknown",
+    category: result.account || "General",
+    confidence: result.confidence
+  };
+}
+
+export function validateParsedReceipt(data: any): boolean {
+  return data.amount > 0 && data.vendor && data.vendor !== "Unknown";
 }

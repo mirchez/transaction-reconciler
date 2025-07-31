@@ -48,11 +48,16 @@ export async function POST(request: Request) {
       where: { email },
     });
 
-    console.log(`🗑️ Removed Gmail connection for ${email}`);
+    // Delete the user and all related data (cascade delete)
+    await prisma.user.delete({
+      where: { email },
+    });
+
+    console.log(`🗑️ Removed Gmail connection and all data for ${email}`);
 
     return NextResponse.json({
       success: true,
-      message: "Gmail disconnected successfully",
+      message: "Gmail disconnected and all data cleared successfully",
     });
   } catch (error) {
     console.error("Error disconnecting Gmail:", error);

@@ -65,7 +65,9 @@ export function useGmailCheck(email: string) {
       // Invalidate and refetch stats after successful check
       queryClient.invalidateQueries({ queryKey: ["gmail", "stats", email] });
 
-      if (data.emailsFound > 0) {
+      if (data.totalChecked === 0) {
+        toast.info("No unread emails found");
+      } else if (data.emailsFound > 0) {
         toast.info(
           `Found ${data.emailsFound} unread email${
             data.emailsFound > 1 ? "s" : ""
@@ -84,6 +86,24 @@ export function useGmailCheck(email: string) {
         queryClient.invalidateQueries({ queryKey: ["stats"] });
         queryClient.invalidateQueries({ queryKey: ["ledger"] });
         queryClient.invalidateQueries({ queryKey: ["bank"] });
+      }
+      
+      // Mostrar información sobre PDFs fallidos
+      if (data.failedPdfs && data.failedPdfs.length > 0) {
+        data.failedPdfs.forEach((pdf: any) => {
+          if (pdf.reason === "Not a receipt") {
+            toast.warning(`${pdf.filename}: Not a receipt`);
+          } else if (pdf.reason === "Invalid receipt") {
+            toast.error(`${pdf.filename}: ${pdf.message}`);
+          } else {
+            toast.error(`${pdf.filename}: ${pdf.message}`);
+          }
+        });
+      }
+      
+      // Mostrar mensaje personalizado si viene del servidor
+      if (data.message && !data.processed && (!data.failedPdfs || data.failedPdfs.length === 0)) {
+        toast.info(data.message);
       }
     },
     onError: (error) => {
@@ -111,8 +131,14 @@ export function useGmailDisconnect() {
     },
     onSuccess: () => {
       toast.success("Gmail disconnected successfully");
-      // Invalidate Gmail status to update UI
+      // Invalidate all queries to update UI completely
       queryClient.invalidateQueries({ queryKey: ["gmail", "status"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["gmail", "stats"] });
+      // Redirect to home page after a short delay
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
     },
     onError: (error) => {
       console.error("Error disconnecting Gmail:", error);

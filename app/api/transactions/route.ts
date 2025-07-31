@@ -3,19 +3,39 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
+    // Get user email from query params or headers
+    const searchParams = request.nextUrl.searchParams;
+    const userEmail = searchParams.get("email");
+
+    if (!userEmail) {
+      return NextResponse.json({
+        transactions: [],
+        stats: { total: 0, matched: 0, ledgerOnly: 0, bankOnly: 0 },
+      });
+    }
+
+    // Ensure user exists
+    await prisma.user.upsert({
+      where: { email: userEmail },
+      update: {},
+      create: { email: userEmail },
+    });
     
-    // Fetch all data
+    // Fetch all data for this email
     const [ledgerEntries, bankTransactions, matches] = await Promise.all([
-      prisma.ledgerEntry.findMany({
+      prisma.ledger.findMany({
+        where: { userEmail },
         orderBy: { date: "desc" },
       }),
-      prisma.bankTransaction.findMany({
+      prisma.bank.findMany({
+        where: { userEmail },
         orderBy: { date: "desc" },
       }),
-      prisma.matchLog.findMany({
+      prisma.matched.findMany({
+        where: { userEmail },
         include: {
-          ledgerEntry: true,
-          bankTransaction: true,
+          ledger: true,
+          bank: true,
         },
       }),
     ]);
@@ -23,8 +43,8 @@ export async function GET(request: NextRequest) {
     // Create a map of matches for quick lookup
     const matchMap = new Map();
     matches.forEach(match => {
-      matchMap.set(`ledger-${match.ledgerEntryId}`, match);
-      matchMap.set(`bank-${match.bankTransactionId}`, match);
+      matchMap.set(`ledger-${match.ledgerId}`, match);
+      matchMap.set(`bank-${match.bankId}`, match);
     });
     
     // Format transactions for display
@@ -32,33 +52,36 @@ export async function GET(request: NextRequest) {
     
     // Add matched transactions
     matches.forEach(match => {
+      const amount = match.ledger.debit || match.ledger.credit || 0;
       transactions.push({
         id: match.id,
-        date: match.ledgerEntry.date.toISOString(),
-        amount: match.ledgerEntry.amount,
-        description: match.ledgerEntry.vendor,
+        date: match.date.toISOString(),
+        amount: Number(match.amount),
+        description: match.description,
         source: "Both" as const,
         status: "matched" as const,
-        category: match.ledgerEntry.category || undefined,
-        vendor: match.ledgerEntry.vendor,
-        ledgerEntryId: match.ledgerEntryId,
-        bankTransactionId: match.bankTransactionId,
-        matchScore: match.matchScore,
+        category: match.ledger.account || undefined,
+        vendor: match.ledger.name || match.description,
+        ledgerEntryId: match.ledgerId,
+        bankTransactionId: match.bankId,
+        matchScore: 100,
+        bankTransaction: match.bankTransaction,
       });
     });
     
     // Add unmatched ledger entries
     ledgerEntries.forEach(entry => {
-      if (!entry.matched) {
+      if (!matchMap.has(`ledger-${entry.id}`)) {
+        const amount = entry.debit || entry.credit || 0;
         transactions.push({
           id: entry.id,
           date: entry.date.toISOString(),
-          amount: entry.amount,
-          description: entry.vendor,
+          amount: Number(amount),
+          description: entry.description,
           source: "Ledger" as const,
           status: "ledger-only" as const,
-          category: entry.category || undefined,
-          vendor: entry.vendor,
+          category: entry.account || undefined,
+          vendor: entry.name || entry.description,
           ledgerEntryId: entry.id,
         });
       }
@@ -66,11 +89,11 @@ export async function GET(request: NextRequest) {
     
     // Add unmatched bank transactions
     bankTransactions.forEach(transaction => {
-      if (!transaction.matched) {
+      if (!matchMap.has(`bank-${transaction.id}`)) {
         transactions.push({
           id: transaction.id,
           date: transaction.date.toISOString(),
-          amount: transaction.amount,
+          amount: Number(transaction.amount),
           description: transaction.description,
           source: "Bank" as const,
           status: "bank-only" as const,
@@ -87,8 +110,8 @@ export async function GET(request: NextRequest) {
       stats: {
         total: transactions.length,
         matched: matches.length,
-        ledgerOnly: ledgerEntries.filter(e => !e.matched).length,
-        bankOnly: bankTransactions.filter(t => !t.matched).length,
+        ledgerOnly: ledgerEntries.filter(e => !matchMap.has(`ledger-${e.id}`)).length,
+        bankOnly: bankTransactions.filter(t => !matchMap.has(`bank-${t.id}`)).length,
       },
     });
   } catch (error) {

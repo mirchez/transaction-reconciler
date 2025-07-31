@@ -26,6 +26,8 @@ import { GmailMonitorModal } from "@/components/gmail-monitor-modal";
 import { Header } from "./components/header";
 import { useGmailStatus } from "@/hooks/use-gmail";
 import { exportMatchedTransactions, exportUnmatchedTransactions } from "./utils/excel-export";
+import { useTransactions } from "@/hooks/use-transactions";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Transaction {
   id: string;
@@ -43,19 +45,19 @@ interface Transaction {
 
 export default function HomePage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [csvModalOpen, setCsvModalOpen] = useState(false);
   const [gmailModalOpen, setGmailModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showReconciled, setShowReconciled] = useState(false);
   const [reconciling, setReconciling] = useState(false);
   const { data: gmailStatus } = useGmailStatus();
+  const { data: transactionsData, isLoading: loading } = useTransactions();
+  const transactions = transactionsData?.transactions || [];
   const [csvFileInfo, setCsvFileInfo] = useState<{name: string, size: string, uploadTime: string} | null>(null);
   
   useEffect(() => {
     setMounted(true);
-    fetchTransactions();
     
     // Check URL params for Gmail connection status (for redirect from OAuth)
     const params = new URLSearchParams(window.location.search);
@@ -86,54 +88,79 @@ export default function HomePage() {
           break;
       }
       
-      alert(errorMessage);
+      toast.error(errorMessage);
       console.error("Gmail authentication error:", error);
       
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (params.get("gmail_connected") === "true") {
+      toast.success("Successfully connected to Gmail");
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
-  const fetchTransactions = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/transactions");
-      
-      if (!response.ok) {
-        console.error("Failed to fetch transactions:", response.status, response.statusText);
-        throw new Error("Failed to fetch transactions");
-      }
-      
-      const data = await response.json();
-      console.log("Fetched transactions:", data);
-      setTransactions(data.transactions || []);
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-      setTransactions([]);
-    } finally {
-      setLoading(false);
+
+
+  const handleReconciliation = async () => {
+    if (!gmailStatus?.email) {
+      toast.error("Please connect your email first");
+      return;
     }
-  };
-
-
-  const handleReconciliation = () => {
+    
     setReconciling(true);
-    setTimeout(() => {
-      setShowReconciled(true);
+    try {
+      const response = await fetch("/api/reconcile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: gmailStatus.email }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to reconcile transactions");
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success(data.message, {
+          description: `Found ${data.stats.newMatches} new matches`,
+        });
+        
+        // Refresh transactions to show updated matches
+        await queryClient.invalidateQueries({ queryKey: ["transactions"] });
+        
+        // Show reconciliation results
+        setShowReconciled(true);
+      }
+    } catch (error) {
+      console.error("Reconciliation error:", error);
+      toast.error("Failed to reconcile transactions", {
+        description: "Please try again",
+      });
+    } finally {
       setReconciling(false);
-    }, 1500);
+    }
   };
 
   const [checkingEmails, setCheckingEmails] = useState(false);
   
   const handleCheckEmails = async () => {
+    if (!gmailStatus?.email) {
+      toast.error("Please connect your Gmail account first");
+      return;
+    }
+    
     setCheckingEmails(true);
     try {
       const response = await fetch("/api/gmail/check", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: gmailStatus?.email }),
       });
 
       if (!response.ok) {
@@ -146,10 +173,8 @@ export default function HomePage() {
         toast.success(`Found ${data.newEmails} new receipt${data.newEmails > 1 ? 's' : ''}!`, {
           description: "Refreshing transactions...",
         });
-        // Refresh transactions after a short delay
-        setTimeout(() => {
-          fetchTransactions();
-        }, 1000);
+        // Refresh transactions
+        await queryClient.invalidateQueries({ queryKey: ["transactions"] });
       } else {
         toast.info("No new receipts found", {
           description: "Your transactions are up to date",
@@ -235,7 +260,14 @@ export default function HomePage() {
                       className="rounded-md"
                       onClick={() => setGmailModalOpen(true)}
                     >
-                      {gmailStatus?.connected ? "Manage Email" : "Connect Email"}
+                      {gmailStatus?.connected ? (
+                        <>
+                          <Mail className="w-4 h-4 mr-2" />
+                          Check Email
+                        </>
+                      ) : (
+                        "Connect Email"
+                      )}
                     </Button>
                   </div>
                 </CardContent>

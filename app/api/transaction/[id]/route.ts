@@ -11,17 +11,17 @@ export async function GET(
     console.log("Fetching transaction with ID:", id);
     
     // First try to find a match by ID
-    const match = await prisma.matchLog.findFirst({
+    const match = await prisma.matched.findFirst({
       where: {
         OR: [
           { id },
-          { ledgerEntryId: id },
-          { bankTransactionId: id }
+          { ledgerId: id },
+          { bankId: id }
         ]
       },
       include: {
-        ledgerEntry: true,
-        bankTransaction: true,
+        ledger: true,
+        bank: true,
       }
     });
     
@@ -31,25 +31,25 @@ export async function GET(
         type: "matched",
         match: {
           id: match.id,
-          score: match.matchScore,
+          score: 100, // matchScore field doesn't exist in new schema
           createdAt: match.createdAt,
-          ledgerEntry: match.ledgerEntry,
-          bankTransaction: match.bankTransaction,
+          ledgerEntry: match.ledger,
+          bankTransaction: match.bank,
         }
       });
     }
     
     // Try to find a ledger entry
-    const ledgerEntry = await prisma.ledgerEntry.findFirst({
+    const ledgerEntry = await prisma.ledger.findFirst({
       where: { id }
     });
     
     if (ledgerEntry) {
       // Check if this entry has any matches
-      const relatedMatches = await prisma.matchLog.findMany({
-        where: { ledgerEntryId: id },
-        include: { bankTransaction: true },
-        orderBy: { matchScore: 'desc' }
+      const relatedMatches = await prisma.matched.findMany({
+        where: { ledgerId: id },
+        include: { bank: true },
+        orderBy: { createdAt: 'desc' }
       });
       
       return NextResponse.json({
@@ -60,16 +60,16 @@ export async function GET(
     }
     
     // Try to find a bank transaction
-    const bankTransaction = await prisma.bankTransaction.findFirst({
+    const bankTransaction = await prisma.bank.findFirst({
       where: { id }
     });
     
     if (bankTransaction) {
       // Check if this transaction has any matches
-      const relatedMatches = await prisma.matchLog.findMany({
-        where: { bankTransactionId: id },
-        include: { ledgerEntry: true },
-        orderBy: { matchScore: 'desc' }
+      const relatedMatches = await prisma.matched.findMany({
+        where: { bankId: id },
+        include: { ledger: true },
+        orderBy: { createdAt: 'desc' }
       });
       
       return NextResponse.json({

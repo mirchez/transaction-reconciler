@@ -3,6 +3,23 @@ import { PDFDocument } from 'pdf-lib';
 // Use pdf-lib and custom text extraction to parse PDFs
 export async function parsePDF(buffer: Buffer): Promise<{ text: string; numpages: number }> {
   try {
+    console.log('📄 Starting PDF parsing...');
+    
+    // Try using pdf-parse first (if available)
+    try {
+      const pdfParse = require('pdf-parse');
+      const data = await pdfParse(buffer);
+      if (data.text && data.text.trim().length > 0) {
+        console.log('✅ Successfully parsed with pdf-parse');
+        return {
+          text: data.text,
+          numpages: data.numpages || 1
+        };
+      }
+    } catch (e) {
+      console.log('⚠️ pdf-parse not available or failed, using custom parser');
+    }
+    
     // Load the PDF document
     const pdfDoc = await PDFDocument.load(buffer);
     const pages = pdfDoc.getPages();
@@ -10,24 +27,34 @@ export async function parsePDF(buffer: Buffer): Promise<{ text: string; numpages
     // Extract text from the buffer
     const fullText = await extractTextFromBuffer(buffer);
     
+    if (fullText && fullText.trim().length > 0) {
+      console.log('✅ Successfully extracted text with custom parser');
+      return {
+        text: fullText,
+        numpages: pages.length
+      };
+    }
+    
+    // If no text found, return a message
+    console.log('⚠️ No text content found in PDF');
     return {
-      text: fullText || 'No text content found',
+      text: 'No text content found in PDF',
       numpages: pages.length
     };
   } catch (error) {
-    console.error('PDF parsing error:', error);
+    console.error('❌ PDF parsing error:', error);
     
     // Fallback: try basic text extraction
     try {
       const fallbackText = await extractTextFromBuffer(buffer);
       return {
-        text: fallbackText || '',
+        text: fallbackText || 'Failed to extract text from PDF',
         numpages: 1
       };
     } catch (fallbackError) {
-      console.error('Fallback parsing also failed:', fallbackError);
+      console.error('❌ Fallback parsing also failed:', fallbackError);
       return {
-        text: '',
+        text: 'Failed to extract text from PDF',
         numpages: 0
       };
     }
