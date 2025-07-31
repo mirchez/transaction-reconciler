@@ -67,9 +67,9 @@ const config = {
         },
       },
       borderRadius: {
-        lg: "0",         /* Sharp edges */
-        md: "0",         /* Sharp edges */
-        sm: "0",         /* Sharp edges - use rounded-none */
+        lg: "0.5rem",    /* 8px */
+        md: "0.375rem",  /* 6px */
+        sm: "0.25rem",   /* 4px */
         none: "0",       /* Explicit sharp edges */
       },
       keyframes: {

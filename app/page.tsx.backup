@@ -6,6 +6,7 @@ import Image from "next/image";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -19,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileText, TrendingUp, CheckCircle2, RefreshCw } from "lucide-react";
+import { FileText, Upload, TrendingUp, Mail, CheckCircle2, RefreshCw } from "lucide-react";
 import { UploadCsvModal } from "@/components/upload-csv-modal";
 import { GmailMonitorModal } from "@/components/gmail-monitor-modal";
 import { CenteredLogo } from "./components/centered-logo";
@@ -113,6 +114,18 @@ export default function HomePage() {
     }
   };
 
+  const handleGoogleConnect = async () => {
+    try {
+      const response = await fetch("/api/auth/google");
+      const data = await response.json();
+      
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      }
+    } catch (error) {
+      console.error("Failed to connect to Google:", error);
+    }
+  };
 
   const handleReconciliation = () => {
     setReconciling(true);
@@ -200,6 +213,42 @@ export default function HomePage() {
               </Card>
             </div>
           </section>
+
+              <CardHeader className="space-y-1">
+                <div className="w-12 h-12 rounded-none bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <TrendingUp className="w-6 h-6 text-primary" />
+                </div>
+                <CardTitle className="text-2xl">Bank Statement</CardTitle>
+                <CardDescription className="text-base">
+                  Import transactions from your bank CSV
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div 
+                    className="border-2 border-dashed border-muted rounded-none p-8 text-center hover:border-primary/50 transition-colors bg-muted cursor-pointer"
+                    onClick={() => setCsvModalOpen(true)}
+                  >
+                    <Upload className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Drag and drop files here, or click to browse
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      CSV files from any major bank
+                    </p>
+                  </div>
+                  <Button
+                    className="rounded-none w-full"
+                    size="lg"
+                    onClick={() => setCsvModalOpen(true)}
+                  >
+                    Upload Statement
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
 
         {/* Transaction Management Section */}
         <section className="py-12 sm:py-16 bg-background">
@@ -580,18 +629,12 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* Modals - Only render after mount to avoid SSR issues */}
+      {/* Upload Modal - Only render after mount to avoid SSR issues */}
       {mounted && (
-        <>
-          <UploadCsvModal 
-            open={csvModalOpen} 
-            onOpenChange={setCsvModalOpen}
-          />
-          <GmailMonitorModal
-            open={gmailModalOpen}
-            onOpenChange={setGmailModalOpen}
-          />
-        </>
+        <UploadCsvModal 
+          open={csvModalOpen} 
+          onOpenChange={setCsvModalOpen}
+        />
       )}
     </div>
   );

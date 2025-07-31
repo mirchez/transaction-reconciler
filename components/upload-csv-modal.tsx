@@ -26,13 +26,11 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const router = useRouter();
 
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const processFile = async (file: File) => {
     // Reset state
     setCsvData([]);
     setParseError(null);
@@ -111,6 +109,36 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
       setParseError("Failed to read file");
       toast.error("Failed to read file");
       setIsParsing(false);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    await processFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      await processFile(file);
     }
   };
 
@@ -197,26 +225,27 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose} modal={true}>
-      <DialogContent className="max-w-4xl">
-        <DialogHeader>
-          <DialogTitle>Upload Bank Statement</DialogTitle>
-          <DialogDescription>
-            Select your CSV file to preview transactions
+      <DialogContent className="sm:max-w-[700px] bg-white dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 rounded-xl">
+        <DialogHeader className="pb-6">
+          <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-white">Upload Bank Statement</DialogTitle>
+          <DialogDescription className="text-gray-600 dark:text-gray-400 mt-2">
+            Select your CSV file to preview and import bank transactions
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Example Download Section */}
-          <div className="bg-muted/50 p-4 rounded-none border border-muted">
+          <div className="bg-gray-50 dark:bg-zinc-900 p-4 rounded-lg border border-gray-100 dark:border-zinc-800">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-foreground">Need a template?</p>
-                <p className="text-sm text-muted-foreground">Download an example CSV file with the correct format</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">Need a template?</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Download an example CSV file with the correct format</p>
               </div>
               <a href="/example-bank-statement.csv" download>
                 <Button
                   variant="outline"
                   size="sm"
+                  className="rounded-lg border-gray-300 dark:border-gray-700"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Example CSV
@@ -226,13 +255,22 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
           </div>
 
           {/* Upload Zone */}
-          <div className="border-2 border-dashed border-muted rounded-none p-8 text-center hover:border-primary/50 transition-colors bg-card">
+          <div 
+            className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+              isDragging 
+                ? "border-gray-500 dark:border-gray-500 bg-gray-100 dark:bg-zinc-800" 
+                : "border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 bg-gray-50 dark:bg-zinc-900"
+            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             <div className="mb-6">
-              <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-lg font-medium text-foreground mb-2">
+              <Upload className="w-8 h-8 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
+              <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 Drop CSV file here
               </p>
-              <p className="text-sm text-muted-foreground">or click to browse</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">or click to browse</p>
             </div>
             <input
               ref={fileInputRef}
@@ -247,6 +285,7 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
               <Button
                 variant="outline"
                 asChild
+                className="rounded-lg border-gray-300 dark:border-gray-700"
               >
                 <span>
                   <Upload className="w-4 h-4 mr-2" />
@@ -258,7 +297,7 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
 
           {/* Error Message */}
           {parseError && (
-            <div className="flex items-center gap-2 p-4 bg-destructive/10 border border-destructive/20 rounded text-destructive">
+            <div className="flex items-center gap-2 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <p className="text-sm">{parseError}</p>
             </div>
@@ -267,50 +306,54 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
           {/* Preview Table */}
           {isParsing ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-muted-foreground">Parsing CSV...</span>
+              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              <span className="ml-2 text-gray-600 dark:text-gray-400">Parsing CSV...</span>
             </div>
           ) : csvData.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-foreground">Preview</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="text-sm font-medium text-gray-900 dark:text-white">Preview</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Showing {csvData.length} of {selectedFile ? "many" : "0"} transactions
                 </p>
               </div>
-              <div className="border border-border rounded-none overflow-hidden bg-card">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="font-medium">
-                        Date
-                      </TableHead>
-                      <TableHead className="font-medium text-right">
-                        Amount
-                      </TableHead>
-                      <TableHead className="font-medium">
-                        Description
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {csvData.map((row, index) => (
-                      <TableRow
-                        key={index}
-                      >
-                        <TableCell className="font-medium">
-                          {row.date}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatAmount(row.amount)}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {row.description}
-                        </TableCell>
+              <div className="border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
+                <div className="w-full bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-800">
+                  <div className="flex text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <div className="px-6 py-3 w-[140px]">Date</div>
+                    <div className="px-6 py-3 w-[120px] text-right">Amount</div>
+                    <div className="px-6 py-3 flex-1">Description</div>
+                  </div>
+                </div>
+                <div className="max-h-[110px] overflow-y-auto">
+                  <Table>
+                    <TableHeader className="sr-only">
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Description</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {csvData.map((row, index) => (
+                        <TableRow
+                          key={index}
+                          className="border-b border-gray-100 dark:border-zinc-800"
+                        >
+                          <TableCell className="font-medium px-6 py-3 w-[140px]">
+                            {row.date}
+                          </TableCell>
+                          <TableCell className="text-right px-6 py-3 w-[120px]">
+                            {formatAmount(row.amount)}
+                          </TableCell>
+                          <TableCell className="text-gray-600 dark:text-gray-400 px-6 py-3">
+                            {row.description}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </div>
           )}
@@ -321,12 +364,14 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
               variant="outline"
               onClick={handleClose}
               disabled={isProcessing || isParsing}
+              className="rounded-lg border-gray-300 dark:border-gray-700"
             >
               Cancel
             </Button>
             <Button
               onClick={processStatement}
               disabled={csvData.length === 0 || isProcessing || isParsing || !!parseError}
+              className="rounded-lg bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 text-white"
             >
               {isProcessing ? (
                 <>

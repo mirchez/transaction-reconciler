@@ -43,7 +43,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
     <div className="space-y-4">
       {/* Reconnect Alert */}
       {needsReconnect && (
-        <Card className="rounded-none bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
+        <Card className="rounded-lg bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
           <CardContent className="p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 flex-1">
@@ -61,7 +61,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
                 variant="default"
                 size="sm"
                 onClick={handleDisconnect}
-                className="rounded-none bg-orange-600 hover:bg-orange-700"
+                className="rounded-lg bg-orange-600 hover:bg-orange-700"
               >
                 Reconnect
               </Button>
@@ -71,12 +71,12 @@ export function GmailStatus({ email }: GmailStatusProps) {
       )}
 
       {/* Status Card */}
-      <Card className="rounded-none bg-card border-muted">
+      <Card className="rounded-lg bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 shadow-sm">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-none bg-primary/10 flex items-center justify-center">
-                <Mail className="w-5 h-5 text-primary" />
+              <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
+                <Mail className="w-5 h-5 text-gray-700 dark:text-gray-300" />
               </div>
               <div>
                 <h3 className="font-semibold">Gmail Monitor</h3>
@@ -84,24 +84,25 @@ export function GmailStatus({ email }: GmailStatusProps) {
               </div>
             </div>
             <div className="flex gap-2">
-              <button
+              <Button
+                size="sm"
                 onClick={handleCheckNow}
                 disabled={checkMutation.isPending}
-                className="rounded-none px-4 py-2 text-sm bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                className="rounded-lg bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 text-white"
               >
                 {checkMutation.isPending ? (
                   <>
-                    <Clock className="w-4 h-4 inline mr-2 animate-spin" />
+                    <Clock className="w-4 h-4 mr-2 animate-spin" />
                     Checking...
                   </>
                 ) : (
                   "Check Now"
                 )}
-              </button>
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-none"
+                className="rounded-lg border-gray-300 dark:border-gray-700"
                 onClick={handleDisconnect}
                 disabled={disconnectMutation.isPending}
               >
