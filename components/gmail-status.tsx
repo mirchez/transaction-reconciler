@@ -43,7 +43,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
     <div className="space-y-4">
       {/* Reconnect Alert */}
       {needsReconnect && (
-        <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
+        <Card className="rounded-none bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
           <CardContent className="p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 flex-1">
@@ -61,7 +61,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
                 variant="default"
                 size="sm"
                 onClick={handleDisconnect}
-                className="bg-orange-600 hover:bg-orange-700"
+                className="rounded-none bg-orange-600 hover:bg-orange-700"
               >
                 Reconnect
               </Button>
@@ -71,7 +71,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
       )}
 
       {/* Status Card */}
-      <Card className="bg-card border-muted">
+      <Card className="rounded-none bg-card border-muted">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -87,7 +87,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
               <button
                 onClick={handleCheckNow}
                 disabled={checkMutation.isPending}
-                className="px-4 py-2 text-sm bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                className="rounded-none px-4 py-2 text-sm bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
               >
                 {checkMutation.isPending ? (
                   <>
@@ -101,6 +101,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
               <Button
                 variant="outline"
                 size="sm"
+                className="rounded-none"
                 onClick={handleDisconnect}
                 disabled={disconnectMutation.isPending}
               >
@@ -136,40 +137,6 @@ export function GmailStatus({ email }: GmailStatusProps) {
         </CardContent>
       </Card>
 
-      {/* Recent Emails with PDFs */}
-      <Card className="bg-card border-muted">
-        <CardContent className="p-6">
-          <h4 className="font-semibold mb-4">Recent Emails with PDFs</h4>
-          {statsData.recentEmails.filter(e => e.hasPdf).length > 0 ? (
-            <div className="space-y-3">
-              {statsData.recentEmails.filter(e => e.hasPdf).map((email) => (
-                <div
-                  key={email.id}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-none"
-                >
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">{email.subject}</p>
-                    <p className="text-xs text-muted-foreground">{email.from}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="default" className="text-xs">
-                      <FileText className="w-3 h-3 mr-1" />
-                      {email.pdfCount} PDF{email.pdfCount > 1 ? "s" : ""}
-                    </Badge>
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">No emails with PDF attachments found yet</p>
-              <p className="text-xs mt-1">Check your inbox or wait for new emails</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

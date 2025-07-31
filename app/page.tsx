@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/table";
 import { FileText, Upload, TrendingUp, Mail, CheckCircle2, RefreshCw } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { UploadPdfModal } from "@/components/upload-pdf-modal";
 import { UploadCsvModal } from "@/components/upload-csv-modal";
 import { GmailStatus } from "@/components/gmail-status";
 import { useGmailStatus } from "@/hooks/use-gmail";
@@ -44,7 +43,6 @@ interface Transaction {
 
 export default function HomePage() {
   const router = useRouter();
-  const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [csvModalOpen, setCsvModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -234,80 +232,42 @@ export default function HomePage() {
 
         {/* Upload Section */}
         <section className="py-12 sm:py-16 bg-muted/50">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
-            <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
-              {/* PDF Upload Card */}
-              <Card className="rounded-none group hover:shadow-xl transition-all duration-200 border-muted bg-card">
-                <CardHeader className="space-y-1">
-                  <div className="w-12 h-12 rounded-none bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                    <FileText className="w-6 h-6 text-primary" />
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-2xl">
+            {/* CSV Upload Card */}
+            <Card className="rounded-none group hover:shadow-xl transition-all duration-200 border-muted bg-card">
+              <CardHeader className="space-y-1">
+                <div className="w-12 h-12 rounded-none bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <TrendingUp className="w-6 h-6 text-primary" />
+                </div>
+                <CardTitle className="text-2xl">Bank Statement</CardTitle>
+                <CardDescription className="text-base">
+                  Import transactions from your bank CSV
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div 
+                    className="border-2 border-dashed border-muted rounded-none p-8 text-center hover:border-primary/50 transition-colors bg-muted cursor-pointer"
+                    onClick={() => setCsvModalOpen(true)}
+                  >
+                    <Upload className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Drag and drop files here, or click to browse
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      CSV files from any major bank
+                    </p>
                   </div>
-                  <CardTitle className="text-2xl">PDF Receipts</CardTitle>
-                  <CardDescription className="text-base">
-                    Upload receipt files from email or computer
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div 
-                      className="border-2 border-dashed border-muted rounded-none p-8 text-center hover:border-primary/50 transition-colors bg-muted cursor-pointer"
-                      onClick={() => setPdfModalOpen(true)}
-                    >
-                      <Upload className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Drag and drop files here, or click to browse
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        PDF files up to 10MB
-                      </p>
-                    </div>
-                    <Button
-                      className="rounded-none w-full"
-                      size="lg"
-                      onClick={() => setPdfModalOpen(true)}
-                    >
-                      Upload Receipts
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* CSV Upload Card */}
-              <Card className="rounded-none group hover:shadow-xl transition-all duration-200 border-muted bg-card">
-                <CardHeader className="space-y-1">
-                  <div className="w-12 h-12 rounded-none bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                    <TrendingUp className="w-6 h-6 text-primary" />
-                  </div>
-                  <CardTitle className="text-2xl">Bank Statement</CardTitle>
-                  <CardDescription className="text-base">
-                    Import transactions from your bank CSV
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div 
-                      className="border-2 border-dashed border-muted rounded-none p-8 text-center hover:border-primary/50 transition-colors bg-muted cursor-pointer"
-                      onClick={() => setCsvModalOpen(true)}
-                    >
-                      <Upload className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Drag and drop files here, or click to browse
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        CSV files from any major bank
-                      </p>
-                    </div>
-                    <Button
-                      className="rounded-none w-full"
-                      size="lg"
-                      onClick={() => setCsvModalOpen(true)}
-                    >
-                      Upload Statement
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  <Button
+                    className="rounded-none w-full"
+                    size="lg"
+                    onClick={() => setCsvModalOpen(true)}
+                  >
+                    Upload Statement
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
@@ -689,18 +649,12 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {/* Upload Modals - Only render after mount to avoid SSR issues */}
+      {/* Upload Modal - Only render after mount to avoid SSR issues */}
       {mounted && (
-        <>
-          <UploadPdfModal 
-            open={pdfModalOpen} 
-            onOpenChange={setPdfModalOpen}
-          />
-          <UploadCsvModal 
-            open={csvModalOpen} 
-            onOpenChange={setCsvModalOpen}
-          />
-        </>
+        <UploadCsvModal 
+          open={csvModalOpen} 
+          onOpenChange={setCsvModalOpen}
+        />
       )}
     </div>
   );
