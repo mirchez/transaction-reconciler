@@ -79,8 +79,11 @@ export function useGmailCheck(email: string) {
             data.processed > 1 ? "s" : ""
           } successfully!`
         );
-        // Refresh the page to show new transactions
-        setTimeout(() => window.location.reload(), 2000);
+        // Invalidate relevant queries to refresh data without page reload
+        queryClient.invalidateQueries({ queryKey: ["transactions"] });
+        queryClient.invalidateQueries({ queryKey: ["stats"] });
+        queryClient.invalidateQueries({ queryKey: ["ledger"] });
+        queryClient.invalidateQueries({ queryKey: ["bank"] });
       }
     },
     onError: (error) => {
@@ -92,6 +95,8 @@ export function useGmailCheck(email: string) {
 
 // Hook to disconnect Gmail
 export function useGmailDisconnect() {
+  const queryClient = useQueryClient();
+  
   return useMutation<void, Error, { email: string }>({
     mutationFn: async ({ email }) => {
       const response = await fetch("/api/gmail/disconnect", {
@@ -106,10 +111,8 @@ export function useGmailDisconnect() {
     },
     onSuccess: () => {
       toast.success("Gmail disconnected successfully");
-      // Redirect to home page to reconnect
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // Invalidate Gmail status to update UI
+      queryClient.invalidateQueries({ queryKey: ["gmail", "status"] });
     },
     onError: (error) => {
       console.error("Error disconnecting Gmail:", error);

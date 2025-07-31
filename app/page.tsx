@@ -17,16 +17,20 @@ import { UploadPdfModal } from "@/components/upload-pdf-modal";
 import { UploadCsvModal } from "@/components/upload-csv-modal";
 import { GmailStatus } from "@/components/gmail-status";
 import { useGmailStatus } from "@/hooks/use-gmail";
+import { useStats } from "@/hooks/use-stats";
+import { AnimatedNumber } from "@/components/animated-number";
 
 export default function HomePage() {
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [csvModalOpen, setCsvModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [stats, setStats] = useState([
-    { label: "Matched", value: 0, variant: "default" },
-    { label: "Ledger Only", value: 0, variant: "warning" },
-    { label: "Bank Only", value: 0, variant: "info" },
-  ]);
+  const { data: statsData, isLoading: statsLoading } = useStats();
+  
+  const stats = [
+    { label: "Matched", value: statsData?.matched || 0, variant: "default" },
+    { label: "Ledger Only", value: statsData?.ledgerOnly || 0, variant: "warning" },
+    { label: "Bank Only", value: statsData?.bankOnly || 0, variant: "info" },
+  ];
   
   // Use React Query for Gmail status
   const { data: gmailStatus } = useGmailStatus();
@@ -43,42 +47,6 @@ export default function HomePage() {
     }
   }, []);
   
-  useEffect(() => {
-    // Only fetch stats after component is mounted to avoid SSR issues
-    if (mounted) {
-      fetchStats();
-    }
-  }, [mounted]);
-
-  const fetchStats = async () => {
-    try {
-      const response = await fetch("/api/stats");
-      
-      // Check content type
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        console.error("Invalid content type:", contentType);
-        console.error("Response status:", response.status);
-        const text = await response.text();
-        console.error("Response body:", text.substring(0, 200));
-        return;
-      }
-      
-      if (response.ok) {
-        const data = await response.json();
-        setStats([
-          { label: "Matched", value: data.matched || 0, variant: "default" },
-          { label: "Ledger Only", value: data.ledgerOnly || 0, variant: "warning" },
-          { label: "Bank Only", value: data.bankOnly || 0, variant: "info" },
-        ]);
-      } else {
-        console.error("Stats API error:", response.status, response.statusText);
-      }
-    } catch (error) {
-      console.error("Failed to fetch stats:", error);
-      // Keep default values on error
-    }
-  };
 
 
   const handleGoogleConnect = async () => {
@@ -263,9 +231,9 @@ export default function HomePage() {
                 >
                   <CardContent className="p-6">
                     <div className="text-center space-y-2">
-                      <p className="text-4xl lg:text-5xl font-bold text-foreground">
-                        {stat.value}
-                      </p>
+                      <div className="text-4xl lg:text-5xl font-bold text-foreground">
+                        <AnimatedNumber value={stat.value} />
+                      </div>
                       <p className="text-sm font-medium text-muted-foreground">
                         {stat.label}
                       </p>
@@ -349,23 +317,11 @@ export default function HomePage() {
         <>
           <UploadPdfModal 
             open={pdfModalOpen} 
-            onOpenChange={(open) => {
-              setPdfModalOpen(open);
-              if (!open) {
-                // Refresh stats when modal closes
-                fetchStats();
-              }
-            }} 
+            onOpenChange={setPdfModalOpen}
           />
           <UploadCsvModal 
             open={csvModalOpen} 
-            onOpenChange={(open) => {
-              setCsvModalOpen(open);
-              if (!open) {
-                // Refresh stats when modal closes
-                fetchStats();
-              }
-            }} 
+            onOpenChange={setCsvModalOpen}
           />
         </>
       )}
