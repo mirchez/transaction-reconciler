@@ -69,6 +69,25 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("Error in OAuth callback:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    
+    // More specific error handling
+    if (error instanceof Error) {
+      if (error.message.includes("invalid_grant")) {
+        return NextResponse.redirect(
+          `${process.env.NEXT_PUBLIC_APP_URL}/?error=invalid_grant`
+        );
+      }
+      if (error.message.includes("redirect_uri_mismatch")) {
+        return NextResponse.redirect(
+          `${process.env.NEXT_PUBLIC_APP_URL}/?error=redirect_uri_mismatch`
+        );
+      }
+    }
+    
     return NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/?error=auth_failed`
     );

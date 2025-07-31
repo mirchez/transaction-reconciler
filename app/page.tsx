@@ -42,7 +42,39 @@ export default function HomePage() {
     
     // Check URL params for Gmail connection status (for redirect from OAuth)
     const params = new URLSearchParams(window.location.search);
-    if (params.get("gmail_connected") === "true") {
+    const error = params.get("error");
+    
+    if (error) {
+      // Display error message based on error type
+      let errorMessage = "Failed to connect to Gmail.";
+      
+      switch (error) {
+        case "auth_denied":
+          errorMessage = "You denied access to Gmail. Please try again and grant the necessary permissions.";
+          break;
+        case "no_code":
+          errorMessage = "Authentication failed: No authorization code received.";
+          break;
+        case "no_email":
+          errorMessage = "Authentication failed: Could not retrieve your email address.";
+          break;
+        case "invalid_grant":
+          errorMessage = "Authentication failed: Invalid authorization grant. Please try again.";
+          break;
+        case "redirect_uri_mismatch":
+          errorMessage = "Authentication failed: Redirect URI mismatch. Please check the OAuth configuration.";
+          break;
+        case "auth_failed":
+          errorMessage = "Authentication failed. Please check the browser console for more details and try again.";
+          break;
+      }
+      
+      alert(errorMessage);
+      console.error("Gmail authentication error:", error);
+      
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (params.get("gmail_connected") === "true") {
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
