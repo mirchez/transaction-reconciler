@@ -47,55 +47,55 @@ export async function GET(request: NextRequest) {
       matchMap.set(`bank-${match.bankId}`, match);
     });
     
-    // Format transactions for display
+    // Format transactions for display - separate matched and unmatched clearly
     const transactions = [];
     
-    // Add matched transactions
+    // Add matched transaction pairs (one entry per match showing both ledger and bank info)
     matches.forEach(match => {
       transactions.push({
         id: match.id,
         date: match.date.toISOString(),
         amount: Number(match.amount),
-        description: match.description,
+        description: match.description, // This is the ledger description
         source: "Both" as const,
         status: "matched" as const,
         ledgerEntryId: match.ledgerId,
         bankTransactionId: match.bankId,
         matchScore: 100,
-        bankTransaction: match.bankTransaction,
+        bankDescription: match.bankTransaction, // Bank transaction formatted string
       });
     });
     
-    // Add ALL ledger entries (both matched and unmatched)
+    // Add ONLY unmatched ledger entries
     ledgerEntries.forEach(entry => {
       const hasMatch = matchMap.has(`ledger-${entry.id}`);
-      transactions.push({
-        id: entry.id,
-        date: entry.date.toISOString(),
-        amount: Number(entry.amount),
-        description: entry.description,
-        source: "Ledger" as const,
-        status: hasMatch ? "matched" as const : "ledger-only" as const,
-        ledgerEntryId: entry.id,
-        // Include match info if available
-        matchId: hasMatch ? matchMap.get(`ledger-${entry.id}`).id : undefined,
-      });
+      if (!hasMatch) {
+        transactions.push({
+          id: entry.id,
+          date: entry.date.toISOString(),
+          amount: Number(entry.amount),
+          description: entry.description,
+          source: "Ledger" as const,
+          status: "ledger-only" as const,
+          ledgerEntryId: entry.id,
+        });
+      }
     });
     
-    // Add ALL bank transactions (both matched and unmatched)
+    // Add ONLY unmatched bank transactions
     bankTransactions.forEach(transaction => {
       const hasMatch = matchMap.has(`bank-${transaction.id}`);
-      transactions.push({
-        id: transaction.id,
-        date: transaction.date.toISOString(),
-        amount: Number(transaction.amount),
-        description: transaction.description,
-        source: "Bank" as const,
-        status: hasMatch ? "matched" as const : "bank-only" as const,
-        bankTransactionId: transaction.id,
-        // Include match info if available
-        matchId: hasMatch ? matchMap.get(`bank-${transaction.id}`).id : undefined,
-      });
+      if (!hasMatch) {
+        transactions.push({
+          id: transaction.id,
+          date: transaction.date.toISOString(),
+          amount: Number(transaction.amount),
+          description: transaction.description,
+          source: "Bank" as const,
+          status: "bank-only" as const,
+          bankTransactionId: transaction.id,
+        });
+      }
     });
     
     // Sort by date (newest first)

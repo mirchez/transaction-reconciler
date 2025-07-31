@@ -36,11 +36,10 @@ interface Transaction {
   description: string;
   source: "Ledger" | "Bank" | "Both";
   status: "matched" | "ledger-only" | "bank-only";
-  category?: string;
-  vendor?: string;
   ledgerEntryId?: string;
   bankTransactionId?: string;
   matchScore?: number;
+  bankDescription?: string;
 }
 
 export default function HomePage() {
@@ -237,10 +236,14 @@ export default function HomePage() {
     }
   };
 
-  // Show ALL ledger and bank transactions (both matched and unmatched)
-  const ledgerOnlyTransactions = transactions.filter((t) => t.source === "Ledger");
-  const bankOnlyTransactions = transactions.filter((t) => t.source === "Bank");
-  const matchedTransactions = transactions.filter((t) => t.status === "matched" && t.source === "Both");
+  // Separate transactions by type - now properly filtered with no duplicates
+  const ledgerOnlyTransactions = transactions.filter((t) => t.status === "ledger-only");
+  const bankOnlyTransactions = transactions.filter((t) => t.status === "bank-only");
+  const matchedTransactions = transactions.filter((t) => t.status === "matched");
+  
+  // For display purposes, we want to show ALL ledger entries and ALL bank entries
+  const allLedgerEntries = [...ledgerOnlyTransactions, ...matchedTransactions];
+  const allBankEntries = [...bankOnlyTransactions, ...matchedTransactions];
 
   const formatAmount = (amount: string | number) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount.replace(/[$,]/g, '')) : amount;
@@ -281,7 +284,7 @@ export default function HomePage() {
           {/* Upload Data Card */}
           <section className="p-6">
             <div className="max-w-7xl mx-auto">
-              <Card className="rounded-lg bg-card border shadow-sm">
+              <Card className="rounded-none bg-card border shadow-sm">
                 <CardContent className="p-6">
                   <div className="space-y-1 mb-6">
                     <h2 className="text-xl font-semibold text-foreground">
@@ -297,7 +300,7 @@ export default function HomePage() {
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Button 
                       size="default"
-                      className="rounded-md"
+                      className="rounded-none"
                       onClick={() => setCsvModalOpen(true)}
                     >
                       Upload bank CSV
@@ -305,7 +308,7 @@ export default function HomePage() {
                     <Button 
                       size="default"
                       variant="outline"
-                      className="rounded-md"
+                      className="rounded-none"
                       onClick={() => setGmailModalOpen(true)}
                     >
                       {gmailStatus?.connected ? (
@@ -321,7 +324,7 @@ export default function HomePage() {
                       <Button 
                         size="default"
                         variant="outline"
-                        className="rounded-md"
+                        className="rounded-none"
                         onClick={handleSendTestEmail}
                         disabled={sendingTestEmail}
                       >
@@ -350,16 +353,16 @@ export default function HomePage() {
 
             {/* Transaction Tables */}
             {loading ? (
-              <Card className="rounded-lg bg-card border shadow-sm">
+              <Card className="rounded-none bg-card border shadow-sm">
                 <CardContent className="p-12 text-center">
                   <p className="text-muted-foreground">Loading transactions...</p>
                 </CardContent>
               </Card>
             ) : transactions.length === 0 ? (
-              <Card className="rounded-lg bg-card border shadow-sm">
+              <Card className="rounded-none bg-card border shadow-sm">
                 <CardContent className="p-12 text-center">
                   <div className="max-w-md mx-auto space-y-4">
-                    <div className="w-16 h-16 mx-auto bg-muted rounded-lg flex items-center justify-center">
+                    <div className="w-16 h-16 mx-auto bg-muted rounded-none flex items-center justify-center">
                       <FileText className="w-8 h-8 text-muted-foreground" />
                     </div>
                     <h3 className="text-xl font-semibold text-foreground">No Transactions Yet!</h3>
@@ -374,7 +377,7 @@ export default function HomePage() {
                 {/* Two tables side by side */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Ledger Only Table */}
-                  <Card className="rounded-lg bg-card border shadow-sm">
+                  <Card className="rounded-none bg-card border shadow-sm">
                     <CardContent className="p-6">
                       <div className="mb-4">
                         <div className="flex items-center justify-between">
@@ -407,14 +410,14 @@ export default function HomePage() {
                           )}
                         </div>
                       </div>
-                      <div className="border border-border rounded-lg overflow-hidden bg-card">
+                      <div className="border border-border rounded-none overflow-hidden bg-card">
                         {/* Data source info */}
                         <div className="px-4 py-3 bg-muted/50 border-b border-border">
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Mail className="w-3 h-3" />
                             <span className="font-medium">{gmailStatus?.email || "Gmail Receipts"}</span>
                             <span className="text-muted-foreground/50">•</span>
-                            <span>{ledgerOnlyTransactions.length} entries</span>
+                            <span>{allLedgerEntries.length} entries</span>
                             <span className="text-muted-foreground/50">•</span>
                             <span>Last synced: {new Date().toLocaleTimeString()}</span>
                           </div>
@@ -438,21 +441,30 @@ export default function HomePage() {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                          {ledgerOnlyTransactions.length === 0 ? (
+                          {allLedgerEntries.length === 0 ? (
                             <TableRow>
                               <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
                                 No ledger transactions
                               </TableCell>
                             </TableRow>
                           ) : (
-                            ledgerOnlyTransactions.map((transaction) => (
+                            allLedgerEntries.map((transaction) => (
                               <TableRow
                                 key={transaction.id}
-                                className="cursor-pointer hover:bg-muted/50 border-b border-border/50"
+                                className={`cursor-pointer hover:bg-muted/50 border-b border-border/50 ${
+                                  transaction.status === "matched" ? "bg-green-50 dark:bg-green-900/20" : ""
+                                }`}
                                 onClick={() => router.push(`/transaction/${transaction.id}`)}
                               >
                                 <TableCell className="font-medium px-4 py-3">{formatDate(transaction.date)}</TableCell>
-                                <TableCell className="px-4 py-3">{transaction.description}</TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <div className="flex items-center gap-2">
+                                    {transaction.description}
+                                    {transaction.status === "matched" && (
+                                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                    )}
+                                  </div>
+                                </TableCell>
                                 <TableCell className="text-right px-4 py-3">
                                   {formatAmount(transaction.amount)}
                                 </TableCell>
@@ -467,7 +479,7 @@ export default function HomePage() {
                   </Card>
 
                   {/* Bank Only Table */}
-                  <Card className="rounded-lg bg-card border shadow-sm">
+                  <Card className="rounded-none bg-card border shadow-sm">
                     <CardContent className="p-6">
                       <div className="mb-4">
                         <h3 className="text-lg font-semibold text-foreground">Bank Transactions</h3>
@@ -475,12 +487,14 @@ export default function HomePage() {
                           All transactions from your bank statement
                         </p>
                       </div>
-                      <div className="border border-border rounded-lg overflow-hidden bg-card">
+                      <div className="border border-border rounded-none overflow-hidden bg-card">
                         {/* Data source info */}
                         <div className="px-4 py-3 bg-muted/50 border-b border-border">
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <File className="w-3 h-3" />
                             <span className="font-medium">{csvFileInfo?.name || "Bank Statement.csv"}</span>
+                            <span className="text-muted-foreground/50">•</span>
+                            <span>{allBankEntries.length} entries</span>
                             <span className="text-muted-foreground/50">•</span>
                             <span>{csvFileInfo?.size || "0.1 MB"}</span>
                             <span className="text-muted-foreground/50">•</span>
@@ -506,21 +520,33 @@ export default function HomePage() {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                          {bankOnlyTransactions.length === 0 ? (
+                          {allBankEntries.length === 0 ? (
                             <TableRow>
                               <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
                                 No bank transactions
                               </TableCell>
                             </TableRow>
                           ) : (
-                            bankOnlyTransactions.map((transaction) => (
+                            allBankEntries.map((transaction) => (
                               <TableRow
                                 key={transaction.id}
-                                className="cursor-pointer hover:bg-muted/50 border-b border-border/50"
+                                className={`cursor-pointer hover:bg-muted/50 border-b border-border/50 ${
+                                  transaction.status === "matched" ? "bg-green-50 dark:bg-green-900/20" : ""
+                                }`}
                                 onClick={() => router.push(`/transaction/${transaction.id}`)}
                               >
                                 <TableCell className="font-medium px-4 py-3">{formatDate(transaction.date)}</TableCell>
-                                <TableCell className="px-4 py-3">{transaction.description}</TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <div className="flex items-center gap-2">
+                                    {transaction.status === "matched" && transaction.bankDescription ? 
+                                      transaction.bankDescription.replace(/^From: /, '').replace(/ \$[\d,.-]+ on [\d-]+$/, '') :
+                                      transaction.description
+                                    }
+                                    {transaction.status === "matched" && (
+                                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                    )}
+                                  </div>
+                                </TableCell>
                                 <TableCell className="text-right px-4 py-3">
                                   {formatAmount(transaction.amount)}
                                 </TableCell>
@@ -537,18 +563,18 @@ export default function HomePage() {
 
                 {/* Run Reconciliation Card */}
                 {transactions.length > 0 && (
-                  <Card className="rounded-lg bg-card border shadow-sm mt-8">
+                  <Card className="rounded-none bg-card border shadow-sm mt-8">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-lg font-semibold text-foreground mb-2">Reconcile Files</h3>
                           <div className="text-sm text-muted-foreground">
-                            <p>{bankOnlyTransactions.length} Bank statement(s) • {ledgerOnlyTransactions.length + matchedTransactions.length} Ledger file(s)</p>
+                            <p>{allBankEntries.length} Bank statement(s) • {allLedgerEntries.length} Ledger file(s)</p>
                           </div>
                         </div>
                         <Button 
                           onClick={handleReconciliation}
-                          disabled={reconciling || (ledgerOnlyTransactions.length === 0 && bankOnlyTransactions.length === 0)}
+                          disabled={reconciling || (allLedgerEntries.length === 0 && allBankEntries.length === 0)}
                           className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90"
                           size="lg"
                         >
@@ -570,7 +596,7 @@ export default function HomePage() {
 
                 {/* Reconciliation Summary - Show when there are matched transactions */}
                 {showReconciled && (
-                  <Card className="rounded-lg bg-card border shadow-sm mt-8">
+                  <Card className="rounded-none bg-card border shadow-sm mt-8">
                     <CardContent className="p-6">
                       <div className="mb-6">
                         <h2 className="text-xl font-semibold text-foreground">Reconciliation Summary</h2>
@@ -579,30 +605,30 @@ export default function HomePage() {
 
                       {/* Summary Stats */}
                       <div className="grid grid-cols-4 gap-4 mb-8">
-                        <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-lg">
-                          <div className="text-2xl font-bold text-foreground">{transactions.length}</div>
+                        <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-none">
+                          <div className="text-2xl font-bold text-foreground">{allBankEntries.length}</div>
                           <div className="text-xs text-muted-foreground mt-1">Bank Transactions</div>
                         </div>
-                        <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-lg">
-                          <div className="text-2xl font-bold text-foreground">{ledgerOnlyTransactions.length + matchedTransactions.length}</div>
+                        <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-none">
+                          <div className="text-2xl font-bold text-foreground">{allLedgerEntries.length}</div>
                           <div className="text-xs text-muted-foreground mt-1">Ledger Transactions</div>
                         </div>
-                        <div className="text-center p-4 bg-green-500/10 dark:bg-green-500/20 border border-green-500/30 dark:border-green-500/40 rounded-lg">
+                        <div className="text-center p-4 bg-green-500/10 dark:bg-green-500/20 border border-green-500/30 dark:border-green-500/40 rounded-none">
                           <div className="text-2xl font-bold text-green-600 dark:text-green-500">{matchedTransactions.length}</div>
                           <div className="text-xs text-muted-foreground mt-1">Matched</div>
                         </div>
-                        <div className="text-center p-4 bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/30 dark:border-orange-500/40 rounded-lg">
+                        <div className="text-center p-4 bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/30 dark:border-orange-500/40 rounded-none">
                           <div className="text-2xl font-bold text-orange-600 dark:text-orange-500">0</div>
                           <div className="text-xs text-muted-foreground mt-1">Ambiguous</div>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 mb-8">
-                        <div className="text-center p-4 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 rounded-lg">
+                        <div className="text-center p-4 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 rounded-none">
                           <div className="text-2xl font-bold text-red-600 dark:text-red-500">{bankOnlyTransactions.length}</div>
                           <div className="text-xs text-muted-foreground mt-1">Unmatched Bank</div>
                         </div>
-                        <div className="text-center p-4 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 rounded-lg">
+                        <div className="text-center p-4 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 rounded-none">
                           <div className="text-2xl font-bold text-red-600 dark:text-red-500">{ledgerOnlyTransactions.length}</div>
                           <div className="text-xs text-muted-foreground mt-1">Unmatched Ledger</div>
                         </div>
@@ -623,7 +649,7 @@ export default function HomePage() {
                             Download Excel
                           </Button>
                         </div>
-                        <div className="border border-border rounded-lg overflow-hidden bg-card">
+                        <div className="border border-border rounded-none overflow-hidden bg-card">
                           <div className="overflow-x-auto">
                             <Table className="w-full">
                               <TableHeader>
@@ -650,13 +676,18 @@ export default function HomePage() {
                                       onClick={() => router.push(`/transaction/${transaction.id}`)}
                                     >
                                       <TableCell className="font-medium px-4 py-3">{formatDate(transaction.date)}</TableCell>
-                                      <TableCell className="px-4 py-3">{transaction.vendor || transaction.description}</TableCell>
-                                      <TableCell className="text-muted-foreground px-4 py-3">{transaction.description}</TableCell>
+                                      <TableCell className="px-4 py-3">{transaction.description}</TableCell>
+                                      <TableCell className="text-muted-foreground px-4 py-3">
+                                        {transaction.bankDescription ? 
+                                          transaction.bankDescription.replace(/^From: /, '').replace(/ \$[\d,.-]+ on [\d-]+$/, '') :
+                                          'N/A'
+                                        }
+                                      </TableCell>
                                       <TableCell className="text-right px-4 py-3">
                                         {formatAmount(transaction.amount)}
                                       </TableCell>
                                       <TableCell className="px-4 py-3">
-                                        <Badge variant="outline" className="rounded-lg">
+                                        <Badge variant="outline" className="rounded-none">
                                           {transaction.matchScore ? `${Math.round(transaction.matchScore)}%` : "100%"}
                                         </Badge>
                                       </TableCell>
@@ -684,7 +715,7 @@ export default function HomePage() {
                             Download Excel
                           </Button>
                         </div>
-                        <div className="border border-border rounded-lg overflow-hidden bg-card">
+                        <div className="border border-border rounded-none overflow-hidden bg-card">
                           <div className="overflow-x-auto">
                             <Table className="w-full">
                               <TableHeader>
@@ -713,7 +744,7 @@ export default function HomePage() {
                                       <TableCell className="font-medium px-4 py-3">{formatDate(transaction.date)}</TableCell>
                                       <TableCell className="px-4 py-3">{transaction.description}</TableCell>
                                       <TableCell className="px-4 py-3">
-                                        <Badge variant="outline" className="rounded-lg">
+                                        <Badge variant="outline" className="rounded-none">
                                           {transaction.source}
                                         </Badge>
                                       </TableCell>
@@ -722,12 +753,12 @@ export default function HomePage() {
                                       </TableCell>
                                       <TableCell className="px-4 py-3">
                                         {transaction.status === "ledger-only" ? (
-                                          <Badge className="rounded-lg bg-orange-500/10 text-orange-700 border-orange-200 dark:bg-orange-500/20 dark:text-orange-300 dark:border-orange-500/30">
+                                          <Badge className="rounded-none bg-orange-500/10 text-orange-700 border-orange-200 dark:bg-orange-500/20 dark:text-orange-300 dark:border-orange-500/30">
                                             <FileText className="w-3 h-3 mr-1" />
                                             Ledger Only
                                           </Badge>
                                         ) : (
-                                          <Badge className="rounded-lg bg-accent/20 text-accent-foreground border-accent/30 dark:bg-accent/20 dark:text-accent-foreground dark:border-accent/30">
+                                          <Badge className="rounded-none bg-accent/20 text-accent-foreground border-accent/30 dark:bg-accent/20 dark:text-accent-foreground dark:border-accent/30">
                                             <TrendingUp className="w-3 h-3 mr-1" />
                                             Bank Only
                                           </Badge>

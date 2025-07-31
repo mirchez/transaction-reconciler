@@ -8,11 +8,10 @@ interface Transaction {
   description: string;
   source: "Ledger" | "Bank" | "Both";
   status: "matched" | "ledger-only" | "bank-only";
-  category?: string;
-  vendor?: string;
   ledgerEntryId?: string;
   bankTransactionId?: string;
   matchScore?: number;
+  bankDescription?: string;
 }
 
 interface TransactionsResponse {
