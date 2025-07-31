@@ -25,7 +25,7 @@ export default function HomePage() {
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [csvModalOpen, setCsvModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const { data: statsData, isLoading: statsLoading } = useStats();
+  const { data: statsData } = useStats();
   
   const stats = [
     { label: "Matched", value: statsData?.matched || 0, variant: "default" },

@@ -14,8 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, FileText, TrendingUp, Upload } from "lucide-react";
+import { ArrowLeft, CheckCircle2, FileText, TrendingUp, Upload, RefreshCw } from "lucide-react";
 import { PageLayout } from "@/components/page-layout";
 
 interface Transaction {
@@ -34,10 +33,10 @@ interface Transaction {
 
 export default function ResultsPage() {
   const router = useRouter();
-  const [currentPage, setCurrentPage] = useState(1);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const itemsPerPage = 10;
+  const [showReconciled, setShowReconciled] = useState(false);
+  const [reconciling, setReconciling] = useState(false);
 
   useEffect(() => {
     fetchTransactions();
@@ -58,56 +57,23 @@ export default function ResultsPage() {
       setTransactions(data.transactions || []);
     } catch (error) {
       console.error("Error fetching transactions:", error);
-      // Don't show mock data on error, just leave empty
       setTransactions([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Only use real data from the database, no mock data
-  const displayTransactions = transactions;
-
-  const getFilteredTransactions = (filter: string) => {
-    switch (filter) {
-      case "matched":
-        return displayTransactions.filter((t) => t.status === "matched");
-      case "ledger":
-        return displayTransactions.filter((t) => t.status === "ledger-only");
-      case "bank":
-        return displayTransactions.filter((t) => t.status === "bank-only");
-      default:
-        return displayTransactions;
-    }
+  const handleReconciliation = () => {
+    setReconciling(true);
+    setTimeout(() => {
+      setShowReconciled(true);
+      setReconciling(false);
+    }, 1500);
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "matched":
-        return (
-          <Badge className="bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800">
-            <CheckCircle2 className="w-3 h-3 mr-1" />
-            Matched
-          </Badge>
-        );
-      case "ledger-only":
-        return (
-          <Badge className="bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800">
-            <FileText className="w-3 h-3 mr-1" />
-            Ledger Only
-          </Badge>
-        );
-      case "bank-only":
-        return (
-          <Badge className="bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
-            <TrendingUp className="w-3 h-3 mr-1" />
-            Bank Only
-          </Badge>
-        );
-      default:
-        return null;
-    }
-  };
+  const ledgerOnlyTransactions = transactions.filter((t) => t.status === "ledger-only");
+  const bankOnlyTransactions = transactions.filter((t) => t.status === "bank-only");
+  const matchedTransactions = transactions.filter((t) => t.status === "matched");
 
   const formatAmount = (amount: string | number) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount.replace(/[$,]/g, '')) : amount;
@@ -125,173 +91,8 @@ export default function ResultsPage() {
     );
   };
 
-  const stats = {
-    total: displayTransactions.length,
-    matched: displayTransactions.filter((t) => t.status === "matched").length,
-    ledgerOnly: displayTransactions.filter((t) => t.status === "ledger-only").length,
-    bankOnly: displayTransactions.filter((t) => t.status === "bank-only").length,
-  };
-
-  return (
-    <PageLayout>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <Link href="/">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">
-                Reconciliation Results
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Review matched and unmatched transactions
-              </p>
-            </div>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8 p-6 bg-muted/30 rounded-none">
-            <Card className="bg-card border-muted">
-              <CardContent className="p-6">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-                  <p className="text-sm text-muted-foreground">Total</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-card border-muted">
-              <CardContent className="p-6">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.matched}</p>
-                  <p className="text-sm text-muted-foreground">Matched</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-card border-muted">
-              <CardContent className="p-6">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.ledgerOnly}</p>
-                  <p className="text-sm text-muted-foreground">Ledger Only</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-card border-muted">
-              <CardContent className="p-6">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.bankOnly}</p>
-                  <p className="text-sm text-muted-foreground">Bank Only</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Empty State or Tabs and Table */}
-          {displayTransactions.length === 0 ? (
-            <Card className="bg-card border-muted shadow-sm">
-              <CardContent className="p-12 text-center">
-                <div className="max-w-md mx-auto space-y-4">
-                  <div className="w-16 h-16 mx-auto bg-muted rounded-none flex items-center justify-center">
-                    <FileText className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-foreground">No Receipts Yet!</h3>
-                  <p className="text-muted-foreground">
-                    Upload your receipts and bank statements to start reconciling transactions.
-                  </p>
-                  <div className="pt-4">
-                    <Link href="/">
-                      <Button>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Files
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-          <Card className="bg-card border-muted shadow-sm">
-            <CardContent className="p-0">
-              <Tabs defaultValue="all" className="w-full">
-                <div className="border-b border-border px-6 pt-6">
-                  <TabsList className="bg-muted/50">
-                    <TabsTrigger value="all">All Transactions</TabsTrigger>
-                    <TabsTrigger value="matched">Matched</TabsTrigger>
-                    <TabsTrigger value="ledger">Ledger Only</TabsTrigger>
-                    <TabsTrigger value="bank">Bank Only</TabsTrigger>
-                  </TabsList>
-                </div>
-
-                <TabsContent value="all" className="mt-0">
-                  {loading ? (
-                    <div className="p-8 text-center text-muted-foreground">
-                      Loading transactions...
-                    </div>
-                  ) : (
-                    <TransactionTable
-                      transactions={displayTransactions}
-                      getStatusBadge={getStatusBadge}
-                      formatAmount={formatAmount}
-                    />
-                  )}
-                </TabsContent>
-                <TabsContent value="matched" className="mt-0">
-                  <TransactionTable
-                    transactions={getFilteredTransactions("matched")}
-                    getStatusBadge={getStatusBadge}
-                    formatAmount={formatAmount}
-                  />
-                </TabsContent>
-                <TabsContent value="ledger" className="mt-0">
-                  <TransactionTable
-                    transactions={getFilteredTransactions("ledger")}
-                    getStatusBadge={getStatusBadge}
-                    formatAmount={formatAmount}
-                  />
-                </TabsContent>
-                <TabsContent value="bank" className="mt-0">
-                  <TransactionTable
-                    transactions={getFilteredTransactions("bank")}
-                    getStatusBadge={getStatusBadge}
-                    formatAmount={formatAmount}
-                  />
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-          )}
-
-          {/* Actions */}
-          <div className="flex justify-end gap-4 mt-8">
-            <Button variant="outline">Export CSV</Button>
-            <Button>Confirm Matches</Button>
-          </div>
-        </div>
-      </div>
-    </PageLayout>
-  );
-}
-
-interface TransactionTableProps {
-  transactions: Transaction[];
-  getStatusBadge: (status: string) => JSX.Element | null;
-  formatAmount: (amount: string) => JSX.Element;
-}
-
-function TransactionTable({ transactions, getStatusBadge, formatAmount }: TransactionTableProps) {
-  const router = useRouter();
-  
   const formatDate = (dateString: string) => {
     try {
-      // Use a consistent date format to avoid hydration issues
       const date = new Date(dateString);
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -301,49 +102,360 @@ function TransactionTable({ transactions, getStatusBadge, formatAmount }: Transa
       return dateString;
     }
   };
-  
+
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {transactions.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                No transactions found
-              </TableCell>
-            </TableRow>
+    <PageLayout>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <Link href="/">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-none text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">
+                  Transaction Management
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  Review unmatched transactions and perform reconciliation
+                </p>
+              </div>
+            </div>
+            <Button 
+              onClick={handleReconciliation}
+              disabled={reconciling || (ledgerOnlyTransactions.length === 0 && bankOnlyTransactions.length === 0)}
+              className="rounded-none"
+            >
+              {reconciling ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Reconciling...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Run Reconciliation
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Empty State */}
+          {loading ? (
+            <Card className="rounded-none bg-card border-muted shadow-sm">
+              <CardContent className="p-12 text-center">
+                <p className="text-muted-foreground">Loading transactions...</p>
+              </CardContent>
+            </Card>
+          ) : transactions.length === 0 ? (
+            <Card className="rounded-none bg-card border-muted shadow-sm">
+              <CardContent className="p-12 text-center">
+                <div className="max-w-md mx-auto space-y-4">
+                  <div className="w-16 h-16 mx-auto bg-muted rounded-none flex items-center justify-center">
+                    <FileText className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">No Transactions Yet!</h3>
+                  <p className="text-muted-foreground">
+                    Upload your receipts and bank statements to start managing transactions.
+                  </p>
+                  <div className="pt-4">
+                    <Link href="/">
+                      <Button className="rounded-none">
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Files
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ) : (
-            transactions.map((transaction) => (
-              <TableRow
-                key={transaction.id}
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => {
-                  router.push(`/transaction/${transaction.id}`);
-                }}
-              >
-                <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
-                <TableCell>{transaction.description}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {transaction.category || "-"}
-                </TableCell>
-                <TableCell className="text-right">
-                  {formatAmount(transaction.amount)}
-                </TableCell>
-                <TableCell>{getStatusBadge(transaction.status)}</TableCell>
-              </TableRow>
-            ))
+            <div className="space-y-8">
+              {/* Ledger Only Table */}
+              <Card className="rounded-none bg-card border-muted shadow-sm">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-none bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                      </div>
+                      <div>
+                        <CardTitle>Ledger Only Transactions</CardTitle>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Receipts without matching bank transactions
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className="rounded-none">
+                      {ledgerOnlyTransactions.length} items
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Vendor</TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {ledgerOnlyTransactions.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                              No ledger-only transactions
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          ledgerOnlyTransactions.map((transaction) => (
+                            <TableRow
+                              key={transaction.id}
+                              className="cursor-pointer hover:bg-muted/50"
+                              onClick={() => router.push(`/transaction/${transaction.id}`)}
+                            >
+                              <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
+                              <TableCell>{transaction.description}</TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {transaction.vendor || "-"}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {transaction.category || "-"}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatAmount(transaction.amount)}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Bank Only Table */}
+              <Card className="rounded-none bg-card border-muted shadow-sm">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-none bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+                        <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <CardTitle>Bank Only Transactions</CardTitle>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Bank transactions without matching receipts
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className="rounded-none">
+                      {bankOnlyTransactions.length} items
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {bankOnlyTransactions.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                              No bank-only transactions
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          bankOnlyTransactions.map((transaction) => (
+                            <TableRow
+                              key={transaction.id}
+                              className="cursor-pointer hover:bg-muted/50"
+                              onClick={() => router.push(`/transaction/${transaction.id}`)}
+                            >
+                              <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
+                              <TableCell>{transaction.description}</TableCell>
+                              <TableCell className="text-right">
+                                {formatAmount(transaction.amount)}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Reconciled Results - Only show after reconciliation */}
+              {showReconciled && (
+                <>
+                  <div className="border-t-2 border-muted pt-8">
+                    <h2 className="text-xl font-semibold text-foreground mb-4">Reconciliation Results</h2>
+                  </div>
+
+                  {/* All Transactions Table */}
+                  <Card className="rounded-none bg-card border-muted shadow-sm">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <CardTitle>All Transactions</CardTitle>
+                        </div>
+                        <Badge variant="secondary" className="rounded-none">
+                          {transactions.length} total
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Date</TableHead>
+                              <TableHead>Description</TableHead>
+                              <TableHead>Source</TableHead>
+                              <TableHead className="text-right">Amount</TableHead>
+                              <TableHead>Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {transactions.map((transaction) => (
+                              <TableRow
+                                key={transaction.id}
+                                className="cursor-pointer hover:bg-muted/50"
+                                onClick={() => router.push(`/transaction/${transaction.id}`)}
+                              >
+                                <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
+                                <TableCell>{transaction.description}</TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className="rounded-none">
+                                    {transaction.source}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {formatAmount(transaction.amount)}
+                                </TableCell>
+                                <TableCell>
+                                  {transaction.status === "matched" ? (
+                                    <Badge className="rounded-none bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800">
+                                      <CheckCircle2 className="w-3 h-3 mr-1" />
+                                      Matched
+                                    </Badge>
+                                  ) : transaction.status === "ledger-only" ? (
+                                    <Badge className="rounded-none bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800">
+                                      <FileText className="w-3 h-3 mr-1" />
+                                      Ledger Only
+                                    </Badge>
+                                  ) : (
+                                    <Badge className="rounded-none bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
+                                      <TrendingUp className="w-3 h-3 mr-1" />
+                                      Bank Only
+                                    </Badge>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Matched Transactions Table */}
+                  <Card className="rounded-none bg-card border-muted shadow-sm">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-none bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
+                            <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+                          </div>
+                          <div>
+                            <CardTitle>Matched Transactions</CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Successfully reconciled transactions
+                            </p>
+                          </div>
+                        </div>
+                        <Badge variant="secondary" className="rounded-none">
+                          {matchedTransactions.length} matched
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Date</TableHead>
+                              <TableHead>Ledger Description</TableHead>
+                              <TableHead>Bank Description</TableHead>
+                              <TableHead className="text-right">Amount</TableHead>
+                              <TableHead>Match Score</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {matchedTransactions.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                  No matched transactions found
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              matchedTransactions.map((transaction) => (
+                                <TableRow
+                                  key={transaction.id}
+                                  className="cursor-pointer hover:bg-muted/50"
+                                  onClick={() => router.push(`/transaction/${transaction.id}`)}
+                                >
+                                  <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
+                                  <TableCell>{transaction.vendor || transaction.description}</TableCell>
+                                  <TableCell className="text-muted-foreground">{transaction.description}</TableCell>
+                                  <TableCell className="text-right">
+                                    {formatAmount(transaction.amount)}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant="outline" className="rounded-none">
+                                      {transaction.matchScore ? `${Math.round(transaction.matchScore)}%` : "100%"}
+                                    </Badge>
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           )}
-        </TableBody>
-      </Table>
-    </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-4 mt-8">
+            <Button variant="outline" className="rounded-none">Export CSV</Button>
+            <Button className="rounded-none" disabled={matchedTransactions.length === 0}>
+              Confirm Matches
+            </Button>
+          </div>
+        </div>
+      </div>
+    </PageLayout>
   );
 }
