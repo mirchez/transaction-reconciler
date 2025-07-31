@@ -142,8 +142,8 @@ export default function TransactionDetailPage() {
             <AlertCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
             <h3 className="text-lg font-medium text-foreground mb-2">Transaction Not Found</h3>
             <p className="text-muted-foreground mb-6">{error || "The requested transaction could not be found."}</p>
-            <Link href="/results">
-              <Button variant="outline">
+            <Link href="/">
+              <Button variant="outline" className="rounded-none">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Results
               </Button>
@@ -312,7 +312,7 @@ export default function TransactionDetailPage() {
                 <XCircle className="w-4 h-4 mr-2" />
                 Reject Match
               </Button>
-              <Button variant="outline" onClick={() => router.push('/results')}>
+              <Button variant="outline" className="rounded-none" onClick={() => router.push('/')}>
                 View in Context
               </Button>
             </div>
@@ -470,7 +470,7 @@ export default function TransactionDetailPage() {
               <p className="text-muted-foreground mb-6">
                 This transaction doesn't have any potential matches in the system.
               </p>
-              <Button variant="outline" onClick={() => router.push('/results')}>
+              <Button variant="outline" className="rounded-none" onClick={() => router.push('/')}>
                 Browse All Transactions
               </Button>
             </CardContent>
@@ -486,11 +486,11 @@ export default function TransactionDetailPage() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
-            <Link href="/results">
+            <Link href="/">
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground hover:text-foreground"
+                className="rounded-none text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Results

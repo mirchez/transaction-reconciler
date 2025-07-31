@@ -53,22 +53,10 @@ export default function NotFound() {
             <p className="text-xs text-slate-500 mb-3">Quick Links</p>
             <div className="flex flex-col space-y-2 text-sm">
               <Link
-                href="/upload-pdf"
+                href="/"
                 className="text-slate-600 hover:text-slate-900 smooth-transition"
               >
-                Upload PDF Receipts
-              </Link>
-              <Link
-                href="/upload-csv"
-                className="text-slate-600 hover:text-slate-900 smooth-transition"
-              >
-                Upload CSV Statement
-              </Link>
-              <Link
-                href="/results"
-                className="text-slate-600 hover:text-slate-900 smooth-transition"
-              >
-                View Results
+                View Transactions
               </Link>
             </div>
           </div>

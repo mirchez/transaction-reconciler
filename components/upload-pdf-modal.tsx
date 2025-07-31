@@ -159,9 +159,9 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
         if (result.processed > 0) {
           toast.success(result.message);
           
-          // Redirect to results page to see all transactions
+          // Refresh the page to see updated transactions
           setTimeout(() => {
-            router.push('/results');
+            window.location.reload();
             onOpenChange(false); // Close the modal
           }, 1500);
         }
