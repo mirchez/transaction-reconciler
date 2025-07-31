@@ -239,27 +239,27 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
 
   return (
     <Dialog open={open} onOpenChange={handleClose} modal={true}>
-      <DialogContent className="sm:max-w-[700px] bg-white dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 rounded-xl">
+      <DialogContent className="sm:max-w-[700px] bg-white dark:bg-popover border-border rounded-lg">
         <DialogHeader className="pb-6">
-          <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-white">Upload Bank Statement</DialogTitle>
-          <DialogDescription className="text-gray-600 dark:text-gray-400 mt-2">
+          <DialogTitle className="text-2xl font-semibold text-foreground">Upload Bank Statement</DialogTitle>
+          <DialogDescription className="text-muted-foreground mt-2">
             Select your CSV file to preview and import bank transactions
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Example Download Section */}
-          <div className="bg-gray-50 dark:bg-zinc-900 p-4 rounded-lg border border-gray-100 dark:border-zinc-800">
+          <div className="bg-muted/50 p-4 rounded-lg border border-border">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">Need a template?</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Download an example CSV file with the correct format</p>
+                <p className="text-sm font-medium text-foreground">Need a template?</p>
+                <p className="text-sm text-muted-foreground">Download an example CSV file with the correct format</p>
               </div>
               <a href="/example-bank-statement.csv" download>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-lg border-gray-300 dark:border-gray-700"
+                  className="rounded-none"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Example CSV
@@ -272,19 +272,19 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
           <div 
             className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
               isDragging 
-                ? "border-gray-500 dark:border-gray-500 bg-gray-100 dark:bg-zinc-800" 
-                : "border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 bg-gray-50 dark:bg-zinc-900"
+                ? "border-primary bg-accent/10" 
+                : "border-border hover:border-muted-foreground bg-muted/30"
             }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
             <div className="mb-6">
-              <Upload className="w-8 h-8 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
-              <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              <Upload className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-lg font-medium text-foreground mb-2">
                 Drop CSV file here
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">or click to browse</p>
+              <p className="text-sm text-muted-foreground">or click to browse</p>
             </div>
             <input
               ref={fileInputRef}
@@ -299,7 +299,7 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
               <Button
                 variant="outline"
                 asChild
-                className="rounded-lg border-gray-300 dark:border-gray-700"
+                className="rounded-lg border-gray-300 dark:border-border"
               >
                 <span>
                   <Upload className="w-4 h-4 mr-2" />
@@ -311,7 +311,7 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
 
           {/* Error Message */}
           {parseError && (
-            <div className="flex items-center gap-2 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
+            <div className="flex items-center gap-2 p-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive-foreground">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <p className="text-sm">{parseError}</p>
             </div>
@@ -320,20 +320,20 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
           {/* Preview Table */}
           {isParsing ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-              <span className="ml-2 text-gray-600 dark:text-gray-400">Parsing CSV...</span>
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">Parsing CSV...</span>
             </div>
           ) : csvData.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-white">Preview</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <h3 className="text-sm font-medium text-foreground">Preview</h3>
+                <p className="text-sm text-muted-foreground">
                   Showing {csvData.length} of {selectedFile ? "many" : "0"} transactions
                 </p>
               </div>
-              <div className="border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
-                <div className="w-full bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-800">
-                  <div className="flex text-sm font-medium text-gray-900 dark:text-gray-100">
+              <div className="border border-border rounded-lg overflow-hidden bg-card">
+                <div className="w-full bg-muted/30 border-b border-border">
+                  <div className="flex text-sm font-medium text-foreground">
                     <div className="px-6 py-3 w-[140px]">Date</div>
                     <div className="px-6 py-3 w-[120px] text-right">Amount</div>
                     <div className="px-6 py-3 flex-1">Description</div>
@@ -352,7 +352,7 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
                       {csvData.map((row, index) => (
                         <TableRow
                           key={index}
-                          className="border-b border-gray-100 dark:border-zinc-800"
+                          className="border-b border-border"
                         >
                           <TableCell className="font-medium px-6 py-3 w-[140px]">
                             {row.date}
@@ -360,7 +360,7 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
                           <TableCell className="text-right px-6 py-3 w-[120px]">
                             {formatAmount(row.amount)}
                           </TableCell>
-                          <TableCell className="text-gray-600 dark:text-gray-400 px-6 py-3">
+                          <TableCell className="text-muted-foreground px-6 py-3">
                             {row.description}
                           </TableCell>
                         </TableRow>
@@ -385,7 +385,7 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
             <Button
               onClick={processStatement}
               disabled={csvData.length === 0 || isProcessing || isParsing || !!parseError}
-              className="rounded-lg bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 text-white"
+              className="rounded-none bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {isProcessing ? (
                 <>

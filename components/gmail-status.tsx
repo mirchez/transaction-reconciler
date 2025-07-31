@@ -43,16 +43,16 @@ export function GmailStatus({ email }: GmailStatusProps) {
     <div className="space-y-4">
       {/* Reconnect Alert */}
       {needsReconnect && (
-        <Card className="rounded-lg bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
+        <Card className="rounded-lg bg-orange-500/10 dark:bg-orange-500/20 border-orange-500/30 dark:border-orange-500/40">
           <CardContent className="p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 flex-1">
-                <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-500" />
                 <div className="flex-1">
-                  <p className="font-medium text-orange-900 dark:text-orange-100">
+                  <p className="font-medium text-orange-700 dark:text-orange-300">
                     Reconnection Required
                   </p>
-                  <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">
+                  <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
                     Please reconnect your Gmail account to grant the necessary permissions for reading emails and attachments.
                   </p>
                 </div>
@@ -61,7 +61,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
                 variant="default"
                 size="sm"
                 onClick={handleDisconnect}
-                className="rounded-lg bg-orange-600 hover:bg-orange-700"
+                className="rounded-none bg-orange-600 hover:bg-orange-700 text-white"
               >
                 Reconnect
               </Button>
@@ -71,12 +71,12 @@ export function GmailStatus({ email }: GmailStatusProps) {
       )}
 
       {/* Status Card */}
-      <Card className="rounded-lg bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 shadow-sm">
+      <Card className="rounded-lg bg-card border-border shadow-sm">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
-                <Mail className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                <Mail className="w-5 h-5 text-muted-foreground" />
               </div>
               <div>
                 <h3 className="font-semibold">Gmail Monitor</h3>
@@ -88,7 +88,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
                 size="sm"
                 onClick={handleCheckNow}
                 disabled={checkMutation.isPending}
-                className="rounded-lg bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 text-white"
+                className="rounded-none bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 {checkMutation.isPending ? (
                   <>
@@ -102,7 +102,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-lg border-gray-300 dark:border-gray-700"
+                className="rounded-none"
                 onClick={handleDisconnect}
                 disabled={disconnectMutation.isPending}
               >
@@ -121,7 +121,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
               <p className="text-sm text-muted-foreground">Emails Checked</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+              <p className="text-2xl font-bold text-green-600 dark:text-green-500">
                 {statsData.pdfsFound}
               </p>
               <p className="text-sm text-muted-foreground">PDFs Found</p>

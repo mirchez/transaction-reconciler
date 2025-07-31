@@ -29,31 +29,31 @@ export function GmailMonitorModal({ open, onOpenChange }: GmailMonitorModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] bg-white dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 rounded-xl">
+      <DialogContent className="sm:max-w-[700px] bg-white dark:bg-popover border-border rounded-lg">
         <DialogHeader className="pb-6">
-          <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-white">Email Management</DialogTitle>
-          <DialogDescription className="text-gray-600 dark:text-gray-400 mt-2">
+          <DialogTitle className="text-2xl font-semibold text-foreground">Email Management</DialogTitle>
+          <DialogDescription className="text-muted-foreground mt-2">
             Connect your Gmail account to automatically process PDF receipts from your inbox
           </DialogDescription>
         </DialogHeader>
         
         <div className="mt-2">
           {!gmailStatus?.connected ? (
-            <div className="bg-gray-50 dark:bg-zinc-900 rounded-lg p-8 border border-gray-100 dark:border-zinc-800">
+            <div className="bg-muted/50 rounded-lg p-8 border border-border">
               <div className="flex flex-col items-center text-center space-y-6">
-                <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
-                  <Mail className="w-10 h-10 text-gray-700 dark:text-gray-300" />
+                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
+                  <Mail className="w-10 h-10 text-muted-foreground" />
                 </div>
                 <div className="space-y-3">
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Connect Gmail</h3>
-                  <p className="text-base text-gray-600 dark:text-gray-400 max-w-md">
+                  <h3 className="text-xl font-semibold text-foreground">Connect Gmail</h3>
+                  <p className="text-base text-muted-foreground max-w-md">
                     Grant access to read emails and automatically import PDF receipts for reconciliation
                   </p>
                 </div>
                 <Button 
                   onClick={handleGoogleConnect} 
                   size="lg" 
-                  className="rounded-lg bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 text-white px-8"
+                  className="rounded-none bg-primary hover:bg-primary/90 text-primary-foreground px-8"
                 >
                   Connect Gmail Account
                 </Button>

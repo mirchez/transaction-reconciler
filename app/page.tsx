@@ -242,26 +242,26 @@ export default function HomePage() {
                           Receipts without matching bank transactions
                         </p>
                       </div>
-                      <div className="border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
+                      <div className="border border-border rounded-lg overflow-hidden bg-card">
                         {/* Data source info */}
-                        <div className="px-4 py-3 bg-gray-50 dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800">
-                          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                        <div className="px-4 py-3 bg-muted/50 border-b border-border">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Mail className="w-3 h-3" />
                             <span className="font-medium">{gmailStatus?.email || "Gmail Receipts"}</span>
-                            <span className="text-gray-400 dark:text-gray-600">•</span>
+                            <span className="text-muted-foreground/50">•</span>
                             <span>{ledgerOnlyTransactions.length} entries</span>
-                            <span className="text-gray-400 dark:text-gray-600">•</span>
+                            <span className="text-muted-foreground/50">•</span>
                             <span>Last synced: {new Date().toLocaleTimeString()}</span>
                           </div>
                         </div>
                         <Table>
                           <TableHeader>
                             <TableRow className="border-b border-gray-200 dark:border-zinc-800">
-                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800 w-[120px]">Date</TableHead>
-                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800 w-[180px]">Description</TableHead>
-                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800 w-[150px]">Vendor</TableHead>
-                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Category</TableHead>
-                              <TableHead className="font-medium text-right bg-gray-50 dark:bg-zinc-800 w-[100px]">Amount</TableHead>
+                              <TableHead className="font-medium bg-muted/30 w-[120px]">Date</TableHead>
+                              <TableHead className="font-medium bg-muted/30 w-[180px]">Description</TableHead>
+                              <TableHead className="font-medium bg-muted/30 w-[150px]">Vendor</TableHead>
+                              <TableHead className="font-medium bg-muted/30">Category</TableHead>
+                              <TableHead className="font-medium text-right bg-muted/30 w-[100px]">Amount</TableHead>
                             </TableRow>
                           </TableHeader>
                         </Table>
@@ -320,34 +320,25 @@ export default function HomePage() {
                           Bank transactions without matching receipts
                         </p>
                       </div>
-                      <div className="border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
+                      <div className="border border-border rounded-lg overflow-hidden bg-card">
                         {/* Data source info */}
-                        <div className="px-4 py-3 bg-gray-50 dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800">
-                          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                        <div className="px-4 py-3 bg-muted/50 border-b border-border">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <File className="w-3 h-3" />
                             <span className="font-medium">{csvFileInfo?.name || "Bank Statement.csv"}</span>
-                            <span className="text-gray-400 dark:text-gray-600">•</span>
+                            <span className="text-muted-foreground/50">•</span>
                             <span>{csvFileInfo?.size || "0.1 MB"}</span>
-                            <span className="text-gray-400 dark:text-gray-600">•</span>
+                            <span className="text-muted-foreground/50">•</span>
                             <span>{csvFileInfo?.uploadTime || new Date().toLocaleTimeString()}</span>
                           </div>
                         </div>
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="border-b border-gray-200 dark:border-zinc-800">
-                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Date</TableHead>
-                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Description</TableHead>
-                              <TableHead className="font-medium text-right bg-gray-50 dark:bg-zinc-800">Amount</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                        </Table>
-                        <div className="max-h-[250px] overflow-y-auto">
-                          <Table>
-                            <TableHeader className="sr-only">
-                              <TableRow>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead>Amount</TableHead>
+                        <div className="overflow-x-auto">
+                          <Table className="w-full">
+                            <TableHeader>
+                              <TableRow className="border-b border-border">
+                                <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">Date</TableHead>
+                                <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">Description</TableHead>
+                                <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">Amount</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -361,12 +352,12 @@ export default function HomePage() {
                             bankOnlyTransactions.map((transaction) => (
                               <TableRow
                                 key={transaction.id}
-                                className="cursor-pointer hover:bg-muted/50"
+                                className="cursor-pointer hover:bg-muted/50 border-b border-border/50"
                                 onClick={() => router.push(`/transaction/${transaction.id}`)}
                               >
-                                <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
-                                <TableCell>{transaction.description}</TableCell>
-                                <TableCell className="text-right">
+                                <TableCell className="font-medium px-4 py-3">{formatDate(transaction.date)}</TableCell>
+                                <TableCell className="px-4 py-3">{transaction.description}</TableCell>
+                                <TableCell className="text-right px-4 py-3">
                                   {formatAmount(transaction.amount)}
                                 </TableCell>
                               </TableRow>
@@ -424,31 +415,31 @@ export default function HomePage() {
 
                       {/* Summary Stats */}
                       <div className="grid grid-cols-4 gap-4 mb-8">
-                        <div className="text-center p-4 bg-gray-50 dark:bg-zinc-900 rounded-lg">
+                        <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-lg">
                           <div className="text-2xl font-bold text-foreground">{transactions.length}</div>
                           <div className="text-xs text-muted-foreground mt-1">Bank Transactions</div>
                         </div>
-                        <div className="text-center p-4 bg-gray-50 dark:bg-zinc-900 rounded-lg">
+                        <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-lg">
                           <div className="text-2xl font-bold text-foreground">{ledgerOnlyTransactions.length + matchedTransactions.length}</div>
                           <div className="text-xs text-muted-foreground mt-1">Ledger Transactions</div>
                         </div>
-                        <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                          <div className="text-2xl font-bold text-green-600 dark:text-green-400">{matchedTransactions.length}</div>
+                        <div className="text-center p-4 bg-green-500/10 dark:bg-green-500/20 border border-green-500/30 dark:border-green-500/40 rounded-lg">
+                          <div className="text-2xl font-bold text-green-600 dark:text-green-500">{matchedTransactions.length}</div>
                           <div className="text-xs text-muted-foreground mt-1">Matched</div>
                         </div>
-                        <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                          <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">0</div>
+                        <div className="text-center p-4 bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/30 dark:border-orange-500/40 rounded-lg">
+                          <div className="text-2xl font-bold text-orange-600 dark:text-orange-500">0</div>
                           <div className="text-xs text-muted-foreground mt-1">Ambiguous</div>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 mb-8">
-                        <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                          <div className="text-2xl font-bold text-red-600 dark:text-red-400">{bankOnlyTransactions.length}</div>
+                        <div className="text-center p-4 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 rounded-lg">
+                          <div className="text-2xl font-bold text-red-600 dark:text-red-500">{bankOnlyTransactions.length}</div>
                           <div className="text-xs text-muted-foreground mt-1">Unmatched Bank</div>
                         </div>
-                        <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                          <div className="text-2xl font-bold text-red-600 dark:text-red-400">{ledgerOnlyTransactions.length}</div>
+                        <div className="text-center p-4 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 rounded-lg">
+                          <div className="text-2xl font-bold text-red-600 dark:text-red-500">{ledgerOnlyTransactions.length}</div>
                           <div className="text-xs text-muted-foreground mt-1">Unmatched Ledger</div>
                         </div>
                       </div>
@@ -468,27 +459,16 @@ export default function HomePage() {
                             Download Excel
                           </Button>
                         </div>
-                        <div className="border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
-                          <Table>
-                            <TableHeader>
-                              <TableRow className="border-b border-gray-200 dark:border-zinc-800">
-                                <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Date</TableHead>
-                                <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Ledger Description</TableHead>
-                                <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Bank Description</TableHead>
-                                <TableHead className="font-medium text-right bg-gray-50 dark:bg-zinc-800">Amount</TableHead>
-                                <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Match Score</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                          </Table>
-                          <div className="max-h-[250px] overflow-y-auto">
-                            <Table>
-                              <TableHeader className="sr-only">
-                                <TableRow>
-                                  <TableHead>Date</TableHead>
-                                  <TableHead>Ledger Description</TableHead>
-                                  <TableHead>Bank Description</TableHead>
-                                  <TableHead>Amount</TableHead>
-                                  <TableHead>Match Score</TableHead>
+                        <div className="border border-border rounded-lg overflow-hidden bg-card">
+                          <div className="overflow-x-auto">
+                            <Table className="w-full">
+                              <TableHeader>
+                                <TableRow className="border-b border-border">
+                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">Date</TableHead>
+                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">Ledger Description</TableHead>
+                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">Bank Description</TableHead>
+                                  <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">Amount</TableHead>
+                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">Match Score</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -502,16 +482,16 @@ export default function HomePage() {
                                   matchedTransactions.map((transaction) => (
                                     <TableRow
                                       key={transaction.id}
-                                      className="cursor-pointer hover:bg-muted/50"
+                                      className="cursor-pointer hover:bg-muted/50 border-b border-border/50"
                                       onClick={() => router.push(`/transaction/${transaction.id}`)}
                                     >
-                                      <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
-                                      <TableCell>{transaction.vendor || transaction.description}</TableCell>
-                                      <TableCell className="text-muted-foreground">{transaction.description}</TableCell>
-                                      <TableCell className="text-right">
+                                      <TableCell className="font-medium px-4 py-3">{formatDate(transaction.date)}</TableCell>
+                                      <TableCell className="px-4 py-3">{transaction.vendor || transaction.description}</TableCell>
+                                      <TableCell className="text-muted-foreground px-4 py-3">{transaction.description}</TableCell>
+                                      <TableCell className="text-right px-4 py-3">
                                         {formatAmount(transaction.amount)}
                                       </TableCell>
-                                      <TableCell>
+                                      <TableCell className="px-4 py-3">
                                         <Badge variant="outline" className="rounded-lg">
                                           {transaction.matchScore ? `${Math.round(transaction.matchScore)}%` : "100%"}
                                         </Badge>
@@ -540,27 +520,16 @@ export default function HomePage() {
                             Download Excel
                           </Button>
                         </div>
-                        <div className="border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
-                          <Table>
-                            <TableHeader>
-                              <TableRow className="border-b border-gray-200 dark:border-zinc-800">
-                                <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Date</TableHead>
-                                <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Description</TableHead>
-                                <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Source</TableHead>
-                                <TableHead className="font-medium text-right bg-gray-50 dark:bg-zinc-800">Amount</TableHead>
-                                <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Status</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                          </Table>
-                          <div className="max-h-[250px] overflow-y-auto">
-                            <Table>
-                              <TableHeader className="sr-only">
-                                <TableRow>
-                                  <TableHead>Date</TableHead>
-                                  <TableHead>Description</TableHead>
-                                  <TableHead>Source</TableHead>
-                                  <TableHead>Amount</TableHead>
-                                  <TableHead>Status</TableHead>
+                        <div className="border border-border rounded-lg overflow-hidden bg-card">
+                          <div className="overflow-x-auto">
+                            <Table className="w-full">
+                              <TableHeader>
+                                <TableRow className="border-b border-border">
+                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">Date</TableHead>
+                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">Description</TableHead>
+                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-24">Source</TableHead>
+                                  <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">Amount</TableHead>
+                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-36">Status</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -574,27 +543,27 @@ export default function HomePage() {
                                   [...ledgerOnlyTransactions, ...bankOnlyTransactions].map((transaction) => (
                                     <TableRow
                                       key={transaction.id}
-                                      className="cursor-pointer hover:bg-muted/50"
+                                      className="cursor-pointer hover:bg-muted/50 border-b border-border/50"
                                       onClick={() => router.push(`/transaction/${transaction.id}`)}
                                     >
-                                      <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
-                                      <TableCell>{transaction.description}</TableCell>
-                                      <TableCell>
+                                      <TableCell className="font-medium px-4 py-3">{formatDate(transaction.date)}</TableCell>
+                                      <TableCell className="px-4 py-3">{transaction.description}</TableCell>
+                                      <TableCell className="px-4 py-3">
                                         <Badge variant="outline" className="rounded-lg">
                                           {transaction.source}
                                         </Badge>
                                       </TableCell>
-                                      <TableCell className="text-right">
+                                      <TableCell className="text-right px-4 py-3">
                                         {formatAmount(transaction.amount)}
                                       </TableCell>
-                                      <TableCell>
+                                      <TableCell className="px-4 py-3">
                                         {transaction.status === "ledger-only" ? (
-                                          <Badge className="rounded-lg bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800">
+                                          <Badge className="rounded-lg bg-orange-500/10 text-orange-700 border-orange-200 dark:bg-orange-500/20 dark:text-orange-300 dark:border-orange-500/30">
                                             <FileText className="w-3 h-3 mr-1" />
                                             Ledger Only
                                           </Badge>
                                         ) : (
-                                          <Badge className="rounded-lg bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
+                                          <Badge className="rounded-lg bg-blue-500/10 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30">
                                             <TrendingUp className="w-3 h-3 mr-1" />
                                             Bank Only
                                           </Badge>
@@ -618,45 +587,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="relative border-t bg-muted">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="relative w-5 h-5">
-                <Image
-                  src="/minerva.avif"
-                  alt="Minerva"
-                  width={20}
-                  height={20}
-                  className="dark:brightness-110 brightness-90 contrast-125"
-                />
-              </div>
-              <span>© 2024 Minerva — Powered by AI</span>
-            </div>
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <a
-                href="#"
-                className="hover:text-foreground transition-colors"
-              >
-                Privacy
-              </a>
-              <a
-                href="#"
-                className="hover:text-foreground transition-colors"
-              >
-                Terms
-              </a>
-              <a
-                href="#"
-                className="hover:text-foreground transition-colors"
-              >
-                Contact
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
         </div>
       </main>
 

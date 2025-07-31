@@ -41,33 +41,33 @@
   }
 
   .dark {
-    /* Dark mode colors based on CLAUDE.md palette */
-    --background: 0 0% 4%; /* #0A0A0A */
-    --foreground: 0 0% 90%; /* #E5E5E5 */
-    --card: 0 0% 4%; /* Near black #0A0A0A */
-    --card-foreground: 0 0% 100%; /* Pure white #FFFFFF */
-    --popover: 0 0% 13.3%; /* #222222 */
-    --popover-foreground: 0 0% 90%; /* #E5E5E5 */
-    --primary: 0 0% 98%; /* Near white for dark mode primary */
-    --primary-foreground: 0 0% 9%; /* Dark text on primary */
-    --secondary: 0 0% 15%; /* Dark gray for secondary */
-    --secondary-foreground: 0 0% 90%; /* Light text */
-    --muted: 0 0% 7%; /* #121212 */
-    --muted-foreground: 240 3% 65%; /* #A1A1AA */
-    --accent: 208 100% 78%; /* Keep sky blue */
-    --accent-foreground: 0 0% 4%; /* Dark text on accent */
-    --destructive: 0 84.2% 45%; /* Stronger red for dark mode */
-    --destructive-foreground: 0 0% 90%; /* Light text */
-    --border: 0 0% 12%; /* #1F1F1F - Lighter border for dark mode */
-    --input: 0 0% 17.3%; /* #2C2C2C */
-    --ring: 0 0% 75%; /* Light gray for focus in dark mode */
+    /* Dark mode colors - Beautiful shadcn-style palette */
+    --background: 240 6% 8.5%; /* #141416 - Medium gray background */
+    --foreground: 0 0% 95%; /* #F2F2F2 - Bright white text */
+    --card: 240 5% 13%; /* #202022 - Elevated surface */
+    --card-foreground: 0 0% 95%; /* #F2F2F2 - Bright white text */
+    --popover: 240 5% 12%; /* #1C1C20 - Higher elevation */
+    --popover-foreground: 0 0% 95%; /* #F2F2F2 */
+    --primary: 0 0% 98%; /* #FAFAFA - Near white for primary */
+    --primary-foreground: 240 5.9% 10%; /* #18181B - Dark text on primary */
+    --secondary: 240 3.7% 15.9%; /* #27272A - Neutral gray */
+    --secondary-foreground: 0 0% 98%; /* #FAFAFA */
+    --muted: 240 3.7% 13%; /* #202023 - Subtle background */
+    --muted-foreground: 240 5% 64.9%; /* #A1A1AA - Muted text */
+    --accent: 217 91% 60%; /* #3B82F6 - Blue accent */
+    --accent-foreground: 0 0% 98%; /* #FAFAFA */
+    --destructive: 0 84.2% 60.2%; /* #EF4444 - Red */
+    --destructive-foreground: 0 0% 98%; /* #FAFAFA */
+    --border: 240 3.7% 15.9%; /* #27272A - Subtle borders */
+    --input: 240 3.7% 15.9%; /* #27272A - Input background */
+    --ring: 217 91% 60%; /* #3B82F6 - Blue focus ring */
     
     /* Chart colors for dark mode */
-    --chart-1: 169 48% 71%; /* Mint */
-    --chart-2: 208 100% 78%; /* Sky blue */
-    --chart-3: 172 91% 40%; /* Medium mint */
-    --chart-4: 142 71% 65%; /* Medium green */
-    --chart-5: 0 84.2% 60%; /* Medium red */
+    --chart-1: 142 76% 36%; /* #22C55E - Green */
+    --chart-2: 217 91% 60%; /* #3B82F6 - Blue */
+    --chart-3: 280 65% 60%; /* #A855F7 - Purple */
+    --chart-4: 38 92% 50%; /* #F59E0B - Amber */
+    --chart-5: 0 84.2% 60.2%; /* #EF4444 - Red */
   }
 }
 
