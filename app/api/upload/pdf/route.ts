@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { LedgerEntrySchema, UploadResponse } from "@/lib/types/transactions";
 import { parsePDF } from "@/lib/pdf-parser";
+import { Decimal } from "@prisma/client/runtime/library";
 
 // Helper function to extract transaction data from PDF text
 function extractTransactionData(text: string): {
@@ -150,6 +151,10 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const files = formData.getAll("files") as File[];
+    
+    // Debug log to see what we're receiving
+    console.log("PDF Upload - FormData keys:", Array.from(formData.keys()));
+    console.log("PDF Upload - Files received:", files.length);
 
     if (!files || files.length === 0) {
       return NextResponse.json(
@@ -215,6 +220,7 @@ export async function POST(request: NextRequest) {
         const validationResult = LedgerEntrySchema.safeParse(ledgerData);
 
         if (!validationResult.success) {
+          console.log(`❌ PDF validation failed for ${file.name}:`, validationResult.error.issues);
           results.errors?.push({
             row: i + 1,
             error: `Invalid data in ${
@@ -227,7 +233,65 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
+        // Additional validation: amount must be greater than 0
+        if (!validationResult.data.amount || validationResult.data.amount <= 0) {
+          console.log(`❌ Invalid amount for ${file.name}: ${validationResult.data.amount}`);
+          results.errors?.push({
+            row: i + 1,
+            error: `Invalid amount in ${file.name}: Amount must be greater than 0`,
+          });
+          results.failed = (results.failed || 0) + 1;
+          continue;
+        }
+
+        // Ensure vendor is meaningful
+        if (!validationResult.data.vendor || validationResult.data.vendor === "Unknown Vendor" || validationResult.data.vendor.length < 3) {
+          console.log(`❌ Invalid vendor for ${file.name}: "${validationResult.data.vendor}"`);
+          results.errors?.push({
+            row: i + 1,
+            error: `Invalid vendor in ${file.name}: Could not extract vendor information`,
+          });
+          results.failed = (results.failed || 0) + 1;
+          continue;
+        }
+
+        // Check if this entry already exists (duplicate check)
+        // Convert amount to Decimal for proper comparison
+        const amountDecimal = new Decimal(validationResult.data.amount);
+        
+        const existingEntry = await prisma.ledgerEntry.findFirst({
+          where: {
+            amount: amountDecimal,
+            vendor: validationResult.data.vendor,
+            // Check date within same day to account for timezone differences
+            date: {
+              gte: new Date(new Date(validationResult.data.date).setHours(0, 0, 0, 0)),
+              lt: new Date(new Date(validationResult.data.date).setHours(23, 59, 59, 999)),
+            },
+          },
+        });
+
+        if (existingEntry) {
+          console.log(`⚠️ Duplicate receipt found for ${file.name}:`);
+          console.log(`   - Amount: $${validationResult.data.amount}`);
+          console.log(`   - Vendor: ${validationResult.data.vendor}`);
+          console.log(`   - Date: ${new Date(validationResult.data.date).toLocaleDateString()}`);
+          console.log(`   - Existing ID: ${existingEntry.id}`);
+          
+          results.errors?.push({
+            row: i + 1,
+            error: `Duplicate: Receipt from ${validationResult.data.vendor} for $${validationResult.data.amount} already exists`,
+          });
+          results.failed = (results.failed || 0) + 1;
+          continue;
+        }
+
         // Save to database
+        console.log(`✅ Saving new receipt to database:`);
+        console.log(`   - Amount: $${validationResult.data.amount}`);
+        console.log(`   - Vendor: ${validationResult.data.vendor}`);
+        console.log(`   - Date: ${new Date(validationResult.data.date).toLocaleDateString()}`);
+        
         const savedEntry = await prisma.ledgerEntry.create({
           data: {
             ...validationResult.data,
@@ -288,6 +352,7 @@ export async function POST(request: NextRequest) {
           vendor: validationResult.data.vendor,
           category: validationResult.data.category,
           id: savedEntry.id,
+          matchingTransactions: matchingTransactions.length,
         });
 
         results.processed = (results.processed || 0) + 1;
@@ -303,17 +368,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Set appropriate message
-    if ((results.processed || 0) === files.length) {
-      results.message = `Successfully processed all ${
-        results.processed || 0
-      } PDF file(s)`;
+    // Set appropriate message with better duplicate handling
+    const duplicateCount = results.errors?.filter(e => e.error.includes("Duplicate")).length || 0;
+    const invalidCount = (results.failed || 0) - duplicateCount;
+    
+    if ((results.processed || 0) === 0 && duplicateCount > 0) {
+      results.message = `All ${duplicateCount} receipt(s) already exist in database`;
+      results.success = true; // Not an error, just nothing new to add
+    } else if ((results.processed || 0) === files.length) {
+      results.message = `Successfully saved ${results.processed || 0} new receipt(s)`;
     } else if ((results.processed || 0) > 0) {
-      results.message = `Processed ${results.processed || 0} file(s), failed ${
-        results.failed || 0
-      } file(s)`;
+      let message = `Saved ${results.processed || 0} new receipt(s)`;
+      if (duplicateCount > 0) {
+        message += `, ${duplicateCount} duplicate(s) skipped`;
+      }
+      if (invalidCount > 0) {
+        message += `, ${invalidCount} invalid PDF(s)`;
+      }
+      results.message = message;
     } else {
-      results.message = `Failed to process all files`;
+      results.message = `No valid receipts found in uploaded files`;
       results.success = false;
     }
 

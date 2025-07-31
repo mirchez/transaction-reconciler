@@ -45,3 +45,16 @@ model MatchLog {
   ledgerEntry        LedgerEntry     @relation(fields: [ledgerEntryId], references: [id])
   bankTransaction    BankTransaction @relation(fields: [bankTransactionId], references: [id])
 }
+
+model GoogleAuth {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  accessToken  String
+  refreshToken String?
+  expiryDate   DateTime?
+  scope        String
+  tokenType    String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
