@@ -21,7 +21,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { FileText, Upload, TrendingUp, Mail, CheckCircle2, RefreshCw } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { UploadCsvModal } from "@/components/upload-csv-modal";
 import { GmailStatus } from "@/components/gmail-status";
 import { useGmailStatus } from "@/hooks/use-gmail";
@@ -172,21 +171,18 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background">
       {/* Gradient background */}
       <div className="fixed inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-background pointer-events-none z-0" />
 
-      {/* Theme Toggle */}
-      <div className="fixed top-4 right-4 z-50">
-        <ThemeToggle />
-      </div>
+      {/* Centered Logo - Header */}
+      <CenteredLogo />
 
-      <main className="relative flex-1">
-        {/* Centered Logo */}
-        <CenteredLogo />
-        
-        {/* Hero Section */}
-        <section className="pb-12 sm:pb-16">
+      {/* Scrollable Content Container */}
+      <main className="relative flex-1 overflow-y-auto">
+        <div className="min-h-full">
+          {/* Hero Section */}
+          <section className="pb-12 sm:pb-16 pt-8">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
             <div className="text-center space-y-4">
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
@@ -607,10 +603,9 @@ export default function HomePage() {
             )}
           </div>
         </section>
-      </main>
 
-      {/* Footer */}
-      <footer className="relative border-t bg-muted">
+        {/* Footer */}
+        <footer className="relative border-t bg-muted">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -648,6 +643,8 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+        </div>
+      </main>
 
       {/* Upload Modal - Only render after mount to avoid SSR issues */}
       {mounted && (
