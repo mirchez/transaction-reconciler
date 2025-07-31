@@ -55,6 +55,7 @@ export default function HomePage() {
   const { data: transactionsData, isLoading: loading } = useTransactions();
   const transactions = transactionsData?.transactions || [];
   const [csvFileInfo, setCsvFileInfo] = useState<{name: string, size: string, uploadTime: string} | null>(null);
+  const [sendingTestEmail, setSendingTestEmail] = useState(false);
   
   useEffect(() => {
     setMounted(true);
@@ -156,6 +157,42 @@ export default function HomePage() {
   };
 
   const [checkingEmails, setCheckingEmails] = useState(false);
+  
+  const handleSendTestEmail = async () => {
+    if (!gmailStatus?.email) {
+      toast.error("Please connect your Gmail account first");
+      return;
+    }
+    
+    setSendingTestEmail(true);
+    try {
+      const response = await fetch("/api/test-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: gmailStatus.email }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to send test email");
+      }
+
+      const data = await response.json();
+      
+      toast.success("Test email sent!", {
+        description: `Check your inbox at ${gmailStatus.email}`,
+      });
+    } catch (error) {
+      console.error("Error sending test email:", error);
+      toast.error("Failed to send test email", {
+        description: error instanceof Error ? error.message : "Please try again",
+      });
+    } finally {
+      setSendingTestEmail(false);
+    }
+  };
   
   const handleCheckEmails = async () => {
     if (!gmailStatus?.email) {
@@ -280,6 +317,27 @@ export default function HomePage() {
                         "Connect Email"
                       )}
                     </Button>
+                    {gmailStatus?.connected && (
+                      <Button 
+                        size="default"
+                        variant="outline"
+                        className="rounded-md"
+                        onClick={handleSendTestEmail}
+                        disabled={sendingTestEmail}
+                      >
+                        {sendingTestEmail ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <FileText className="w-4 h-4 mr-2" />
+                            Send Test Email
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
