@@ -3,7 +3,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 export function CenteredLogo() {
   return (
-    <div className="relative bg-background/95 backdrop-blur-sm border-b border-border">
+    <div className="relative bg-background/95 backdrop-blur-sm border-b border-gray-50">
       {/* Theme Toggle inside header */}
       <div className="absolute top-4 right-4">
         <ThemeToggle />

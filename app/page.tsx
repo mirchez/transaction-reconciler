@@ -23,6 +23,7 @@ import { FileText, TrendingUp, CheckCircle2, RefreshCw } from "lucide-react";
 import { UploadCsvModal } from "@/components/upload-csv-modal";
 import { GmailMonitorModal } from "@/components/gmail-monitor-modal";
 import { CenteredLogo } from "./components/centered-logo";
+import { useGmailStatus } from "@/hooks/use-gmail";
 
 interface Transaction {
   id: string;
@@ -47,6 +48,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [showReconciled, setShowReconciled] = useState(false);
   const [reconciling, setReconciling] = useState(false);
+  const { data: gmailStatus } = useGmailStatus();
   
   useEffect(() => {
     setMounted(true);
@@ -166,7 +168,7 @@ export default function HomePage() {
           {/* Upload Data Card */}
           <section className="p-6">
             <div className="max-w-7xl mx-auto">
-              <Card className="rounded-lg bg-card border-border shadow-sm">
+              <Card className="rounded-lg bg-card border border-gray-200 dark:border-zinc-800 shadow-sm">
                 <CardContent className="p-6">
                   <div className="space-y-1 mb-6">
                     <h2 className="text-xl font-semibold text-foreground">
@@ -193,7 +195,7 @@ export default function HomePage() {
                       className="rounded-md"
                       onClick={() => setGmailModalOpen(true)}
                     >
-                      Manage Email
+                      {gmailStatus?.connected ? "Manage Email" : "Connect Email"}
                     </Button>
                   </div>
                 </CardContent>
@@ -202,51 +204,21 @@ export default function HomePage() {
           </section>
 
         {/* Transaction Management Section */}
-        <section className="py-12 sm:py-16 bg-background">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-            {/* Header with Reconciliation Button */}
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-semibold text-foreground">
-                  Transaction Management
-                </h2>
-                <p className="text-muted-foreground mt-1">
-                  Review unmatched transactions and perform reconciliation
-                </p>
-              </div>
-              {transactions.length > 0 && (
-                <Button 
-                  onClick={handleReconciliation}
-                  disabled={reconciling || (ledgerOnlyTransactions.length === 0 && bankOnlyTransactions.length === 0)}
-                  className="rounded-none"
-                >
-                  {reconciling ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      Reconciling...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Run Reconciliation
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
+        <section className="p-6">
+          <div className="max-w-7xl mx-auto">
 
             {/* Transaction Tables */}
             {loading ? (
-              <Card className="rounded-none bg-card border-muted shadow-sm">
+              <Card className="rounded-lg bg-card border border-gray-200 dark:border-zinc-800 shadow-sm">
                 <CardContent className="p-12 text-center">
                   <p className="text-muted-foreground">Loading transactions...</p>
                 </CardContent>
               </Card>
             ) : transactions.length === 0 ? (
-              <Card className="rounded-none bg-card border-muted shadow-sm">
+              <Card className="rounded-lg bg-card border border-gray-200 dark:border-zinc-800 shadow-sm">
                 <CardContent className="p-12 text-center">
                   <div className="max-w-md mx-auto space-y-4">
-                    <div className="w-16 h-16 mx-auto bg-muted rounded-none flex items-center justify-center">
+                    <div className="w-16 h-16 mx-auto bg-muted rounded-lg flex items-center justify-center">
                       <FileText className="w-8 h-8 text-muted-foreground" />
                     </div>
                     <h3 className="text-xl font-semibold text-foreground">No Transactions Yet!</h3>
@@ -258,39 +230,41 @@ export default function HomePage() {
               </Card>
             ) : (
               <div className="space-y-8">
-                {/* Ledger Only Table */}
-                <Card className="rounded-none bg-card border-muted shadow-sm">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-none bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center">
-                          <FileText className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                        </div>
-                        <div>
-                          <CardTitle>Ledger Only Transactions</CardTitle>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Receipts without matching bank transactions
-                          </p>
-                        </div>
+                {/* Two tables side by side */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Ledger Only Table */}
+                  <Card className="rounded-lg bg-card border border-gray-200 dark:border-zinc-800 shadow-sm">
+                    <CardContent className="p-6">
+                      <div className="mb-4">
+                        <h3 className="text-lg font-semibold text-foreground">Ledger Only Transactions</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Receipts without matching bank transactions
+                        </p>
                       </div>
-                      <Badge variant="secondary" className="rounded-none">
-                        {ledgerOnlyTransactions.length} items
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead>Vendor</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
+                      <div className="border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="border-b border-gray-200 dark:border-zinc-800">
+                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Date</TableHead>
+                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Description</TableHead>
+                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Vendor</TableHead>
+                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Category</TableHead>
+                              <TableHead className="font-medium text-right bg-gray-50 dark:bg-zinc-800">Amount</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                        </Table>
+                        <div className="max-h-[300px] overflow-y-auto">
+                          <Table>
+                            <TableHeader className="sr-only">
+                              <TableRow>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Description</TableHead>
+                                <TableHead>Vendor</TableHead>
+                                <TableHead>Category</TableHead>
+                                <TableHead>Amount</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
                           {ledgerOnlyTransactions.length === 0 ? (
                             <TableRow>
                               <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
@@ -318,43 +292,42 @@ export default function HomePage() {
                               </TableRow>
                             ))
                           )}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Bank Only Table */}
-                <Card className="rounded-none bg-card border-muted shadow-sm">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-none bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                          <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <div>
-                          <CardTitle>Bank Only Transactions</CardTitle>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Bank transactions without matching receipts
-                          </p>
+                            </TableBody>
+                          </Table>
                         </div>
                       </div>
-                      <Badge variant="secondary" className="rounded-none">
-                        {bankOnlyTransactions.length} items
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
+                    </CardContent>
+                  </Card>
+
+                  {/* Bank Only Table */}
+                  <Card className="rounded-lg bg-card border border-gray-200 dark:border-zinc-800 shadow-sm">
+                    <CardContent className="p-6">
+                      <div className="mb-4">
+                        <h3 className="text-lg font-semibold text-foreground">Bank Only Transactions</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Bank transactions without matching receipts
+                        </p>
+                      </div>
+                      <div className="border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="border-b border-gray-200 dark:border-zinc-800">
+                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Date</TableHead>
+                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Description</TableHead>
+                              <TableHead className="font-medium text-right bg-gray-50 dark:bg-zinc-800">Amount</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                        </Table>
+                        <div className="max-h-[300px] overflow-y-auto">
+                          <Table>
+                            <TableHeader className="sr-only">
+                              <TableRow>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Description</TableHead>
+                                <TableHead>Amount</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
                           {bankOnlyTransactions.length === 0 ? (
                             <TableRow>
                               <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
@@ -376,11 +349,37 @@ export default function HomePage() {
                               </TableRow>
                             ))
                           )}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </CardContent>
-                </Card>
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Run Reconciliation Button */}
+                {transactions.length > 0 && (
+                  <div className="flex justify-center mt-8">
+                    <Button 
+                      onClick={handleReconciliation}
+                      disabled={reconciling || (ledgerOnlyTransactions.length === 0 && bankOnlyTransactions.length === 0)}
+                      className="rounded-lg bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 text-white"
+                      size="lg"
+                    >
+                      {reconciling ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                          Reconciling...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Run Reconciliation
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
 
                 {/* Reconciled Results - Only show after reconciliation */}
                 {showReconciled && (
