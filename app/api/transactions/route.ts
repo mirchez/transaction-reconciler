@@ -82,19 +82,20 @@ export async function GET(request: NextRequest) {
       });
     });
     
-    // Add unmatched bank transactions
+    // Add ALL bank transactions (both matched and unmatched)
     bankTransactions.forEach(transaction => {
-      if (!matchMap.has(`bank-${transaction.id}`)) {
-        transactions.push({
-          id: transaction.id,
-          date: transaction.date.toISOString(),
-          amount: Number(transaction.amount),
-          description: transaction.description,
-          source: "Bank" as const,
-          status: "bank-only" as const,
-          bankTransactionId: transaction.id,
-        });
-      }
+      const hasMatch = matchMap.has(`bank-${transaction.id}`);
+      transactions.push({
+        id: transaction.id,
+        date: transaction.date.toISOString(),
+        amount: Number(transaction.amount),
+        description: transaction.description,
+        source: "Bank" as const,
+        status: hasMatch ? "matched" as const : "bank-only" as const,
+        bankTransactionId: transaction.id,
+        // Include match info if available
+        matchId: hasMatch ? matchMap.get(`bank-${transaction.id}`).id : undefined,
+      });
     });
     
     // Sort by date (newest first)

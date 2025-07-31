@@ -200,9 +200,9 @@ export default function HomePage() {
     }
   };
 
-  // Show ALL ledger transactions (both matched and unmatched)
+  // Show ALL ledger and bank transactions (both matched and unmatched)
   const ledgerOnlyTransactions = transactions.filter((t) => t.source === "Ledger");
-  const bankOnlyTransactions = transactions.filter((t) => t.status === "bank-only");
+  const bankOnlyTransactions = transactions.filter((t) => t.source === "Bank");
   const matchedTransactions = transactions.filter((t) => t.status === "matched" && t.source === "Both");
 
   const formatAmount = (amount: string | number) => {
@@ -412,9 +412,9 @@ export default function HomePage() {
                   <Card className="rounded-lg bg-card border shadow-sm">
                     <CardContent className="p-6">
                       <div className="mb-4">
-                        <h3 className="text-lg font-semibold text-foreground">Bank Only Transactions</h3>
+                        <h3 className="text-lg font-semibold text-foreground">Bank Transactions</h3>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Bank transactions without matching receipts
+                          All transactions from your bank statement
                         </p>
                       </div>
                       <div className="border border-border rounded-lg overflow-hidden bg-card">
@@ -451,7 +451,7 @@ export default function HomePage() {
                           {bankOnlyTransactions.length === 0 ? (
                             <TableRow>
                               <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
-                                No bank-only transactions
+                                No bank transactions
                               </TableCell>
                             </TableRow>
                           ) : (
