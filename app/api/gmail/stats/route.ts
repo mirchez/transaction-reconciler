@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
 
 // Simulated email tracking (in production, you'd store this in database)
 const emailTracking = new Map();

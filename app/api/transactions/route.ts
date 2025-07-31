@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,7 +52,6 @@ export async function GET(request: NextRequest) {
     
     // Add matched transactions
     matches.forEach(match => {
-      const amount = match.ledger.debit || match.ledger.credit || 0;
       transactions.push({
         id: match.id,
         date: match.date.toISOString(),
@@ -60,43 +59,24 @@ export async function GET(request: NextRequest) {
         description: match.description,
         source: "Both" as const,
         status: "matched" as const,
-        category: match.ledger.account || undefined,
-        vendor: match.ledger.name || match.description,
         ledgerEntryId: match.ledgerId,
         bankTransactionId: match.bankId,
         matchScore: 100,
         bankTransaction: match.bankTransaction,
-        // Include all ledger fields for the table display
-        type: match.ledger.type || undefined,
-        num: match.ledger.num || undefined,
-        name: match.ledger.name || undefined,
-        account: match.ledger.account || undefined,
-        debit: match.ledger.debit ? Number(match.ledger.debit) : undefined,
-        credit: match.ledger.credit ? Number(match.ledger.credit) : undefined,
       });
     });
     
     // Add unmatched ledger entries
     ledgerEntries.forEach(entry => {
       if (!matchMap.has(`ledger-${entry.id}`)) {
-        const amount = entry.debit || entry.credit || 0;
         transactions.push({
           id: entry.id,
           date: entry.date.toISOString(),
-          amount: Number(amount),
+          amount: Number(entry.amount),
           description: entry.description,
           source: "Ledger" as const,
           status: "ledger-only" as const,
-          category: entry.account || undefined,
-          vendor: entry.name || entry.description,
           ledgerEntryId: entry.id,
-          // Include all ledger fields for the table display
-          type: entry.type || undefined,
-          num: entry.num || undefined,
-          name: entry.name || undefined,
-          account: entry.account || undefined,
-          debit: entry.debit ? Number(entry.debit) : undefined,
-          credit: entry.credit ? Number(entry.credit) : undefined,
         });
       }
     });

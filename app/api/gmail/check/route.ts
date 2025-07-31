@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
+import { parsePDF } from "@/lib/pdf-parser";
+import { extractLedgerDataWithOpenAI } from "@/lib/openai-service";
+import { Decimal } from "@prisma/client/runtime/library";
 
 async function getAuthenticatedClient(email: string) {
   const googleAuth = await prisma.googleAuth.findUnique({
@@ -39,7 +42,30 @@ export async function POST(request: Request) {
       );
     }
 
-    const { oauth2Client, googleAuth } = await getAuthenticatedClient(email);
+    console.log(`🔍 Checking Gmail for ${email}`);
+
+    // Ensure user exists
+    await prisma.user.upsert({
+      where: { email },
+      update: {},
+      create: { email },
+    });
+
+    let oauth2Client;
+    let googleAuth;
+    
+    try {
+      const result = await getAuthenticatedClient(email);
+      oauth2Client = result.oauth2Client;
+      googleAuth = result.googleAuth;
+    } catch (error) {
+      console.error("❌ Failed to authenticate:", error);
+      return NextResponse.json(
+        { error: "Gmail not connected or authentication failed" },
+        { status: 401 }
+      );
+    }
+
     const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
     // Calculate the time 5 minutes ago
@@ -175,37 +201,65 @@ export async function POST(request: Request) {
                 // Decode base64 attachment data
                 const buffer = Buffer.from(attachment.data.data, "base64");
                 
-                // Process the PDF using our existing PDF upload endpoint
-                const formData = new FormData();
-                // Create a proper File object with correct type
-                const file = new File([buffer], pdfAttachment.filename, { 
-                  type: "application/pdf",
-                  lastModified: Date.now()
-                });
-                formData.append("file", file);
-                formData.append("email", email); // Add the user email
+                try {
+                  // Parse PDF directly
+                  const pdfData = await parsePDF(buffer);
+                  const pdfText = pdfData.text;
 
-                // Call our PDF processing endpoint
-                const processResponse = await fetch(
-                  `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/upload/pdf`,
-                  {
-                    method: "POST",
-                    body: formData,
-                    headers: {
-                      "X-Allow-Duplicates": "true", // Allow duplicates for new emails
-                      "X-Email-ID": message.id || "", // Pass the email ID
-                    }
+                  if (!pdfText || pdfText.trim().length === 0) {
+                    throw new Error("Could not extract text from PDF");
                   }
-                );
 
-                if (processResponse.ok) {
-                  const result = await processResponse.json();
+                  // Extract ledger data using AI
+                  const extractedData = await extractLedgerDataWithOpenAI(pdfText);
+
+                  if (!extractedData.isLedgerEntry) {
+                    console.log(`   ⚠️  Not a financial document: ${pdfAttachment.filename}`);
+                    failedPdfs.push({
+                      filename: pdfAttachment.filename,
+                      reason: "Not a receipt",
+                      message: "No financial data found"
+                    });
+                    continue;
+                  }
+
+                  // Validate minimum required data
+                  const hasAmount = extractedData.amount && extractedData.amount > 0;
+                  const hasDescription = extractedData.description && extractedData.description.trim() !== "";
                   
+                  if (!hasAmount || !hasDescription) {
+                    console.log(`   ⚠️  Invalid receipt: ${pdfAttachment.filename}`);
+                    const missing = [];
+                    if (!hasAmount) missing.push("amount");
+                    if (!hasDescription) missing.push("description");
+                    failedPdfs.push({
+                      filename: pdfAttachment.filename,
+                      reason: "Invalid receipt",
+                      message: `Missing: ${missing.join(", ")}`
+                    });
+                    continue;
+                  }
+
+                  // Create ledger entry
+                  const ledgerEntry = await prisma.ledger.create({
+                    data: {
+                      userEmail: email,
+                      date: extractedData.date ? new Date(extractedData.date) : new Date(),
+                      description: extractedData.description || "Unknown transaction",
+                      amount: new Decimal(extractedData.amount || 0),
+                    },
+                  });
+
                   // Successfully processed receipt
                   processedPdfs.push({
                     filename: pdfAttachment.filename,
                     messageId: message.id,
-                    result,
+                    result: {
+                      id: ledgerEntry.id,
+                      date: ledgerEntry.date.toISOString(),
+                      description: ledgerEntry.description,
+                      amount: Number(ledgerEntry.amount),
+                    },
                   });
                   console.log(`   ✅ PDF processed successfully: ${pdfAttachment.filename}`);
                   
@@ -213,34 +267,14 @@ export async function POST(request: Request) {
                   if (!successfullyProcessedMessageIds.includes(message.id)) {
                     successfullyProcessedMessageIds.push(message.id);
                   }
-                } else {
-                  const errorResponse = await processResponse.json();
-                  
-                  if (errorResponse.isReceipt === false) {
-                    console.log(`   ⚠️  Not a receipt: ${pdfAttachment.filename}`);
-                    console.log(`      ${errorResponse.message}`);
-                    failedPdfs.push({
-                      filename: pdfAttachment.filename,
-                      reason: "Not a receipt",
-                      message: errorResponse.message
-                    });
-                  } else if (errorResponse.isValid === false) {
-                    console.log(`   ⚠️  Invalid receipt: ${pdfAttachment.filename}`);
-                    console.log(`      Missing: ${Object.keys(errorResponse.missingFields || {}).filter(k => errorResponse.missingFields[k]).join(", ")}`);
-                    failedPdfs.push({
-                      filename: pdfAttachment.filename,
-                      reason: "Invalid receipt",
-                      message: `Missing: ${Object.keys(errorResponse.missingFields || {}).filter(k => errorResponse.missingFields[k]).join(", ")}`
-                    });
-                  } else {
-                    console.log(`   ❌ Failed to process PDF: ${pdfAttachment.filename}`);
-                    console.log(`      Error: ${errorResponse.error || errorResponse.message}`);
-                    failedPdfs.push({
-                      filename: pdfAttachment.filename,
-                      reason: "Processing error",
-                      message: errorResponse.error || errorResponse.message
-                    });
-                  }
+                } catch (processingError: any) {
+                  console.log(`   ❌ Failed to process PDF: ${pdfAttachment.filename}`);
+                  console.log(`      Error: ${processingError.message}`);
+                  failedPdfs.push({
+                    filename: pdfAttachment.filename,
+                    reason: "Processing error",
+                    message: processingError.message
+                  });
                 }
               }
             } catch (error: any) {
@@ -317,9 +351,7 @@ export async function POST(request: Request) {
       newEmails: emailDetails,
     };
 
-    // Update tracking (in production, store in database)
-    const { updateEmailTracking } = await import("../stats/route");
-    updateEmailTracking(email, emailStats);
+    // Update tracking is done through the database, not needed here
 
     const response = {
       processed: processedPdfs.length,
@@ -347,10 +379,7 @@ export async function POST(request: Request) {
     if (processedPdfs.length > 0) {
       console.log("\n📄 Processed PDFs:");
       for (const pdf of processedPdfs) {
-        console.log(`   - ${pdf.filename}: $${pdf.result.amount} from ${pdf.result.vendor}`);
-        if (pdf.result.matchingTransactions?.length > 0) {
-          console.log(`     🔗 Found ${pdf.result.matchingTransactions.length} matching bank transactions`);
-        }
+        console.log(`   - ${pdf.filename}: $${pdf.result.amount} - ${pdf.result.description}`);
       }
     }
     console.log("------------------------\n");
@@ -359,22 +388,23 @@ export async function POST(request: Request) {
     if (successfullyProcessedMessageIds.length > 0) {
       try {
         console.log(`\n🔖 Marking ${successfullyProcessedMessageIds.length} processed emails as read...`);
-        const markReadResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_APP_URL}/api/gmail/mark-read`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email,
-              messageIds: successfullyProcessedMessageIds,
-            }),
-          }
-        );
         
-        if (markReadResponse.ok) {
-          const markReadResult = await markReadResponse.json();
-          console.log(`✅ Marked ${markReadResult.marked} emails as read`);
+        // Mark emails as read using Gmail API directly
+        for (const messageId of successfullyProcessedMessageIds) {
+          try {
+            await gmail.users.messages.modify({
+              userId: "me",
+              id: messageId,
+              requestBody: {
+                removeLabelIds: ["UNREAD"],
+              },
+            });
+          } catch (error) {
+            console.log(`Failed to mark message ${messageId} as read:`, error);
+          }
         }
+        
+        console.log(`✅ Marked ${successfullyProcessedMessageIds.length} emails as read`);
       } catch (error) {
         console.error("Failed to mark emails as read:", error);
         // Don't fail the whole operation if marking as read fails
@@ -382,11 +412,33 @@ export async function POST(request: Request) {
     }
     
     return NextResponse.json(response);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error checking Gmail:", error);
+    
+    // Provide more specific error messages
+    let errorMessage = "Failed to check Gmail";
+    let statusCode = 500;
+    
+    if (error.code === 401) {
+      errorMessage = "Gmail authentication failed. Please reconnect your account.";
+      statusCode = 401;
+    } else if (error.code === 403) {
+      errorMessage = "Gmail permissions denied. Please reconnect with proper permissions.";
+      statusCode = 403;
+    } else if (error.message?.includes("token")) {
+      errorMessage = "Gmail access token expired. Please reconnect your account.";
+      statusCode = 401;
+    } else if (error.message?.includes("OPENAI_API_KEY")) {
+      errorMessage = "OpenAI service not configured. Please contact support.";
+      statusCode = 503;
+    }
+    
     return NextResponse.json(
-      { error: "Failed to check Gmail" },
-      { status: 500 }
+      { 
+        error: errorMessage,
+        details: error.message 
+      },
+      { status: statusCode }
     );
   }
 }

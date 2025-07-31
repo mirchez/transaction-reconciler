@@ -338,7 +338,7 @@ export default function HomePage() {
                           )}
                         </div>
                       </div>
-                      <div className="border border-border rounded-lg overflow-x-auto bg-card">
+                      <div className="border border-border rounded-lg overflow-hidden bg-card">
                         {/* Data source info */}
                         <div className="px-4 py-3 bg-muted/50 border-b border-border">
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -350,65 +350,42 @@ export default function HomePage() {
                             <span>Last synced: {new Date().toLocaleTimeString()}</span>
                           </div>
                         </div>
-                        <Table>
+                        <Table className="w-full">
                           <TableHeader>
-                            <TableRow className="border-b border-gray-200 dark:border-zinc-800">
-                              <TableHead className="font-medium bg-muted/30 text-left px-3 py-2 text-xs">Date</TableHead>
-                              <TableHead className="font-medium bg-muted/30 text-left px-3 py-2 text-xs">Type</TableHead>
-                              <TableHead className="font-medium bg-muted/30 text-left px-3 py-2 text-xs">Number</TableHead>
-                              <TableHead className="font-medium bg-muted/30 text-left px-3 py-2 text-xs">Vendor</TableHead>
-                              <TableHead className="font-medium bg-muted/30 text-left px-3 py-2 text-xs">Description</TableHead>
-                              <TableHead className="font-medium bg-muted/30 text-left px-3 py-2 text-xs">Category</TableHead>
-                              <TableHead className="font-medium bg-muted/30 text-right px-3 py-2 text-xs">Debit</TableHead>
-                              <TableHead className="font-medium bg-muted/30 text-right px-3 py-2 text-xs">Credit</TableHead>
+                            <TableRow className="border-b border-border">
+                              <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">Date</TableHead>
+                              <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">Description</TableHead>
+                              <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">Amount</TableHead>
                             </TableRow>
                           </TableHeader>
                         </Table>
-                        <div className="max-h-[250px] overflow-auto">
-                          <Table className="min-w-[1000px]">
+                        <div className="max-h-[250px] overflow-y-auto">
+                          <Table className="w-full">
                             <TableHeader className="sr-only">
                               <TableRow>
-                                <TableHead className="w-[100px]">Date</TableHead>
-                                <TableHead className="w-[80px]">Type</TableHead>
-                                <TableHead className="w-[100px]">Number</TableHead>
-                                <TableHead className="w-[150px]">Vendor</TableHead>
-                                <TableHead className="w-[200px]">Description</TableHead>
-                                <TableHead className="w-[120px]">Category</TableHead>
-                                <TableHead className="w-[100px]">Debit</TableHead>
-                                <TableHead className="w-[100px]">Credit</TableHead>
+                                <TableHead className="w-32">Date</TableHead>
+                                <TableHead>Description</TableHead>
+                                <TableHead className="w-28">Amount</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
                           {ledgerOnlyTransactions.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                              <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
                                 No ledger-only transactions
                               </TableCell>
                             </TableRow>
                           ) : (
-                            ledgerOnlyTransactions.map((transaction: any) => (
+                            ledgerOnlyTransactions.map((transaction) => (
                               <TableRow
                                 key={transaction.id}
-                                className="cursor-pointer hover:bg-muted/50"
+                                className="cursor-pointer hover:bg-muted/50 border-b border-border/50"
                                 onClick={() => router.push(`/transaction/${transaction.id}`)}
                               >
-                                <TableCell className="text-left px-3 py-2 text-sm">{formatDate(transaction.date)}</TableCell>
-                                <TableCell className="text-left px-3 py-2 text-sm">{transaction.type || "Receipt"}</TableCell>
-                                <TableCell className="text-left px-3 py-2 text-sm text-muted-foreground">
-                                  {transaction.num || "-"}
-                                </TableCell>
-                                <TableCell className="text-left px-3 py-2 text-sm font-medium">
-                                  {transaction.vendor || transaction.name || "-"}
-                                </TableCell>
-                                <TableCell className="text-left px-3 py-2 text-sm">{transaction.description}</TableCell>
-                                <TableCell className="text-left px-3 py-2 text-sm text-muted-foreground">
-                                  {transaction.category || transaction.account || "-"}
-                                </TableCell>
-                                <TableCell className="text-right px-3 py-2 text-sm font-medium">
-                                  {transaction.debit ? formatAmount(transaction.debit) : "-"}
-                                </TableCell>
-                                <TableCell className="text-right px-3 py-2 text-sm font-medium">
-                                  {transaction.credit ? formatAmount(transaction.credit) : "-"}
+                                <TableCell className="font-medium px-4 py-3">{formatDate(transaction.date)}</TableCell>
+                                <TableCell className="px-4 py-3">{transaction.description}</TableCell>
+                                <TableCell className="text-right px-4 py-3">
+                                  {formatAmount(transaction.amount)}
                                 </TableCell>
                               </TableRow>
                             ))

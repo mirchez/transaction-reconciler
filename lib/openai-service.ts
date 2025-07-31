@@ -10,15 +10,8 @@ const openai = new OpenAI({
 const LedgerExtractionSchema = z.object({
   isLedgerEntry: z.boolean(),
   date: z.string().optional(),
-  type: z.string().optional(),
-  num: z.string().optional().nullable(),
-  name: z.string().optional().nullable(),
   description: z.string().optional(),
-  account: z.string().optional().nullable(),
-  split: z.string().optional().nullable(),
-  debit: z.number().optional().nullable(),
-  credit: z.number().optional().nullable(),
-  balance: z.number().optional().nullable(),
+  amount: z.number().optional(),
   confidence: z.number().min(0).max(1),
 });
 
@@ -26,7 +19,7 @@ export type LedgerExtraction = z.infer<typeof LedgerExtractionSchema>;
 
 const SYSTEM_PROMPT = `You are an expert accounting assistant helping small businesses manage their bookkeeping. Your role is to analyze ANY document and extract financial/accounting information if present.
 
-IMPORTANT: Any document that contains transaction data (date, amount, vendor/party) should be processed, not just traditional receipts or invoices. This includes:
+IMPORTANT: Any document that contains transaction data (date, amount, description) should be processed, not just traditional receipts or invoices. This includes:
 - Receipts, invoices, bills, statements
 - Financial reports, summaries, ledgers
 - Transaction lists, payment confirmations
@@ -34,30 +27,19 @@ IMPORTANT: Any document that contains transaction data (date, amount, vendor/par
 
 For documents with financial data, extract:
 1. Date - Transaction date in YYYY-MM-DD format. Look for dates like "Date:", "Invoice Date:", "Transaction Date:", or at the top of receipts
-2. Type - Document type: Receipt, Invoice, Bill, Statement, Credit Note, etc.
-3. Number - Reference number, invoice #, receipt #, order #, etc.
-4. Name - Vendor/merchant name (company who issued the document)
-5. Description - Clear description of what was purchased/paid
-6. Account - Categorize intelligently:
-   - Food & Dining (restaurants, cafes, groceries)
-   - Transportation (uber, taxi, gas, parking)
-   - Office Supplies (stationery, equipment)
-   - Technology (software, subscriptions, hardware)
-   - Travel (hotels, flights)
-   - Utilities (electricity, water, internet)
-   - Professional Services (consulting, legal, accounting)
-   - Marketing & Advertising
-   - Rent & Lease
-   - Other Expenses
-7. Debit - Amount paid/spent (always positive)
-8. Credit - Amount received/refunded (always positive)
+2. Description - VERY SHORT description (2-3 words maximum):
+   - Priority 1: Use company/vendor name (e.g., "Starbucks", "Amazon", "Uber")
+   - Priority 2: If no clear vendor, use what was bought (e.g., "Office Supplies", "Gas Station")
+   - Keep it simple - NO long sentences, NO reference numbers, NO categories
+3. Amount - The total amount of the transaction (always positive)
+   - Look for TOTAL, AMOUNT DUE, GRAND TOTAL, or BALANCE DUE
+   - For regular purchases/expenses: positive amount
+   - For refunds/returns/credits: still positive (we'll handle sign in the app)
 
 IMPORTANT RULES:
-- Set isLedgerEntry to TRUE if you can extract: amount AND vendor/party name
-- Look for the TOTAL, AMOUNT DUE, GRAND TOTAL, or BALANCE DUE for the amount
-- For regular purchases/expenses: use debit field
-- For refunds/returns/credits: use credit field
-- Extract vendor name from logo, header, or "from" field
+- Set isLedgerEntry to TRUE if you can extract BOTH: amount AND description
+- Description MUST be SHORT (2-3 words max) - preferably just the company name
+- If no vendor/company name found, use the most prominent text or document title
 - If date is unclear, use today's date
 - Confidence: 0-1 based on data quality and completeness
 - Even if it's not a traditional receipt, if it has financial data, process it
@@ -66,17 +48,9 @@ Respond with JSON:
 {
   "isLedgerEntry": true/false,
   "date": "YYYY-MM-DD",
-  "type": "Receipt",
-  "num": "reference number or null",
-  "name": "Vendor Name",
-  "description": "Clear description of purchase",
-  "account": "Appropriate category",
-  "split": null,
-  "debit": 123.45,
-  "credit": null,
-  "balance": null,
-  "confidence": 0.95,
-  "rawData": "relevant extracted text snippets"
+  "description": "Company Name",
+  "amount": 123.45,
+  "confidence": 0.95
 }`;
 
 export async function extractLedgerDataWithOpenAI(pdfText: string): Promise<LedgerExtraction> {
@@ -113,9 +87,8 @@ export async function extractLedgerDataWithOpenAI(pdfText: string): Promise<Ledg
     const parsedData = JSON.parse(responseText);
     console.log("✅ OpenAI analysis complete:", {
       isLedgerEntry: parsedData.isLedgerEntry,
-      type: parsedData.type,
-      vendor: parsedData.name,
-      amount: parsedData.debit || parsedData.credit,
+      description: parsedData.description,
+      amount: parsedData.amount,
       confidence: parsedData.confidence
     });
     
@@ -123,11 +96,11 @@ export async function extractLedgerDataWithOpenAI(pdfText: string): Promise<Ledg
     const validatedData = LedgerExtractionSchema.parse(parsedData);
     
     // Override isLedgerEntry if we have the required data
-    const hasAmount = validatedData.debit || validatedData.credit;
-    const hasVendor = validatedData.name && validatedData.name.trim() !== "";
+    const hasAmount = validatedData.amount && validatedData.amount > 0;
+    const hasDescription = validatedData.description && validatedData.description.trim() !== "";
     
-    // If we have amount and vendor, it's valid for ledger regardless of document type
-    if (hasAmount && hasVendor) {
+    // If we have amount and description, it's valid for ledger
+    if (hasAmount && hasDescription) {
       console.log("✅ Document has required ledger data, marking as valid");
       return {
         ...validatedData,
@@ -137,8 +110,8 @@ export async function extractLedgerDataWithOpenAI(pdfText: string): Promise<Ledg
     }
     
     // If marked as ledger entry but missing data, invalidate
-    if (validatedData.isLedgerEntry && (!hasAmount || !hasVendor)) {
-      console.log("⚠️ Document marked as ledger but missing required fields:", { hasAmount, hasVendor });
+    if (validatedData.isLedgerEntry && (!hasAmount || !hasDescription)) {
+      console.log("⚠️ Document marked as ledger but missing required fields:", { hasAmount, hasDescription });
       return {
         ...validatedData,
         isLedgerEntry: false,
@@ -191,50 +164,61 @@ function fallbackLedgerParsing(text: string): LedgerExtraction {
     }
   }
 
-  // Extract vendor
+  // Extract vendor/company name
   const lines = text.split('\n').filter(line => line.trim());
-  const vendor = lines.find(line => 
-    line.length > 2 && 
-    !line.match(/^\d/) && 
-    !line.match(/date|receipt|invoice|total|amount/i)
-  ) || "Unknown Vendor";
-
-  // Extract invoice/receipt number
-  const numMatch = text.match(/(?:invoice|receipt|order|reference|#)[\s:]*([A-Z0-9\-]+)/i);
-  const num = numMatch ? numMatch[1] : null;
-
-  // Categorize
-  const categories = {
-    "Food & Dining": /restaurant|food|dining|cafe|coffee|meal|lunch|dinner|breakfast/i,
-    "Transportation": /uber|lyft|taxi|gas|fuel|parking|toll/i,
-    "Office Supplies": /office|supplies|staples|paper|ink|stationery/i,
-    "Technology": /software|hardware|computer|laptop|subscription|app/i,
-    "Travel": /hotel|flight|airline|travel|lodging/i,
-    "Entertainment": /movie|theater|concert|entertainment/i,
-    "Healthcare": /pharmacy|medical|doctor|hospital|clinic/i,
-    "Utilities": /electric|gas|water|internet|phone|utility/i,
-  };
-
-  let account = "General Expense";
-  for (const [cat, regex] of Object.entries(categories)) {
-    if (regex.test(text)) {
-      account = cat;
+  
+  // Look for company name in the first few lines (usually at the top)
+  let vendor = "";
+  for (const line of lines.slice(0, 5)) {
+    if (line.length > 2 && 
+        !line.match(/^\d/) && 
+        !line.match(/date|receipt|invoice|total|amount|thank|your|purchase|order/i)) {
+      vendor = line.trim();
       break;
     }
   }
+  
+  // If no vendor found, check for common company patterns
+  if (!vendor) {
+    const companyMatch = text.match(/(?:from|at|merchant|vendor|company|store)[\s:]*([A-Za-z\s&]+?)(?:\n|$)/i);
+    if (companyMatch) {
+      vendor = companyMatch[1].trim();
+    }
+  }
+  
+  // If still no vendor, use category as description
+  if (!vendor || vendor.length < 2) {
+    const categories = {
+      "Restaurant": /restaurant|food|dining|cafe|coffee|meal/i,
+      "Transport": /uber|lyft|taxi|gas|fuel|parking/i,
+      "Office": /office|supplies|staples|paper/i,
+      "Tech": /software|hardware|computer|subscription/i,
+      "Hotel": /hotel|lodging|accommodation/i,
+      "Healthcare": /pharmacy|medical|doctor|hospital/i,
+      "Utilities": /electric|gas|water|internet|phone/i,
+    };
+
+    for (const [cat, regex] of Object.entries(categories)) {
+      if (regex.test(text)) {
+        vendor = cat;
+        break;
+      }
+    }
+  }
+  
+  if (!vendor) {
+    vendor = "Unknown";
+  }
+  
+  // Clean up vendor name - keep it short (2-3 words max)
+  const words = vendor.split(/\s+/).filter(w => w.length > 0);
+  const description = words.slice(0, 2).join(' ');
 
   return {
-    isLedgerEntry: true,
+    isLedgerEntry: amount > 0 && description !== "Unknown",
     date: dateStr,
-    type: "Receipt",
-    num: num,
-    name: vendor.trim(),
-    description: `Purchase from ${vendor.trim()}`,
-    account: account,
-    split: null,
-    debit: amount,
-    credit: null,
-    balance: null,
+    description: description,
+    amount: amount,
     confidence: 0.7
   };
 }
@@ -248,13 +232,12 @@ export async function parseReceiptWithOpenAI(pdfText: string): Promise<any> {
   
   return {
     date: result.date ? new Date(result.date).toISOString() : new Date().toISOString(),
-    amount: result.debit || result.credit || 0,
-    vendor: result.name || "Unknown",
-    category: result.account || "General",
+    amount: result.amount || 0,
+    description: result.description || "Unknown",
     confidence: result.confidence
   };
 }
 
 export function validateParsedReceipt(data: any): boolean {
-  return data.amount > 0 && data.vendor && data.vendor !== "Unknown";
+  return data.amount > 0 && data.description && data.description !== "Unknown";
 }

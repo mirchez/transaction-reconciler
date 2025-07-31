@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Mail, FileText, CheckCircle2, Clock, AlertCircle, LogOut } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { useGmailStats, useGmailCheck, useGmailDisconnect } from "@/hooks/use-gmail";
+import { useGmailStats, useGmailCheck, useGmailDisconnect, useGmailForceDisconnect } from "@/hooks/use-gmail";
 
 interface GmailStatusProps {
   email: string;
@@ -14,11 +14,13 @@ interface GmailStatusProps {
 
 export function GmailStatus({ email }: GmailStatusProps) {
   const [needsReconnect, setNeedsReconnect] = useState(false);
+  const [showForceDisconnect, setShowForceDisconnect] = useState(false);
   
   // Use React Query hooks
-  const { data: stats, isLoading: isLoadingStats } = useGmailStats(email);
+  const { data: stats, isLoading: isLoadingStats, error: statsError } = useGmailStats(email);
   const checkMutation = useGmailCheck(email);
   const disconnectMutation = useGmailDisconnect();
+  const forceDisconnectMutation = useGmailForceDisconnect();
 
   const handleCheckNow = async () => {
     checkMutation.mutate();
@@ -31,6 +33,13 @@ export function GmailStatus({ email }: GmailStatusProps) {
     disconnectMutation.mutate({ email });
   };
 
+  const handleForceDisconnect = async () => {
+    if (!confirm("This will force disconnect your Gmail account. Are you sure?")) {
+      return;
+    }
+    forceDisconnectMutation.mutate({ email });
+  };
+
   // Default stats if not loaded yet
   const statsData = stats || {
     totalChecked: 0,
@@ -38,6 +47,40 @@ export function GmailStatus({ email }: GmailStatusProps) {
     lastCheck: null,
     recentEmails: [],
   };
+
+  // Show error state and force disconnect option if there are errors
+  if (disconnectMutation.isError || checkMutation.isError || statsError) {
+    return (
+      <div className="space-y-4">
+        <Card className="rounded-lg bg-red-500/10 dark:bg-red-500/20 border-red-500/30 dark:border-red-500/40">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-1">
+                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-500" />
+                <div className="flex-1">
+                  <p className="font-medium text-red-700 dark:text-red-300">
+                    Gmail Connection Error
+                  </p>
+                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                    There was an error with your Gmail connection. You may need to force disconnect and reconnect.
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleForceDisconnect}
+                disabled={forceDisconnectMutation.isPending}
+                className="rounded-none"
+              >
+                {forceDisconnectMutation.isPending ? "Disconnecting..." : "Force Disconnect"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

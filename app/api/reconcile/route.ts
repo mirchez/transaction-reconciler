@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
 
     for (const bank of bankEntries) {
       for (const ledger of ledgerEntries) {
-        // Check if amounts match (bank amount vs ledger debit or credit)
+        // Check if amounts match
         const bankAmount = Number(bank.amount);
-        const ledgerAmount = Number(ledger.debit || ledger.credit || 0);
+        const ledgerAmount = Number(ledger.amount);
         
         if (Math.abs(bankAmount - ledgerAmount) < 0.01) {
           // Check if dates are close (within 7 days)
@@ -50,10 +50,17 @@ export async function POST(request: NextRequest) {
           if (daysDiff <= 7) {
             // Check if descriptions are similar
             const bankDesc = bank.description.toLowerCase();
-            const ledgerDesc = (ledger.description || ledger.name || "").toLowerCase();
+            const ledgerDesc = ledger.description.toLowerCase();
             
-            if (bankDesc.includes(ledgerDesc) || ledgerDesc.includes(bankDesc) || 
-                (ledger.name && bankDesc.includes(ledger.name.toLowerCase()))) {
+            // Look for common words or vendor names
+            const bankWords = bankDesc.split(/\s+/);
+            const ledgerWords = ledgerDesc.split(/\s+/);
+            
+            const hasCommonWords = bankWords.some(word => 
+              word.length > 3 && ledgerWords.some(lw => lw.includes(word) || word.includes(lw))
+            );
+            
+            if (hasCommonWords || bankDesc.includes(ledgerDesc) || ledgerDesc.includes(bankDesc)) {
               matches.push({ bank, ledger });
             }
           }

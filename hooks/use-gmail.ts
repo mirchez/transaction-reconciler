@@ -47,6 +47,10 @@ export function useGmailCheck(email: string) {
 
   return useMutation<GmailCheckResponse, Error>({
     mutationFn: async () => {
+      if (!email) {
+        throw new Error("Email is required");
+      }
+
       const response = await fetch("/api/gmail/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -54,7 +58,8 @@ export function useGmailCheck(email: string) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to check Gmail");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to check Gmail");
       }
 
       return response.json();
@@ -119,6 +124,10 @@ export function useGmailDisconnect() {
   
   return useMutation<void, Error, { email: string }>({
     mutationFn: async ({ email }) => {
+      if (!email) {
+        throw new Error("Email is required");
+      }
+
       const response = await fetch("/api/gmail/disconnect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -126,7 +135,8 @@ export function useGmailDisconnect() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to disconnect Gmail");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to disconnect Gmail");
       }
     },
     onSuccess: () => {
@@ -143,6 +153,43 @@ export function useGmailDisconnect() {
     onError: (error) => {
       console.error("Error disconnecting Gmail:", error);
       toast.error("Failed to disconnect Gmail");
+    },
+  });
+}
+
+// Hook to force disconnect Gmail (bypassing errors)
+export function useGmailForceDisconnect() {
+  const queryClient = useQueryClient();
+  
+  return useMutation<void, Error, { email: string }>({
+    mutationFn: async ({ email }) => {
+      if (!email) {
+        throw new Error("Email is required");
+      }
+
+      const response = await fetch("/api/gmail/force-disconnect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to force disconnect Gmail");
+      }
+    },
+    onSuccess: () => {
+      toast.success("Gmail disconnected successfully");
+      // Invalidate all queries to update UI completely
+      queryClient.invalidateQueries();
+      // Redirect to home page after a short delay
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
+    },
+    onError: (error) => {
+      console.error("Error force disconnecting Gmail:", error);
+      toast.error("Failed to force disconnect Gmail");
     },
   });
 }

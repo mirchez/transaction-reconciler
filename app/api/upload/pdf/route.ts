@@ -53,27 +53,27 @@ export async function POST(request: NextRequest) {
     if (!extractedData.isLedgerEntry) {
       console.log("❌ Document is not a ledger entry:", file.name);
       console.log("   Extracted data:", {
-        hasAmount: extractedData.debit || extractedData.credit,
-        vendor: extractedData.name,
+        hasAmount: extractedData.amount,
+        description: extractedData.description,
         confidence: extractedData.confidence
       });
       
       // Provide more specific feedback
       let message = "Could not extract required financial data";
-      if (!extractedData.debit && !extractedData.credit) {
+      if (!extractedData.amount) {
         message = "No amount found in the document";
-      } else if (!extractedData.name) {
-        message = "No vendor/merchant name found in the document";
+      } else if (!extractedData.description) {
+        message = "No description or vendor information found in the document";
       }
       
       return NextResponse.json(
         { 
           error: "Missing required financial data",
           message: message,
-          details: "Document must contain at least an amount and vendor name",
+          details: "Document must contain at least an amount and description",
           missingData: {
-            amount: !extractedData.debit && !extractedData.credit,
-            vendor: !extractedData.name
+            amount: !extractedData.amount,
+            description: !extractedData.description
           },
           isReceipt: false,
           confidence: extractedData.confidence
@@ -83,24 +83,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate minimum required data for a ledger entry
-    const hasAmount = extractedData.debit || extractedData.credit;
-    const hasVendor = extractedData.name;
+    const hasAmount = extractedData.amount && extractedData.amount > 0;
+    const hasDescription = extractedData.description && extractedData.description.trim() !== "";
     const hasDate = extractedData.date;
     
-    if (!hasAmount || !hasVendor) {
+    if (!hasAmount || !hasDescription) {
       console.log("❌ Receipt missing required data:", {
         hasAmount,
-        hasVendor,
+        hasDescription,
         hasDate,
         data: extractedData
       });
       return NextResponse.json(
         { 
           error: "Receipt is missing required information",
-          message: "The receipt must have at least an amount and vendor name",
+          message: "The receipt must have at least an amount and description",
           missingFields: {
             amount: !hasAmount,
-            vendor: !hasVendor,
+            description: !hasDescription,
             date: !hasDate
           },
           isReceipt: true,
@@ -123,11 +123,9 @@ export async function POST(request: NextRequest) {
 
     // Log successful extraction
     console.log("✅ Successfully extracted ledger data:");
-    console.log(`   Type: ${extractedData.type}`);
-    console.log(`   Vendor: ${extractedData.name}`);
-    console.log(`   Amount: $${extractedData.debit || extractedData.credit}`);
+    console.log(`   Description: ${extractedData.description}`);
+    console.log(`   Amount: $${extractedData.amount}`);
     console.log(`   Date: ${extractedData.date}`);
-    console.log(`   Category: ${extractedData.account}`);
     console.log(`   Confidence: ${extractedData.confidence}`);
 
     // Create ledger entry
@@ -135,15 +133,8 @@ export async function POST(request: NextRequest) {
       data: {
         userEmail,
         date: extractedData.date ? new Date(extractedData.date) : new Date(),
-        type: extractedData.type || "Receipt",
-        num: extractedData.num,
-        name: extractedData.name,
-        description: extractedData.description || `${extractedData.type || "Receipt"} from ${extractedData.name || "Unknown"}`,
-        account: extractedData.account,
-        split: extractedData.split,
-        debit: extractedData.debit ? new Decimal(extractedData.debit) : null,
-        credit: extractedData.credit ? new Decimal(extractedData.credit) : null,
-        balance: extractedData.balance ? new Decimal(extractedData.balance) : null,
+        description: extractedData.description || "Unknown transaction",
+        amount: new Decimal(extractedData.amount || 0),
       },
     });
     
@@ -151,15 +142,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Successfully processed ${extractedData.type || "receipt"}`,
+      message: `Successfully processed receipt`,
       entry: {
         id: ledgerEntry.id,
         date: ledgerEntry.date.toISOString(),
-        type: ledgerEntry.type,
-        vendor: ledgerEntry.name,
         description: ledgerEntry.description,
-        amount: ledgerEntry.debit || ledgerEntry.credit || 0,
-        account: ledgerEntry.account,
+        amount: Number(ledgerEntry.amount),
         confidence: extractedData.confidence,
       },
     });

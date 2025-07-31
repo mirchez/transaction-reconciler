@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
 import { google } from "googleapis";
 
 export async function POST(request: Request) {
@@ -48,10 +48,14 @@ export async function POST(request: Request) {
       where: { email },
     });
 
-    // Delete the user and all related data (cascade delete)
-    await prisma.user.delete({
-      where: { email },
-    });
+    // Delete the user and all related data (cascade delete) if exists
+    try {
+      await prisma.user.delete({
+        where: { email },
+      });
+    } catch (error) {
+      console.log("⚠️ User record not found or already deleted");
+    }
 
     console.log(`🗑️ Removed Gmail connection and all data for ${email}`);
 

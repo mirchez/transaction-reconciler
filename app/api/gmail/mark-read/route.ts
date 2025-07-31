@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
 
 async function getAuthenticatedClient(email: string) {
   const googleAuth = await prisma.googleAuth.findUnique({
