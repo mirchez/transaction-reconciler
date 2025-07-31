@@ -18,6 +18,9 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        lovelace: ["var(--font-lovelace)", "serif"],
+      },
       colors: {
         // Custom colors from CLAUDE.md
         "mint": {

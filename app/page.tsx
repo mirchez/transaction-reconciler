@@ -19,6 +19,7 @@ import { GmailStatus } from "@/components/gmail-status";
 import { useGmailStatus } from "@/hooks/use-gmail";
 import { useStats } from "@/hooks/use-stats";
 import { AnimatedNumber } from "@/components/animated-number";
+import { CenteredLogo } from "./components/centered-logo";
 
 export default function HomePage() {
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
@@ -67,37 +68,22 @@ export default function HomePage() {
       {/* Gradient background */}
       <div className="fixed inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-background pointer-events-none z-0" />
 
-      {/* Navigation */}
-      <header className="relative border-b bg-card backdrop-blur-xl sticky top-0 z-40">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative w-8 h-8">
-                <Image
-                  src="/minerva-logo.avif"
-                  alt="Minerva"
-                  width={32}
-                  height={32}
-                  className="dark:brightness-110 brightness-90 contrast-125"
-                />
-              </div>
-              <span className="font-semibold text-lg tracking-tight">
-                Minerva
-              </span>
-            </Link>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+      {/* Theme Toggle */}
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
 
       <main className="relative flex-1">
+        {/* Centered Logo */}
+        <CenteredLogo />
+        
         {/* Hero Section */}
-        <section className="py-20 sm:py-24 lg:py-32">
+        <section className="pb-12 sm:pb-16">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
             <div className="text-center space-y-4">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
                 Transaction Reconciler
-              </h1>
+              </h2>
               <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
                 Upload receipts and bank statements to automatically match
                 transactions.
