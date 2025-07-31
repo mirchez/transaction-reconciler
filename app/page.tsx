@@ -19,11 +19,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileText, TrendingUp, CheckCircle2, RefreshCw, File, Mail } from "lucide-react";
+import { FileText, TrendingUp, CheckCircle2, RefreshCw, File, Mail, Download } from "lucide-react";
 import { UploadCsvModal } from "@/components/upload-csv-modal";
 import { GmailMonitorModal } from "@/components/gmail-monitor-modal";
 import { Header } from "./components/header";
 import { useGmailStatus } from "@/hooks/use-gmail";
+import { exportMatchedTransactions, exportUnmatchedTransactions } from "./utils/excel-export";
 
 interface Transaction {
   id: string;
@@ -379,28 +380,37 @@ export default function HomePage() {
                   </Card>
                 </div>
 
-                {/* Run Reconciliation Button */}
+                {/* Run Reconciliation Card */}
                 {transactions.length > 0 && (
-                  <div className="flex justify-center mt-8">
-                    <Button 
-                      onClick={handleReconciliation}
-                      disabled={reconciling || (ledgerOnlyTransactions.length === 0 && bankOnlyTransactions.length === 0)}
-                      className="rounded-lg bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 text-white"
-                      size="lg"
-                    >
-                      {reconciling ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                          Reconciling...
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="w-4 h-4 mr-2" />
-                          Run Reconciliation
-                        </>
-                      )}
-                    </Button>
-                  </div>
+                  <Card className="rounded-lg bg-card border shadow-sm mt-8">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold text-foreground mb-2">Reconcile Files</h3>
+                          <div className="text-sm text-muted-foreground">
+                            <p>{bankOnlyTransactions.length} Bank statement(s) • {ledgerOnlyTransactions.length + matchedTransactions.length} Ledger file(s)</p>
+                          </div>
+                        </div>
+                        <Button 
+                          onClick={handleReconciliation}
+                          disabled={reconciling || (ledgerOnlyTransactions.length === 0 && bankOnlyTransactions.length === 0)}
+                          className="rounded-none bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
+                          size="lg"
+                        >
+                          {reconciling ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                              Reconciling...
+                            </>
+                          ) : (
+                            <>
+                              Start Reconciliation
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
 
                 {/* Reconciled Results - Only show after reconciliation */}
@@ -445,7 +455,19 @@ export default function HomePage() {
 
                       {/* Matched Transactions Table */}
                       <div className="mb-8">
-                        <h3 className="text-lg font-semibold text-foreground mb-4">Matched Transactions</h3>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold text-foreground">Matched Transactions</h3>
+                          <Button
+                            onClick={() => exportMatchedTransactions(matchedTransactions, `matched-transactions-${new Date().toISOString().split('T')[0]}`)}
+                            variant="outline"
+                            size="sm"
+                            className="rounded-none"
+                            disabled={matchedTransactions.length === 0}
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download Excel
+                          </Button>
+                        </div>
                         <div className="border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
                           <Table>
                             <TableHeader>
@@ -505,7 +527,19 @@ export default function HomePage() {
 
                       {/* Unmatched Transactions */}
                       <div>
-                        <h3 className="text-lg font-semibold text-foreground mb-4">Unmatched Transactions</h3>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold text-foreground">Unmatched Transactions</h3>
+                          <Button
+                            onClick={() => exportUnmatchedTransactions([...ledgerOnlyTransactions, ...bankOnlyTransactions], `unmatched-transactions-${new Date().toISOString().split('T')[0]}`)}
+                            variant="outline"
+                            size="sm"
+                            className="rounded-none"
+                            disabled={ledgerOnlyTransactions.length === 0 && bankOnlyTransactions.length === 0}
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download Excel
+                          </Button>
+                        </div>
                         <div className="border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
                           <Table>
                             <TableHeader>
@@ -580,15 +614,7 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* Actions */}
-            {transactions.length > 0 && (
-              <div className="flex justify-end gap-4 mt-8">
-                <Button variant="outline" className="rounded-lg">Export CSV</Button>
-                <Button className="rounded-lg" disabled={matchedTransactions.length === 0}>
-                  Confirm Matches
-                </Button>
-              </div>
-            )}
+           
           </div>
         </section>
 
