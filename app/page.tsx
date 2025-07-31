@@ -338,7 +338,7 @@ export default function HomePage() {
                           )}
                         </div>
                       </div>
-                      <div className="border border-border rounded-lg overflow-hidden bg-card">
+                      <div className="border border-border rounded-lg overflow-x-auto bg-card">
                         {/* Data source info */}
                         <div className="px-4 py-3 bg-muted/50 border-b border-border">
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -353,49 +353,62 @@ export default function HomePage() {
                         <Table>
                           <TableHeader>
                             <TableRow className="border-b border-gray-200 dark:border-zinc-800">
-                              <TableHead className="font-medium bg-muted/30 w-[120px]">Date</TableHead>
-                              <TableHead className="font-medium bg-muted/30 w-[180px]">Description</TableHead>
-                              <TableHead className="font-medium bg-muted/30 w-[150px]">Vendor</TableHead>
-                              <TableHead className="font-medium bg-muted/30">Category</TableHead>
-                              <TableHead className="font-medium text-right bg-muted/30 w-[100px]">Amount</TableHead>
+                              <TableHead className="font-medium bg-muted/30 text-left px-3 py-2 text-xs">Date</TableHead>
+                              <TableHead className="font-medium bg-muted/30 text-left px-3 py-2 text-xs">Type</TableHead>
+                              <TableHead className="font-medium bg-muted/30 text-left px-3 py-2 text-xs">Number</TableHead>
+                              <TableHead className="font-medium bg-muted/30 text-left px-3 py-2 text-xs">Vendor</TableHead>
+                              <TableHead className="font-medium bg-muted/30 text-left px-3 py-2 text-xs">Description</TableHead>
+                              <TableHead className="font-medium bg-muted/30 text-left px-3 py-2 text-xs">Category</TableHead>
+                              <TableHead className="font-medium bg-muted/30 text-right px-3 py-2 text-xs">Debit</TableHead>
+                              <TableHead className="font-medium bg-muted/30 text-right px-3 py-2 text-xs">Credit</TableHead>
                             </TableRow>
                           </TableHeader>
                         </Table>
-                        <div className="max-h-[250px] overflow-y-auto">
-                          <Table>
+                        <div className="max-h-[250px] overflow-auto">
+                          <Table className="min-w-[1000px]">
                             <TableHeader className="sr-only">
                               <TableRow>
-                                <TableHead className="w-[120px]">Date</TableHead>
-                                <TableHead className="w-[180px]">Description</TableHead>
+                                <TableHead className="w-[100px]">Date</TableHead>
+                                <TableHead className="w-[80px]">Type</TableHead>
+                                <TableHead className="w-[100px]">Number</TableHead>
                                 <TableHead className="w-[150px]">Vendor</TableHead>
-                                <TableHead>Category</TableHead>
-                                <TableHead className="w-[100px]">Amount</TableHead>
+                                <TableHead className="w-[200px]">Description</TableHead>
+                                <TableHead className="w-[120px]">Category</TableHead>
+                                <TableHead className="w-[100px]">Debit</TableHead>
+                                <TableHead className="w-[100px]">Credit</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
                           {ledgerOnlyTransactions.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                                 No ledger-only transactions
                               </TableCell>
                             </TableRow>
                           ) : (
-                            ledgerOnlyTransactions.map((transaction) => (
+                            ledgerOnlyTransactions.map((transaction: any) => (
                               <TableRow
                                 key={transaction.id}
                                 className="cursor-pointer hover:bg-muted/50"
                                 onClick={() => router.push(`/transaction/${transaction.id}`)}
                               >
-                                <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
-                                <TableCell>{transaction.description}</TableCell>
-                                <TableCell className="text-muted-foreground">
-                                  {transaction.vendor || "-"}
+                                <TableCell className="text-left px-3 py-2 text-sm">{formatDate(transaction.date)}</TableCell>
+                                <TableCell className="text-left px-3 py-2 text-sm">{transaction.type || "Receipt"}</TableCell>
+                                <TableCell className="text-left px-3 py-2 text-sm text-muted-foreground">
+                                  {transaction.num || "-"}
                                 </TableCell>
-                                <TableCell className="text-muted-foreground">
-                                  {transaction.category || "-"}
+                                <TableCell className="text-left px-3 py-2 text-sm font-medium">
+                                  {transaction.vendor || transaction.name || "-"}
                                 </TableCell>
-                                <TableCell className="text-right">
-                                  {formatAmount(transaction.amount)}
+                                <TableCell className="text-left px-3 py-2 text-sm">{transaction.description}</TableCell>
+                                <TableCell className="text-left px-3 py-2 text-sm text-muted-foreground">
+                                  {transaction.category || transaction.account || "-"}
+                                </TableCell>
+                                <TableCell className="text-right px-3 py-2 text-sm font-medium">
+                                  {transaction.debit ? formatAmount(transaction.debit) : "-"}
+                                </TableCell>
+                                <TableCell className="text-right px-3 py-2 text-sm font-medium">
+                                  {transaction.credit ? formatAmount(transaction.credit) : "-"}
                                 </TableCell>
                               </TableRow>
                             ))

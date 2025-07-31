@@ -66,6 +66,13 @@ export async function GET(request: NextRequest) {
         bankTransactionId: match.bankId,
         matchScore: 100,
         bankTransaction: match.bankTransaction,
+        // Include all ledger fields for the table display
+        type: match.ledger.type || undefined,
+        num: match.ledger.num || undefined,
+        name: match.ledger.name || undefined,
+        account: match.ledger.account || undefined,
+        debit: match.ledger.debit ? Number(match.ledger.debit) : undefined,
+        credit: match.ledger.credit ? Number(match.ledger.credit) : undefined,
       });
     });
     
@@ -83,6 +90,13 @@ export async function GET(request: NextRequest) {
           category: entry.account || undefined,
           vendor: entry.name || entry.description,
           ledgerEntryId: entry.id,
+          // Include all ledger fields for the table display
+          type: entry.type || undefined,
+          num: entry.num || undefined,
+          name: entry.name || undefined,
+          account: entry.account || undefined,
+          debit: entry.debit ? Number(entry.debit) : undefined,
+          credit: entry.credit ? Number(entry.credit) : undefined,
         });
       }
     });
