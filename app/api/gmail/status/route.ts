@@ -3,32 +3,31 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    // Get the most recently updated Google auth connection
+    // For now, check if any GoogleAuth record exists
+    // In production, you'd check the current user's session
     const googleAuth = await prisma.googleAuth.findFirst({
-      orderBy: {
-        updatedAt: "desc",
-      },
-      select: {
-        email: true,
-        name: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      orderBy: { createdAt: "desc" },
     });
 
     if (!googleAuth) {
-      return NextResponse.json({ connected: false });
+      return NextResponse.json({
+        connected: false,
+        email: null,
+      });
     }
 
+    // Check if tokens are still valid (simple check)
+    const isExpired = googleAuth.expiryDate && googleAuth.expiryDate < new Date();
+
     return NextResponse.json({
-      connected: true,
+      connected: !isExpired,
       email: googleAuth.email,
-      name: googleAuth.name,
-      connectedAt: googleAuth.createdAt,
-      lastChecked: googleAuth.updatedAt,
     });
   } catch (error) {
     console.error("Error checking Gmail status:", error);
-    return NextResponse.json({ connected: false });
+    return NextResponse.json({
+      connected: false,
+      email: null,
+    });
   }
 }

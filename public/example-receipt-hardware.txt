@@ -1,0 +1,53 @@
+==========================================
+                RECEIPT
+==========================================
+
+TechGear Electronics
+789 Hardware Lane
+Austin, TX 78701
+Tel: (512) 555-3456
+Email: sales@techgear.com
+
+Date: 2024-01-08
+Time: 3:45 PM
+Receipt #: TGE-2024-0108
+
+------------------------------------------
+
+ITEMS PURCHASED:
+
+Dell OptiPlex Desktop Computer        $449.00
+- Intel i7 Processor
+- 16GB RAM
+- 512GB SSD
+
+Wireless Keyboard & Mouse Set          $79.00
+- Bluetooth 5.0
+- Ergonomic Design
+
+USB-C Docking Station                  $71.00
+- 4K Display Support
+- Multiple Ports
+
+------------------------------------------
+
+Subtotal:                             $599.00
+Sales Tax (0%):                         $0.00
+                                     --------
+Total:                                $599.00
+
+------------------------------------------
+
+Payment Method: Debit Card ****9012
+Transaction ID: HWR-20240108-1545
+
+Thank you for shopping with TechGear!
+90-day warranty on all hardware.
+
+==========================================
+
+This receipt contains:
+- Date: 2024-01-08 (matches CSV row 9)
+- Amount: $599.00
+- Vendor: TechGear Electronics
+- Category: Hardware

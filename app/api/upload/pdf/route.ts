@@ -2,18 +2,48 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { LedgerEntrySchema, UploadResponse } from "@/lib/types/transactions";
 import { parsePDF } from "@/lib/pdf-parser";
+import { parseReceiptWithOpenAI, validateParsedReceipt } from "@/lib/openai-service";
 import { Decimal } from "@prisma/client/runtime/library";
 
 // Helper function to extract transaction data from PDF text
-function extractTransactionData(text: string): {
+async function extractTransactionData(text: string): Promise<{
   amount?: number;
   date?: string;
   vendor?: string;
   category?: string;
-} {
-  const data: any = {};
-
+  confidence?: number;
+}> {
   console.log("PDF Text Content:", text); // Debug log
+
+  // Check if OpenAI API key is available
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      console.log("Using OpenAI API for receipt parsing...");
+      const parsedData = await parseReceiptWithOpenAI(text);
+      
+      // Validate the parsed data
+      if (validateParsedReceipt(parsedData)) {
+        console.log(`✅ OpenAI parsing successful with confidence: ${parsedData.confidence}`);
+        return {
+          amount: parsedData.amount,
+          date: parsedData.date,
+          vendor: parsedData.vendor,
+          category: parsedData.category,
+          confidence: parsedData.confidence,
+        };
+      } else {
+        console.log("⚠️ OpenAI parsing returned invalid data, falling back to regex...");
+      }
+    } catch (error) {
+      console.error("OpenAI parsing error:", error);
+      console.log("⚠️ Falling back to regex-based parsing...");
+    }
+  } else {
+    console.log("⚠️ OpenAI API key not found, using regex-based parsing...");
+  }
+
+  // Original regex-based parsing as fallback
+  const data: any = {};
 
   // Extract amount - look for Total: pattern first
   const totalRegex = /Total:?\s*\$?([\d,]+\.?\d{0,2})/i;
@@ -144,6 +174,8 @@ function extractTransactionData(text: string): {
     data.category = "General";
   }
 
+  data.confidence = 0.5; // Lower confidence for regex-based parsing
+
   return data;
 }
 
@@ -205,8 +237,8 @@ export async function POST(request: NextRequest) {
         // Parse PDF using our wrapper
         const pdfData = await parsePDF(buffer);
 
-        // Extract transaction data
-        const extractedData = extractTransactionData(pdfData.text);
+        // Extract transaction data (now async with OpenAI support)
+        const extractedData = await extractTransactionData(pdfData.text);
 
         // Prepare ledger entry data
         const ledgerData = {
@@ -353,6 +385,7 @@ export async function POST(request: NextRequest) {
           category: validationResult.data.category,
           id: savedEntry.id,
           matchingTransactions: matchingTransactions.length,
+          confidence: extractedData.confidence,
         });
 
         results.processed = (results.processed || 0) + 1;

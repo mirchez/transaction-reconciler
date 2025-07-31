@@ -1,0 +1,50 @@
+==========================================
+                RECEIPT
+==========================================
+
+Professional Training Academy
+456 Education Boulevard
+New York, NY 10001
+Tel: (212) 555-7890
+Email: info@protraining.com
+
+Date: 2024-01-09
+Time: 09:00 AM
+Receipt #: PTA-2024-0109
+
+------------------------------------------
+
+ITEMS PURCHASED:
+
+Full-Stack Development Workshop        $200.00
+- 2-Day Intensive Course
+- Hands-on Projects
+- Certificate Included
+
+Course Materials                        $50.00
+- Digital Textbook
+- Practice Exercises
+- Video Resources
+
+------------------------------------------
+
+Subtotal:                             $250.00
+Sales Tax (0%):                         $0.00
+                                     --------
+Total:                                $250.00
+
+------------------------------------------
+
+Payment Method: Credit Card ****5678
+Transaction ID: TRN-20240109-0900
+
+Thank you for choosing our training!
+We look forward to seeing you in class.
+
+==========================================
+
+This receipt contains:
+- Date: 2024-01-09 (matches CSV row 8)
+- Amount: $250.00
+- Vendor: Professional Training Academy
+- Category: Training

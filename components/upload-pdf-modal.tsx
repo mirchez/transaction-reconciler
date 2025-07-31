@@ -271,80 +271,82 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  // Create a proper PDF receipt
+                  // Create a proper PDF receipt with clear data structure
                   const doc = new jsPDF();
                   
                   // Header
                   doc.setFontSize(24);
                   doc.text('RECEIPT', 105, 20, { align: 'center' });
                   
-                  // Company info
+                  // Company info (VENDOR)
                   doc.setFontSize(16);
                   doc.text('Tech Solutions Inc.', 105, 35, { align: 'center' });
                   doc.setFontSize(10);
-                  doc.text('123 Business Ave, Suite 100', 105, 42, { align: 'center' });
-                  doc.text('San Francisco, CA 94105', 105, 48, { align: 'center' });
-                  doc.text('Phone: (555) 123-4567', 105, 54, { align: 'center' });
+                  doc.text('123 Innovation Drive', 105, 42, { align: 'center' });
+                  doc.text('San Francisco, CA 94103', 105, 48, { align: 'center' });
+                  doc.text('Phone: (415) 555-0123', 105, 54, { align: 'center' });
                   
                   // Line separator
                   doc.line(20, 60, 190, 60);
                   
-                  // Receipt details (matching CSV date)
+                  // Receipt details with clear DATE
                   doc.setFontSize(12);
-                  doc.text('Receipt #: RCP-2024-0115', 20, 70);
-                  doc.text('Date: January 15, 2024', 20, 78);
-                  doc.text('Time: 2:30 PM', 20, 86);
+                  doc.text('Receipt #: TSI-2024-0115', 20, 70);
+                  doc.text('Date: 2024-01-15', 20, 78);
+                  doc.text('Time: 10:45 AM', 20, 86);
                   
                   // Line separator
                   doc.line(20, 92, 190, 92);
                   
-                  // Items
+                  // Items (SOFTWARE category)
                   doc.setFontSize(12);
-                  doc.text('ITEMS', 20, 102);
+                  doc.text('ITEMS PURCHASED:', 20, 102);
                   doc.setFontSize(10);
                   
-                  // Item 1
-                  doc.text('Software License - Professional', 20, 112);
-                  doc.text('1 x $299.99', 40, 120);
+                  // Item 1 - Software
+                  doc.text('Software License (Annual)', 20, 112);
+                  doc.text('- Professional Edition', 30, 120);
+                  doc.text('- 1 User License', 30, 128);
                   doc.text('$299.99', 170, 120, { align: 'right' });
                   
-                  // Item 2
-                  doc.text('Support Package - 1 Year', 20, 130);
-                  doc.text('1 x $49.99', 40, 138);
-                  doc.text('$49.99', 170, 138, { align: 'right' });
-                  
-                  // Item 3
-                  doc.text('Training Session - Online', 20, 148);
-                  doc.text('2 x $75.00', 40, 156);
-                  doc.text('$150.00', 170, 156, { align: 'right' });
+                  // Item 2 - Support
+                  doc.text('Premium Support Package', 20, 140);
+                  doc.text('- Priority Email Support', 30, 148);
+                  doc.text('- 24/7 Access', 30, 156);
+                  doc.text('$49.99', 170, 148, { align: 'right' });
                   
                   // Line separator
-                  doc.line(20, 162, 190, 162);
+                  doc.line(20, 164, 190, 164);
                   
-                  // Totals (matching the CSV bank transaction)
+                  // Totals with clear AMOUNT
                   doc.setFontSize(10);
-                  doc.text('Subtotal:', 130, 172);
-                  doc.text('$499.98', 170, 172, { align: 'right' });
+                  doc.text('Subtotal:', 130, 174);
+                  doc.text('$349.98', 170, 174, { align: 'right' });
                   
-                  doc.text('Tax (8.5%):', 130, 180);
-                  doc.text('$42.50', 170, 180, { align: 'right' });
+                  doc.text('Sales Tax (8.5%):', 130, 182);
+                  doc.text('$29.75', 170, 182, { align: 'right' });
                   
                   doc.setFontSize(12);
                   doc.setFont(undefined, 'bold');
-                  doc.text('Total:', 130, 190);
-                  doc.text('$542.48', 170, 190, { align: 'right' });
+                  doc.text('Total:', 130, 192);
+                  doc.text('$379.73', 170, 192, { align: 'right' });
                   
                   // Payment info
                   doc.setFont(undefined, 'normal');
                   doc.setFontSize(10);
-                  doc.text('Payment Method: Credit Card ****1234', 20, 205);
-                  doc.text('Transaction ID: TXN-2024-0115-001', 20, 213);
+                  doc.text('Payment Method: Credit Card ****1234', 20, 207);
+                  doc.text('Transaction ID: TXN-20240115-1045', 20, 215);
                   
                   // Footer
-                  doc.line(20, 220, 190, 220);
+                  doc.line(20, 222, 190, 222);
                   doc.setFontSize(10);
-                  doc.text('Thank you for your purchase!', 105, 230, { align: 'center' });
-                  doc.text('Please keep this receipt for your records', 105, 238, { align: 'center' });
+                  doc.text('Thank you for your purchase!', 105, 232, { align: 'center' });
+                  doc.text('Please keep this receipt for your records', 105, 240, { align: 'center' });
+                  
+                  // Metadata comment for parsing
+                  doc.setFontSize(8);
+                  doc.setTextColor(150);
+                  doc.text('Parser Data: Date=2024-01-15, Amount=379.73, Vendor=Tech Solutions Inc., Category=Software', 105, 255, { align: 'center' });
                   
                   // Save the PDF
                   doc.save('example-receipt.pdf');

@@ -15,8 +15,8 @@ import { FileText, Upload, TrendingUp, Mail } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UploadPdfModal } from "@/components/upload-pdf-modal";
 import { UploadCsvModal } from "@/components/upload-csv-modal";
-import { GmailMonitor } from "@/components/gmail-monitor";
 import { GmailStatus } from "@/components/gmail-status";
+import { useGmailStatus } from "@/hooks/use-gmail";
 
 export default function HomePage() {
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
@@ -27,18 +27,17 @@ export default function HomePage() {
     { label: "Ledger Only", value: 0, variant: "warning" },
     { label: "Bank Only", value: 0, variant: "info" },
   ]);
-  const [gmailConnected, setGmailConnected] = useState(false);
-  const [connectedEmail, setConnectedEmail] = useState("");
+  
+  // Use React Query for Gmail status
+  const { data: gmailStatus } = useGmailStatus();
   
   // Only render modals after component mounts to avoid SSR issues
   useEffect(() => {
     setMounted(true);
     
-    // Check URL params for Gmail connection status
+    // Check URL params for Gmail connection status (for redirect from OAuth)
     const params = new URLSearchParams(window.location.search);
     if (params.get("gmail_connected") === "true") {
-      setGmailConnected(true);
-      setConnectedEmail(params.get("email") || "");
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
@@ -48,7 +47,6 @@ export default function HomePage() {
     // Only fetch stats after component is mounted to avoid SSR issues
     if (mounted) {
       fetchStats();
-      checkGmailStatus();
     }
   }, [mounted]);
 
@@ -82,24 +80,6 @@ export default function HomePage() {
     }
   };
 
-  const checkGmailStatus = async () => {
-    try {
-      const response = await fetch("/api/gmail/status");
-      if (response.ok) {
-        const data = await response.json();
-        console.log("🔌 Gmail Connection Status:", data);
-        if (data.connected) {
-          setGmailConnected(true);
-          setConnectedEmail(data.email);
-          console.log(`✅ Gmail connected: ${data.email}`);
-        } else {
-          console.log("❌ No Gmail account connected");
-        }
-      }
-    } catch (error) {
-      console.error("Failed to check Gmail status:", error);
-    }
-  };
 
   const handleGoogleConnect = async () => {
     try {
@@ -161,7 +141,7 @@ export default function HomePage() {
         {/* Gmail Connect Section */}
         <section className="py-8 sm:py-12">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
-            {!gmailConnected ? (
+            {!gmailStatus?.connected ? (
               <Card className="bg-card border-muted">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
@@ -183,7 +163,7 @@ export default function HomePage() {
                 </CardContent>
               </Card>
             ) : (
-              <GmailStatus email={connectedEmail} />
+              <GmailStatus email={gmailStatus.email || ""} />
             )}
           </div>
         </section>
@@ -363,10 +343,6 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {/* Gmail Monitor */}
-      {mounted && gmailConnected && (
-        <GmailMonitor email={connectedEmail} enabled={true} />
-      )}
 
       {/* Upload Modals - Only render after mount to avoid SSR issues */}
       {mounted && (

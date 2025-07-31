@@ -31,7 +31,7 @@ Premium Support Package              $49.99
 Subtotal:                          $349.98
 Sales Tax (8.5%):                   $29.75
                                    --------
-TOTAL:                             $379.73
+Total:                             $379.73
 
 ------------------------------------------
 
@@ -46,3 +46,9 @@ Please keep this receipt for your records.
 Note: This is a sample receipt file.
 To use with the PDF upload feature, save this
 as a PDF file using any PDF creator tool.
+
+This receipt contains:
+- Date: 2024-01-15 (ISO format compatible)
+- Amount: $379.73 (positive number)
+- Vendor: Tech Solutions Inc.
+- Category: Software (based on items)

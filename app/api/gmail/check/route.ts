@@ -42,30 +42,31 @@ export async function POST(request: Request) {
     const { oauth2Client, googleAuth } = await getAuthenticatedClient(email);
     const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
-    // Get only the last 5 emails (most recent)
+    // Get only unread emails with PDF attachments
     let messages = [];
     try {
-      // First try to get emails with attachments
+      // Get unread emails with PDF attachments
       const response = await gmail.users.messages.list({
         userId: "me",
-        q: "has:attachment filename:pdf",
-        maxResults: 5,
-        orderBy: "internalDate desc", // Most recent first
+        q: "is:unread has:attachment filename:pdf",
+        maxResults: 10 // Get up to 10 unread emails
       });
       messages = response.data.messages || [];
-      console.log(`✅ Gmail API Response - Found ${messages.length} recent emails with PDF attachments (last 5)`);
+      console.log(`📧 Found ${messages.length} unread emails with PDFs`);
     } catch (error: any) {
-      // If search fails, try a simpler approach - just get last 5 emails
+      // If search fails, try a simpler approach - just get unread emails
       console.log("⚠️ Complex search failed, trying simpler approach:", error.message);
       const response = await gmail.users.messages.list({
         userId: "me",
-        maxResults: 5,
+        q: "is:unread",
+        maxResults: 10,
       });
       messages = response.data.messages || [];
-      console.log(`✅ Gmail API Response - Found ${messages.length} recent emails (last 5)`);
+      console.log(`📧 Found ${messages.length} unread emails`);
     }
-    const processedPdfs = [];
-    const emailsFound = [];
+    const processedPdfs: any[] = [];
+    const emailsFound: any[] = [];
+    const successfullyProcessedMessageIds: string[] = [];
 
     for (const message of messages) {
       if (!message.id) continue;
@@ -92,7 +93,7 @@ export async function POST(request: Request) {
 
         // Check for attachments
         const parts = fullMessage.data.payload?.parts || [];
-        const pdfAttachments = [];
+        const pdfAttachments: any[] = [];
         
         for (const part of parts) {
           if (part.filename) {
@@ -110,17 +111,24 @@ export async function POST(request: Request) {
         emailData.pdfAttachments = pdfAttachments;
         emailsFound.push(emailData);
         
-        console.log(`📧 Email found: "${emailData.subject}" from ${emailData.from}`);
-        console.log(`   📎 Attachments: ${emailData.hasAttachments ? 'Yes' : 'No'}`);
+        // Simplify email logs
+        const sender = emailData.from?.split('<')[0]?.trim() || 'Unknown';
+        const hasPdfs = pdfAttachments.length > 0;
+        if (hasPdfs) {
+          console.log(`📄 ${sender}: "${emailData.subject}" - ${pdfAttachments.length} PDF(s)`);
+        }
         if (pdfAttachments.length > 0) {
-          console.log(`   📄 PDFs found: ${pdfAttachments.map(p => p.filename).join(', ')}`);
           
           // Process each PDF attachment
           for (const pdfAttachment of pdfAttachments) {
             try {
-              console.log(`   🔄 Processing PDF: ${pdfAttachment.filename}`);
               
               // Get the attachment data
+              if (!pdfAttachment.attachmentId) {
+                console.warn(`⚠️ No attachment ID for ${pdfAttachment.filename}`);
+                continue;
+              }
+              
               const attachment = await gmail.users.messages.attachments.get({
                 userId: "me",
                 messageId: message.id,
@@ -168,6 +176,10 @@ export async function POST(request: Request) {
                       if (result.matchingTransactions?.length > 0) {
                         console.log(`      🔗 Found ${result.matchingTransactions.length} matching bank transactions`);
                       }
+                    }
+                    // Track successfully processed message
+                    if (!successfullyProcessedMessageIds.includes(message.id)) {
+                      successfullyProcessedMessageIds.push(message.id);
                     }
                   }
                 } else {
@@ -243,12 +255,7 @@ export async function POST(request: Request) {
       emailsWithPdfs: emailsFound.filter(e => e.pdfAttachments.length > 0).length,
     };
     
-    console.log("\n📊 Gmail Check Summary:");
-    console.log(`- Recent emails checked: ${messages.length} (last 5 emails)`);
-    console.log(`- Emails with attachments: ${response.emailsWithAttachments}`);
-    console.log(`- Emails with PDFs: ${response.emailsWithPdfs}`);
-    console.log(`- New PDFs processed: ${processedPdfs.length}`);
-    console.log(`- Account: ${email}`);
+    console.log(`\n📊 Summary: ${messages.length} emails | ${response.emailsWithPdfs} with PDFs | ${processedPdfs.length} processed`);
     
     // Si se procesaron PDFs, mostrar los resultados
     if (processedPdfs.length > 0) {
@@ -261,6 +268,32 @@ export async function POST(request: Request) {
       }
     }
     console.log("------------------------\n");
+    
+    // Mark successfully processed emails as read
+    if (successfullyProcessedMessageIds.length > 0) {
+      try {
+        console.log(`\n🔖 Marking ${successfullyProcessedMessageIds.length} processed emails as read...`);
+        const markReadResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_APP_URL}/api/gmail/mark-read`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email,
+              messageIds: successfullyProcessedMessageIds,
+            }),
+          }
+        );
+        
+        if (markReadResponse.ok) {
+          const markReadResult = await markReadResponse.json();
+          console.log(`✅ Marked ${markReadResult.marked} emails as read`);
+        }
+      } catch (error) {
+        console.error("Failed to mark emails as read:", error);
+        // Don't fail the whole operation if marking as read fails
+      }
+    }
     
     return NextResponse.json(response);
   } catch (error) {
