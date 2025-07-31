@@ -100,6 +100,16 @@ export default function HomePage() {
     }
   }, []);
 
+  // Auto-show reconciliation results if there are matched transactions
+  useEffect(() => {
+    if (transactions.length > 0) {
+      const hasMatchedTransactions = transactions.some(t => t.status === "matched" && t.source === "Both");
+      if (hasMatchedTransactions && !showReconciled) {
+        setShowReconciled(true);
+      }
+    }
+  }, [transactions, showReconciled]);
+
 
 
   const handleReconciliation = async () => {
@@ -500,13 +510,13 @@ export default function HomePage() {
                   </Card>
                 )}
 
-                {/* Reconciled Results - Only show after reconciliation */}
+                {/* Reconciliation Summary - Show when there are matched transactions */}
                 {showReconciled && (
                   <Card className="rounded-lg bg-card border shadow-sm mt-8">
                     <CardContent className="p-6">
                       <div className="mb-6">
-                        <h2 className="text-xl font-semibold text-foreground">Reconciliation Results</h2>
-                        <p className="text-sm text-muted-foreground mt-1">Summary of transaction matching results</p>
+                        <h2 className="text-xl font-semibold text-foreground">Reconciliation Summary</h2>
+                        <p className="text-sm text-muted-foreground mt-1">Overview of all matched and unmatched transactions</p>
                       </div>
 
                       {/* Summary Stats */}
