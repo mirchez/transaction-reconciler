@@ -42,27 +42,35 @@ export async function POST(request: Request) {
     const { oauth2Client, googleAuth } = await getAuthenticatedClient(email);
     const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
-    // Get only unread emails with PDF attachments
+    // Calculate the time 5 minutes ago
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const gmailDateQuery = Math.floor(fiveMinutesAgo.getTime() / 1000); // Gmail uses Unix timestamp
+    
+    console.log(`\n🕐 Checking emails from last 5 minutes`);
+    console.log(`   Current time: ${new Date().toLocaleString()}`);
+    console.log(`   Checking from: ${fiveMinutesAgo.toLocaleString()}`);
+    
+    // Get only unread emails from the last 5 minutes
     let messages = [];
     try {
-      // Get unread emails with PDF attachments
+      // Get unread emails with PDF attachments from last 5 minutes
       const response = await gmail.users.messages.list({
         userId: "me",
-        q: "is:unread has:attachment filename:pdf",
-        maxResults: 10 // Get up to 10 unread emails
+        q: `is:unread has:attachment filename:pdf after:${gmailDateQuery}`,
+        maxResults: 10 // Increase limit since we're filtering by time
       });
       messages = response.data.messages || [];
-      console.log(`📧 Found ${messages.length} unread emails with PDFs`);
+      console.log(`📧 Found ${messages.length} unread emails with PDFs from last 5 minutes`);
     } catch (error: any) {
       // If search fails, try a simpler approach - just get unread emails
       console.log("⚠️ Complex search failed, trying simpler approach:", error.message);
       const response = await gmail.users.messages.list({
         userId: "me",
-        q: "is:unread",
+        q: `is:unread after:${gmailDateQuery}`,
         maxResults: 10,
       });
       messages = response.data.messages || [];
-      console.log(`📧 Found ${messages.length} unread emails`);
+      console.log(`📧 Found ${messages.length} unread emails from last 5 minutes`);
     }
     const processedPdfs: any[] = [];
     const emailsFound: any[] = [];
@@ -70,6 +78,21 @@ export async function POST(request: Request) {
 
     for (const message of messages) {
       if (!message.id) continue;
+
+      // Check if this email has already been processed
+      try {
+        const existingProcessedEmail = await prisma.processedEmail.findUnique({
+          where: { gmailId: message.id }
+        });
+        
+        if (existingProcessedEmail) {
+          console.log(`⏭️ Email ${message.id} already processed, skipping...`);
+          continue;
+        }
+      } catch (error) {
+        console.warn(`⚠️ ProcessedEmail table not available yet, continuing...`);
+        // Continue processing if table doesn't exist yet
+      }
 
       // Get full message details to check attachments
       let fullMessage;
@@ -82,11 +105,23 @@ export async function POST(request: Request) {
         });
         
         const headers = fullMessage.data.payload?.headers || [];
+        const dateHeader = headers.find((h: any) => h.name === "Date")?.value;
+        const emailDate = dateHeader ? new Date(dateHeader) : new Date();
+        
+        // Check if email is from the last 5 minutes
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        if (emailDate < fiveMinutesAgo) {
+          console.log(`⏭️ Email ${message.id} is older than 5 minutes, skipping...`);
+          console.log(`   Email date: ${emailDate.toLocaleString()}`);
+          console.log(`   Cutoff time: ${fiveMinutesAgo.toLocaleString()}`);
+          continue;
+        }
+        
         const emailData = {
           id: message.id,
           subject: headers.find((h: any) => h.name === "Subject")?.value || "No subject",
           from: headers.find((h: any) => h.name === "From")?.value || "Unknown",
-          date: headers.find((h: any) => h.name === "Date")?.value || new Date().toISOString(),
+          date: emailDate.toISOString(),
           hasAttachments: false,
           pdfAttachments: [],
         };
@@ -154,6 +189,10 @@ export async function POST(request: Request) {
                   {
                     method: "POST",
                     body: formData,
+                    headers: {
+                      "X-Allow-Duplicates": "true", // Allow duplicates for new emails
+                      "X-Email-ID": message.id || "", // Pass the email ID
+                    }
                   }
                 );
 
@@ -191,6 +230,28 @@ export async function POST(request: Request) {
               }
             } catch (error: any) {
               console.log(`   ❌ Error processing attachment: ${error.message}`);
+            }
+          }
+          
+          // Mark this email as processed if we processed at least one PDF
+          if (pdfAttachments.length > 0) {
+            try {
+              await prisma.processedEmail.create({
+                data: {
+                  gmailId: message.id,
+                  userEmail: email,
+                  subject: emailData.subject,
+                  from: emailData.from,
+                  attachmentCount: pdfAttachments.length
+                }
+              });
+              console.log(`✅ Email ${message.id} marked as processed`);
+            } catch (error: any) {
+              if (error.message?.includes('processedEmail')) {
+                console.warn(`⚠️ ProcessedEmail table not available yet`);
+              } else {
+                console.error(`Failed to mark email as processed:`, error.message);
+              }
             }
           }
         }

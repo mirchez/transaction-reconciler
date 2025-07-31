@@ -184,6 +184,10 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const files = formData.getAll("files") as File[];
     
+    // Check if we should allow duplicates (from new emails)
+    const allowDuplicates = request.headers.get("X-Allow-Duplicates") === "true";
+    const emailId = request.headers.get("X-Email-ID");
+    
     // Debug log to see what we're receiving
     console.log("PDF Upload - FormData keys:", Array.from(formData.keys()));
     console.log("PDF Upload - Files received:", files.length);
@@ -287,35 +291,39 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Check if this entry already exists (duplicate check)
-        // Convert amount to Decimal for proper comparison
-        const amountDecimal = new Decimal(validationResult.data.amount);
-        
-        const existingEntry = await prisma.ledgerEntry.findFirst({
-          where: {
-            amount: amountDecimal,
-            vendor: validationResult.data.vendor,
-            // Check date within same day to account for timezone differences
-            date: {
-              gte: new Date(new Date(validationResult.data.date).setHours(0, 0, 0, 0)),
-              lt: new Date(new Date(validationResult.data.date).setHours(23, 59, 59, 999)),
-            },
-          },
-        });
-
-        if (existingEntry) {
-          console.log(`⚠️ Duplicate receipt found for ${file.name}:`);
-          console.log(`   - Amount: $${validationResult.data.amount}`);
-          console.log(`   - Vendor: ${validationResult.data.vendor}`);
-          console.log(`   - Date: ${new Date(validationResult.data.date).toLocaleDateString()}`);
-          console.log(`   - Existing ID: ${existingEntry.id}`);
+        // Check if this entry already exists (duplicate check) - only if not from a new email
+        if (!allowDuplicates) {
+          // Convert amount to Decimal for proper comparison
+          const amountDecimal = new Decimal(validationResult.data.amount);
           
-          results.errors?.push({
-            row: i + 1,
-            error: `Duplicate: Receipt from ${validationResult.data.vendor} for $${validationResult.data.amount} already exists`,
+          const existingEntry = await prisma.ledgerEntry.findFirst({
+            where: {
+              amount: amountDecimal,
+              vendor: validationResult.data.vendor,
+              // Check date within same day to account for timezone differences
+              date: {
+                gte: new Date(new Date(validationResult.data.date).setHours(0, 0, 0, 0)),
+                lt: new Date(new Date(validationResult.data.date).setHours(23, 59, 59, 999)),
+              },
+            },
           });
-          results.failed = (results.failed || 0) + 1;
-          continue;
+
+          if (existingEntry) {
+            console.log(`⚠️ Duplicate receipt found for ${file.name}:`);
+            console.log(`   - Amount: $${validationResult.data.amount}`);
+            console.log(`   - Vendor: ${validationResult.data.vendor}`);
+            console.log(`   - Date: ${new Date(validationResult.data.date).toLocaleDateString()}`);
+            console.log(`   - Existing ID: ${existingEntry.id}`);
+            
+            results.errors?.push({
+              row: i + 1,
+              error: `Duplicate: Receipt from ${validationResult.data.vendor} for $${validationResult.data.amount} already exists`,
+            });
+            results.failed = (results.failed || 0) + 1;
+            continue;
+          }
+        } else {
+          console.log(`✅ Allowing duplicate for new email ${emailId}: ${validationResult.data.vendor}`);
         }
 
         // Save to database
