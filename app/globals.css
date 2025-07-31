@@ -27,7 +27,7 @@
     --accent-foreground: 172 91% 24%; /* Dark mint */
     --destructive: 0 93% 94%; /* Soft red #FEE2E2 */
     --destructive-foreground: 0 84.2% 45%; /* Darker red for text */
-    --border: 213 16% 85%; /* #CBD5E1 */
+    --border: 210 20% 92%; /* #E8EBF0 - Lighter border */
     --input: 213 16% 85%; /* #CBD5E1 */
     --ring: 0 0% 15%; /* Dark gray for focus */
     --radius: 0.5rem; /* 8px radius by default */
@@ -58,7 +58,7 @@
     --accent-foreground: 0 0% 4%; /* Dark text on accent */
     --destructive: 0 84.2% 45%; /* Stronger red for dark mode */
     --destructive-foreground: 0 0% 90%; /* Light text */
-    --border: 0 0% 17.3%; /* #2C2C2C */
+    --border: 0 0% 12%; /* #1F1F1F - Lighter border for dark mode */
     --input: 0 0% 17.3%; /* #2C2C2C */
     --ring: 0 0% 75%; /* Light gray for focus in dark mode */
     

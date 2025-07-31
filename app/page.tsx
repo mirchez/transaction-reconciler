@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileText, TrendingUp, CheckCircle2, RefreshCw } from "lucide-react";
+import { FileText, TrendingUp, CheckCircle2, RefreshCw, File, Mail } from "lucide-react";
 import { UploadCsvModal } from "@/components/upload-csv-modal";
 import { GmailMonitorModal } from "@/components/gmail-monitor-modal";
 import { CenteredLogo } from "./components/centered-logo";
@@ -49,6 +49,7 @@ export default function HomePage() {
   const [showReconciled, setShowReconciled] = useState(false);
   const [reconciling, setReconciling] = useState(false);
   const { data: gmailStatus } = useGmailStatus();
+  const [csvFileInfo, setCsvFileInfo] = useState<{name: string, size: string, uploadTime: string} | null>(null);
   
   useEffect(() => {
     setMounted(true);
@@ -168,7 +169,7 @@ export default function HomePage() {
           {/* Upload Data Card */}
           <section className="p-6">
             <div className="max-w-7xl mx-auto">
-              <Card className="rounded-lg bg-card border border-gray-200 dark:border-zinc-800 shadow-sm">
+              <Card className="rounded-lg bg-card border shadow-sm">
                 <CardContent className="p-6">
                   <div className="space-y-1 mb-6">
                     <h2 className="text-xl font-semibold text-foreground">
@@ -209,13 +210,13 @@ export default function HomePage() {
 
             {/* Transaction Tables */}
             {loading ? (
-              <Card className="rounded-lg bg-card border border-gray-200 dark:border-zinc-800 shadow-sm">
+              <Card className="rounded-lg bg-card border shadow-sm">
                 <CardContent className="p-12 text-center">
                   <p className="text-muted-foreground">Loading transactions...</p>
                 </CardContent>
               </Card>
             ) : transactions.length === 0 ? (
-              <Card className="rounded-lg bg-card border border-gray-200 dark:border-zinc-800 shadow-sm">
+              <Card className="rounded-lg bg-card border shadow-sm">
                 <CardContent className="p-12 text-center">
                   <div className="max-w-md mx-auto space-y-4">
                     <div className="w-16 h-16 mx-auto bg-muted rounded-lg flex items-center justify-center">
@@ -233,7 +234,7 @@ export default function HomePage() {
                 {/* Two tables side by side */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Ledger Only Table */}
-                  <Card className="rounded-lg bg-card border border-gray-200 dark:border-zinc-800 shadow-sm">
+                  <Card className="rounded-lg bg-card border shadow-sm">
                     <CardContent className="p-6">
                       <div className="mb-4">
                         <h3 className="text-lg font-semibold text-foreground">Ledger Only Transactions</h3>
@@ -242,26 +243,37 @@ export default function HomePage() {
                         </p>
                       </div>
                       <div className="border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
+                        {/* Data source info */}
+                        <div className="px-4 py-3 bg-gray-50 dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800">
+                          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                            <Mail className="w-3 h-3" />
+                            <span className="font-medium">{gmailStatus?.email || "Gmail Receipts"}</span>
+                            <span className="text-gray-400 dark:text-gray-600">•</span>
+                            <span>{ledgerOnlyTransactions.length} entries</span>
+                            <span className="text-gray-400 dark:text-gray-600">•</span>
+                            <span>Last synced: {new Date().toLocaleTimeString()}</span>
+                          </div>
+                        </div>
                         <Table>
                           <TableHeader>
                             <TableRow className="border-b border-gray-200 dark:border-zinc-800">
-                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Date</TableHead>
-                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Description</TableHead>
-                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Vendor</TableHead>
+                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800 w-[120px]">Date</TableHead>
+                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800 w-[180px]">Description</TableHead>
+                              <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800 w-[150px]">Vendor</TableHead>
                               <TableHead className="font-medium bg-gray-50 dark:bg-zinc-800">Category</TableHead>
-                              <TableHead className="font-medium text-right bg-gray-50 dark:bg-zinc-800">Amount</TableHead>
+                              <TableHead className="font-medium text-right bg-gray-50 dark:bg-zinc-800 w-[100px]">Amount</TableHead>
                             </TableRow>
                           </TableHeader>
                         </Table>
-                        <div className="max-h-[300px] overflow-y-auto">
+                        <div className="max-h-[250px] overflow-y-auto">
                           <Table>
                             <TableHeader className="sr-only">
                               <TableRow>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead>Vendor</TableHead>
+                                <TableHead className="w-[120px]">Date</TableHead>
+                                <TableHead className="w-[180px]">Description</TableHead>
+                                <TableHead className="w-[150px]">Vendor</TableHead>
                                 <TableHead>Category</TableHead>
-                                <TableHead>Amount</TableHead>
+                                <TableHead className="w-[100px]">Amount</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -300,7 +312,7 @@ export default function HomePage() {
                   </Card>
 
                   {/* Bank Only Table */}
-                  <Card className="rounded-lg bg-card border border-gray-200 dark:border-zinc-800 shadow-sm">
+                  <Card className="rounded-lg bg-card border shadow-sm">
                     <CardContent className="p-6">
                       <div className="mb-4">
                         <h3 className="text-lg font-semibold text-foreground">Bank Only Transactions</h3>
@@ -309,6 +321,17 @@ export default function HomePage() {
                         </p>
                       </div>
                       <div className="border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
+                        {/* Data source info */}
+                        <div className="px-4 py-3 bg-gray-50 dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800">
+                          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                            <File className="w-3 h-3" />
+                            <span className="font-medium">{csvFileInfo?.name || "Bank Statement.csv"}</span>
+                            <span className="text-gray-400 dark:text-gray-600">•</span>
+                            <span>{csvFileInfo?.size || "0.1 MB"}</span>
+                            <span className="text-gray-400 dark:text-gray-600">•</span>
+                            <span>{csvFileInfo?.uploadTime || new Date().toLocaleTimeString()}</span>
+                          </div>
+                        </div>
                         <Table>
                           <TableHeader>
                             <TableRow className="border-b border-gray-200 dark:border-zinc-800">
@@ -318,7 +341,7 @@ export default function HomePage() {
                             </TableRow>
                           </TableHeader>
                         </Table>
-                        <div className="max-h-[300px] overflow-y-auto">
+                        <div className="max-h-[250px] overflow-y-auto">
                           <Table>
                             <TableHeader className="sr-only">
                               <TableRow>
@@ -585,6 +608,7 @@ export default function HomePage() {
           <UploadCsvModal 
             open={csvModalOpen} 
             onOpenChange={setCsvModalOpen}
+            onFileUpload={(fileInfo) => setCsvFileInfo(fileInfo)}
           />
           <GmailMonitorModal
             open={gmailModalOpen}

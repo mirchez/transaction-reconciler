@@ -15,9 +15,10 @@ import Papa from "papaparse";
 interface UploadCsvModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onFileUpload?: (fileInfo: {name: string, size: string, uploadTime: string}) => void;
 }
 
-export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
+export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvModalProps) {
   const [csvData, setCsvData] = useState<CSVRow[]>([]);
   const [fileName, setFileName] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,6 +50,19 @@ export function UploadCsvModal({ open, onOpenChange }: UploadCsvModalProps) {
     setFileName(file.name);
     setSelectedFile(file);
     setIsParsing(true);
+    
+    // Call the callback with file info
+    if (onFileUpload) {
+      const fileSize = file.size < 1024 * 1024 
+        ? `${(file.size / 1024).toFixed(1)} KB`
+        : `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+      
+      onFileUpload({
+        name: file.name,
+        size: fileSize,
+        uploadTime: new Date().toLocaleTimeString()
+      });
+    }
 
     try {
       const text = await file.text();
