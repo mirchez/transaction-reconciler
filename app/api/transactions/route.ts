@@ -66,19 +66,20 @@ export async function GET(request: NextRequest) {
       });
     });
     
-    // Add unmatched ledger entries
+    // Add ALL ledger entries (both matched and unmatched)
     ledgerEntries.forEach(entry => {
-      if (!matchMap.has(`ledger-${entry.id}`)) {
-        transactions.push({
-          id: entry.id,
-          date: entry.date.toISOString(),
-          amount: Number(entry.amount),
-          description: entry.description,
-          source: "Ledger" as const,
-          status: "ledger-only" as const,
-          ledgerEntryId: entry.id,
-        });
-      }
+      const hasMatch = matchMap.has(`ledger-${entry.id}`);
+      transactions.push({
+        id: entry.id,
+        date: entry.date.toISOString(),
+        amount: Number(entry.amount),
+        description: entry.description,
+        source: "Ledger" as const,
+        status: hasMatch ? "matched" as const : "ledger-only" as const,
+        ledgerEntryId: entry.id,
+        // Include match info if available
+        matchId: hasMatch ? matchMap.get(`ledger-${entry.id}`).id : undefined,
+      });
     });
     
     // Add unmatched bank transactions

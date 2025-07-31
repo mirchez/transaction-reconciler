@@ -190,9 +190,10 @@ export default function HomePage() {
     }
   };
 
-  const ledgerOnlyTransactions = transactions.filter((t) => t.status === "ledger-only");
+  // Show ALL ledger transactions (both matched and unmatched)
+  const ledgerOnlyTransactions = transactions.filter((t) => t.source === "Ledger");
   const bankOnlyTransactions = transactions.filter((t) => t.status === "bank-only");
-  const matchedTransactions = transactions.filter((t) => t.status === "matched");
+  const matchedTransactions = transactions.filter((t) => t.status === "matched" && t.source === "Both");
 
   const formatAmount = (amount: string | number) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount.replace(/[$,]/g, '')) : amount;
@@ -310,9 +311,9 @@ export default function HomePage() {
                       <div className="mb-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <h3 className="text-lg font-semibold text-foreground">Ledger Only Transactions</h3>
+                            <h3 className="text-lg font-semibold text-foreground">Ledger Transactions</h3>
                             <p className="text-sm text-muted-foreground mt-1">
-                              Receipts without matching bank transactions
+                              All receipts and invoices from your emails
                             </p>
                           </div>
                           {gmailStatus?.connected && (
@@ -372,7 +373,7 @@ export default function HomePage() {
                           {ledgerOnlyTransactions.length === 0 ? (
                             <TableRow>
                               <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
-                                No ledger-only transactions
+                                No ledger transactions
                               </TableCell>
                             </TableRow>
                           ) : (
