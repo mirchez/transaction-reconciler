@@ -23,8 +23,8 @@
     --secondary-foreground: 0 0% 9%; /* Near black */
     --muted: 210 20% 98%; /* #F9FAFB */
     --muted-foreground: 217 10% 46%; /* #6B7280 */
-    --accent: 208 100% 78%; /* Sky blue #8BC5FF */
-    --accent-foreground: 172 91% 24%; /* Dark mint */
+    --accent: 210 20% 96%; /* Very light gray for hover states */
+    --accent-foreground: 210 25% 16%; /* Dark text on accent */
     --destructive: 0 93% 94%; /* Soft red #FEE2E2 */
     --destructive-foreground: 0 84.2% 45%; /* Darker red for text */
     --border: 210 20% 92%; /* #E8EBF0 - Lighter border */
@@ -54,7 +54,7 @@
     --secondary-foreground: 0 0% 98%; /* #FAFAFA */
     --muted: 240 3.7% 13%; /* #202023 - Subtle background */
     --muted-foreground: 240 5% 64.9%; /* #A1A1AA - Muted text */
-    --accent: 217 91% 60%; /* #3B82F6 - Blue accent */
+    --accent: 240 3.7% 20%; /* Neutral gray for hover states */
     --accent-foreground: 0 0% 98%; /* #FAFAFA */
     --destructive: 0 84.2% 60.2%; /* #EF4444 - Red */
     --destructive-foreground: 0 0% 98%; /* #FAFAFA */

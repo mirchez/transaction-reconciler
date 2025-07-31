@@ -20,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { FileText, TrendingUp, CheckCircle2, RefreshCw, File, Mail, Download } from "lucide-react";
+import { toast } from "sonner";
 import { UploadCsvModal } from "@/components/upload-csv-modal";
 import { GmailMonitorModal } from "@/components/gmail-monitor-modal";
 import { Header } from "./components/header";
@@ -124,6 +125,44 @@ export default function HomePage() {
       setShowReconciled(true);
       setReconciling(false);
     }, 1500);
+  };
+
+  const [checkingEmails, setCheckingEmails] = useState(false);
+  
+  const handleCheckEmails = async () => {
+    setCheckingEmails(true);
+    try {
+      const response = await fetch("/api/gmail/check", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to check emails");
+      }
+
+      const data = await response.json();
+      
+      if (data.newEmails > 0) {
+        toast.success(`Found ${data.newEmails} new receipt${data.newEmails > 1 ? 's' : ''}!`, {
+          description: "Refreshing transactions...",
+        });
+        // Refresh transactions after a short delay
+        setTimeout(() => {
+          fetchTransactions();
+        }, 1000);
+      } else {
+        toast.info("No new receipts found", {
+          description: "Your transactions are up to date",
+        });
+      }
+    } catch (error) {
+      console.error("Error checking emails:", error);
+      toast.error("Failed to check emails", {
+        description: "Please try again or check your Gmail connection",
+      });
+    } finally {
+      setCheckingEmails(false);
+    }
   };
 
   const ledgerOnlyTransactions = transactions.filter((t) => t.status === "ledger-only");
@@ -237,10 +276,35 @@ export default function HomePage() {
                   <Card className="rounded-lg bg-card border shadow-sm">
                     <CardContent className="p-6">
                       <div className="mb-4">
-                        <h3 className="text-lg font-semibold text-foreground">Ledger Only Transactions</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Receipts without matching bank transactions
-                        </p>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-lg font-semibold text-foreground">Ledger Only Transactions</h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Receipts without matching bank transactions
+                            </p>
+                          </div>
+                          {gmailStatus?.connected && (
+                            <Button
+                              onClick={handleCheckEmails}
+                              disabled={checkingEmails}
+                              variant="outline"
+                              size="sm"
+                              className="rounded-none"
+                            >
+                              {checkingEmails ? (
+                                <>
+                                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                  Checking...
+                                </>
+                              ) : (
+                                <>
+                                  <Mail className="w-4 h-4 mr-2" />
+                                  Check Now
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </div>
                       </div>
                       <div className="border border-border rounded-lg overflow-hidden bg-card">
                         {/* Data source info */}
@@ -332,13 +396,22 @@ export default function HomePage() {
                             <span>{csvFileInfo?.uploadTime || new Date().toLocaleTimeString()}</span>
                           </div>
                         </div>
-                        <div className="overflow-x-auto">
+                        <Table className="w-full">
+                          <TableHeader>
+                            <TableRow className="border-b border-border">
+                              <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">Date</TableHead>
+                              <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">Description</TableHead>
+                              <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">Amount</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                        </Table>
+                        <div className="max-h-[250px] overflow-y-auto">
                           <Table className="w-full">
-                            <TableHeader>
-                              <TableRow className="border-b border-border">
-                                <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">Date</TableHead>
-                                <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">Description</TableHead>
-                                <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">Amount</TableHead>
+                            <TableHeader className="sr-only">
+                              <TableRow>
+                                <TableHead className="w-32">Date</TableHead>
+                                <TableHead>Description</TableHead>
+                                <TableHead className="w-28">Amount</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -385,7 +458,7 @@ export default function HomePage() {
                         <Button 
                           onClick={handleReconciliation}
                           disabled={reconciling || (ledgerOnlyTransactions.length === 0 && bankOnlyTransactions.length === 0)}
-                          className="rounded-none bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
+                          className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90"
                           size="lg"
                         >
                           {reconciling ? (
@@ -563,7 +636,7 @@ export default function HomePage() {
                                             Ledger Only
                                           </Badge>
                                         ) : (
-                                          <Badge className="rounded-lg bg-blue-500/10 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30">
+                                          <Badge className="rounded-lg bg-accent/20 text-accent-foreground border-accent/30 dark:bg-accent/20 dark:text-accent-foreground dark:border-accent/30">
                                             <TrendingUp className="w-3 h-3 mr-1" />
                                             Bank Only
                                           </Badge>
