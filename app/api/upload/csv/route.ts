@@ -144,80 +144,6 @@ function extractBankDataFallback(csvData: CSVRow[]): {
   });
 }
 
-async function matchTransactions(userEmail: string) {
-  // Get unmatched ledger and bank entries
-  const [ledgerEntries, bankEntries] = await Promise.all([
-    prisma.ledger.findMany({
-      where: {
-        userEmail,
-        matched: {
-          none: {},
-        },
-      },
-    }),
-    prisma.bank.findMany({
-      where: {
-        userEmail,
-        matched: {
-          none: {},
-        },
-      },
-    }),
-  ]);
-
-  const matches: any[] = [];
-
-  for (const bank of bankEntries) {
-    for (const ledger of ledgerEntries) {
-      // Check if amounts match
-      const bankAmount = Number(bank.amount);
-      const ledgerAmount = Number(ledger.amount);
-
-      if (Math.abs(bankAmount - ledgerAmount) < 0.01) {
-        // Check if dates are close (within 7 days)
-        const bankDate = new Date(bank.date);
-        const ledgerDate = new Date(ledger.date);
-        const daysDiff =
-          Math.abs(bankDate.getTime() - ledgerDate.getTime()) /
-          (1000 * 60 * 60 * 24);
-
-        if (daysDiff <= 7) {
-          // Check if descriptions are similar
-          const bankDesc = bank.description.toLowerCase();
-          const ledgerDesc = ledger.description.toLowerCase();
-
-          if (
-            bankDesc.includes(ledgerDesc) ||
-            ledgerDesc.includes(bankDesc)
-          ) {
-            matches.push({ bank, ledger });
-          }
-        }
-      }
-    }
-  }
-
-  // Create matched records
-  for (const match of matches) {
-    const { bank, ledger } = match;
-
-    await prisma.matched.create({
-      data: {
-        userEmail,
-        ledgerId: ledger.id,
-        bankId: bank.id,
-        bankTransaction: `From: ${bank.description} $${
-          bank.amount
-        } on ${new Date(bank.date).toLocaleDateString()}`,
-        description: ledger.description,
-        amount: bank.amount,
-        date: ledger.date,
-      },
-    });
-  }
-
-  return matches.length;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -304,9 +230,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Perform matching
-    const matchedCount = await matchTransactions(userEmail);
-
     return NextResponse.json({
       success: true,
       message:
@@ -316,8 +239,6 @@ export async function POST(request: NextRequest) {
       stats: {
         total: createdTransactions.length,
         duplicates: duplicates.length,
-        matched: matchedCount,
-        unmatched: createdTransactions.length - matchedCount,
       },
     });
   } catch (error) {
