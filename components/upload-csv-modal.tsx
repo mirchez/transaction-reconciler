@@ -3,24 +3,48 @@
 import type React from "react";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Upload, Loader2, AlertCircle, Download } from "lucide-react";
 import { toast } from "sonner";
-import { MAX_FILE_SIZE, ALLOWED_CSV_TYPES, type CSVRow } from "@/lib/types/transactions";
+import {
+  MAX_FILE_SIZE,
+  ALLOWED_CSV_TYPES,
+  type CSVRow,
+} from "@/lib/types/transactions";
 import Papa from "papaparse";
 import { useGmailStatus } from "@/hooks/use-gmail";
 import { useQueryClient } from "@tanstack/react-query";
 
-
 interface UploadCsvModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onFileUpload?: (fileInfo: {name: string, size: string, uploadTime: string}) => void;
+  onFileUpload?: (fileInfo: {
+    name: string;
+    size: string;
+    uploadTime: string;
+  }) => void;
 }
 
-export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvModalProps) {
+export function UploadCsvModal({
+  open,
+  onOpenChange,
+  onFileUpload,
+}: UploadCsvModalProps) {
   const [csvData, setCsvData] = useState<CSVRow[]>([]);
   const [fileName, setFileName] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -33,7 +57,6 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
   const router = useRouter();
   const { data: gmailStatus } = useGmailStatus();
   const queryClient = useQueryClient();
-
 
   const processFile = async (file: File) => {
     // Reset state
@@ -54,23 +77,24 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
     setFileName(file.name);
     setSelectedFile(file);
     setIsParsing(true);
-    
+
     // Call the callback with file info
     if (onFileUpload) {
-      const fileSize = file.size < 1024 * 1024 
-        ? `${(file.size / 1024).toFixed(1)} KB`
-        : `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
-      
+      const fileSize =
+        file.size < 1024 * 1024
+          ? `${(file.size / 1024).toFixed(1)} KB`
+          : `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+
       onFileUpload({
         name: file.name,
         size: fileSize,
-        uploadTime: new Date().toLocaleTimeString()
+        uploadTime: new Date().toLocaleTimeString(),
       });
     }
 
     try {
       const text = await file.text();
-      
+
       Papa.parse(text, {
         header: true,
         skipEmptyLines: true,
@@ -84,35 +108,56 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
           }
 
           // Transform data to display format
-          const transformedData: CSVRow[] = results.data.map((row: any) => {
-            // Try to find date, amount, and description columns
-            let date = row.date || row.Date || row.transaction_date || row["transaction date"] || "";
-            let amount = row.amount || row.Amount || row.debit || row.credit || row.Debit || row.Credit || "";
-            let description = row.description || row.Description || row.merchant || row.Merchant || row.details || row.Details || "";
+          const transformedData: CSVRow[] = results.data
+            .map((row: any) => {
+              // Try to find date, amount, and description columns
+              let date =
+                row.date ||
+                row.Date ||
+                row.transaction_date ||
+                row["transaction date"] ||
+                "";
+              let amount =
+                row.amount ||
+                row.Amount ||
+                row.debit ||
+                row.credit ||
+                row.Debit ||
+                row.Credit ||
+                "";
+              let description =
+                row.description ||
+                row.Description ||
+                row.merchant ||
+                row.Merchant ||
+                row.details ||
+                row.Details ||
+                "";
 
-            // If columns not found, try by index
-            if (!date && !amount && !description) {
-              const values = Object.values(row);
-              if (values.length >= 3) {
-                date = values[0] as string;
-                description = values[1] as string;
-                amount = values[2] as string;
+              // If columns not found, try by index
+              if (!date && !amount && !description) {
+                const values = Object.values(row);
+                if (values.length >= 3) {
+                  date = values[0] as string;
+                  description = values[1] as string;
+                  amount = values[2] as string;
+                }
               }
-            }
 
-            return {
-              date: date.toString(),
-              amount: amount.toString(),
-              description: description.toString(),
-            };
-          }).filter(row => row.date || row.amount || row.description); // Filter out empty rows
+              return {
+                date: date.toString(),
+                amount: amount.toString(),
+                description: description.toString(),
+              };
+            })
+            .filter((row) => row.date || row.amount || row.description); // Filter out empty rows
 
           if (transformedData.length === 0) {
             setParseError("No valid data found in CSV file");
             toast.error("No valid data found in CSV file");
           } else {
             setCsvData(transformedData.slice(0, 10)); // Show first 10 rows as preview
-            toast.success(`Found ${results.data.length} transactions`);
+            toast.success("CSV uploaded successfully");
           }
           setIsParsing(false);
         },
@@ -130,7 +175,9 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
     await processFile(file);
@@ -192,7 +239,9 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
       if (response.status === 409) {
         // Handle duplicate file error
         toast.error("File already exists", {
-          description: result.message || "This CSV file has already been uploaded - duplicate files are not allowed",
+          description:
+            result.message ||
+            "This CSV file has already been uploaded - duplicate files are not allowed",
         });
       } else if (result.success) {
         // Check if there were any duplicates skipped
@@ -257,7 +306,9 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
     <Dialog open={open} onOpenChange={handleClose} modal={true}>
       <DialogContent className="max-w-[95vw] sm:max-w-[700px] bg-white dark:bg-popover border-border rounded-none">
         <DialogHeader className="pb-4 sm:pb-6">
-          <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">Upload Bank Statement</DialogTitle>
+          <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">
+            Upload Bank Statement
+          </DialogTitle>
           <DialogDescription className="text-sm sm:text-base text-muted-foreground mt-2">
             Select your CSV file to preview and import bank transactions
           </DialogDescription>
@@ -268,8 +319,12 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
           <div className="bg-muted/50 p-3 sm:p-4 rounded-none border border-border">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-foreground">Need a template?</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">Download an example CSV file with the correct format</p>
+                <p className="text-xs sm:text-sm font-medium text-foreground">
+                  Need a template?
+                </p>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Download an example CSV file with the correct format
+                </p>
               </div>
               <a href="/example-bank-statement.csv" download>
                 <Button
@@ -285,10 +340,10 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
           </div>
 
           {/* Upload Zone */}
-          <div 
+          <div
             className={`border-2 border-dashed rounded-none p-3 sm:p-4 text-center transition-colors ${
-              isDragging 
-                ? "border-primary bg-accent/10" 
+              isDragging
+                ? "border-primary bg-accent/10"
                 : "border-border hover:border-muted-foreground bg-muted/30"
             }`}
             onDragOver={handleDragOver}
@@ -300,7 +355,9 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
               <p className="text-base sm:text-lg font-medium text-foreground mb-2">
                 Drop CSV file here
               </p>
-              <p className="text-xs sm:text-sm text-muted-foreground">or click to browse</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                or click to browse
+              </p>
             </div>
             <input
               ref={fileInputRef}
@@ -337,55 +394,68 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
           {isParsing ? (
             <div className="flex items-center justify-center py-6 sm:py-8">
               <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-sm sm:text-base text-muted-foreground">Parsing CSV...</span>
+              <span className="ml-2 text-sm sm:text-base text-muted-foreground">
+                Parsing CSV...
+              </span>
             </div>
-          ) : csvData.length > 0 && (
-            <div className="space-y-3 sm:space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
-                <h3 className="text-xs sm:text-sm font-medium text-foreground">Preview</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Showing {csvData.length} of {selectedFile ? "many" : "0"} transactions
-                </p>
-              </div>
-              <div className="border border-border rounded-none overflow-hidden bg-card">
-                <div className="w-full bg-muted/30 border-b border-border">
-                  <div className="flex text-xs sm:text-sm font-medium text-foreground">
-                    <div className="px-3 sm:px-6 py-2 sm:py-3 w-[100px] sm:w-[140px]">Date</div>
-                    <div className="px-3 sm:px-6 py-2 sm:py-3 w-[80px] sm:w-[120px] text-right">Amount</div>
-                    <div className="px-3 sm:px-6 py-2 sm:py-3 flex-1">Description</div>
+          ) : (
+            csvData.length > 0 && (
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+                  <h3 className="text-xs sm:text-sm font-medium text-foreground">
+                    Preview
+                  </h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Showing {csvData.length} of {selectedFile ? "many" : "0"}{" "}
+                    transactions
+                  </p>
+                </div>
+                <div className="border border-border rounded-none overflow-hidden bg-card">
+                  <div className="w-full bg-muted/30 border-b border-border">
+                    <div className="flex text-xs sm:text-sm font-medium text-foreground">
+                      <div className="px-3 sm:px-6 py-2 sm:py-3 w-[100px] sm:w-[140px]">
+                        Date
+                      </div>
+                      <div className="px-3 sm:px-6 py-2 sm:py-3 w-[80px] sm:w-[120px] text-right">
+                        Amount
+                      </div>
+                      <div className="px-3 sm:px-6 py-2 sm:py-3 flex-1">
+                        Description
+                      </div>
+                    </div>
+                  </div>
+                  <div className="max-h-[110px] sm:max-h-[110px] overflow-y-auto">
+                    <Table>
+                      <TableHeader className="sr-only">
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Description</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {csvData.map((row, index) => (
+                          <TableRow
+                            key={index}
+                            className="border-b border-border"
+                          >
+                            <TableCell className="font-medium px-3 sm:px-6 py-2 sm:py-3 w-[100px] sm:w-[140px] text-xs sm:text-sm">
+                              {row.date}
+                            </TableCell>
+                            <TableCell className="text-right px-3 sm:px-6 py-2 sm:py-3 w-[80px] sm:w-[120px] text-xs sm:text-sm">
+                              {formatAmount(row.amount)}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm">
+                              {row.description}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 </div>
-                <div className="max-h-[110px] sm:max-h-[110px] overflow-y-auto">
-                  <Table>
-                    <TableHeader className="sr-only">
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Description</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {csvData.map((row, index) => (
-                        <TableRow
-                          key={index}
-                          className="border-b border-border"
-                        >
-                          <TableCell className="font-medium px-3 sm:px-6 py-2 sm:py-3 w-[100px] sm:w-[140px] text-xs sm:text-sm">
-                            {row.date}
-                          </TableCell>
-                          <TableCell className="text-right px-3 sm:px-6 py-2 sm:py-3 w-[80px] sm:w-[120px] text-xs sm:text-sm">
-                            {formatAmount(row.amount)}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm">
-                            {row.description}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
               </div>
-            </div>
+            )
           )}
 
           {/* Actions */}
@@ -400,7 +470,12 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
             </Button>
             <Button
               onClick={processStatement}
-              disabled={csvData.length === 0 || isProcessing || isParsing || !!parseError}
+              disabled={
+                csvData.length === 0 ||
+                isProcessing ||
+                isParsing ||
+                !!parseError
+              }
               className="rounded-none bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm order-1 sm:order-2"
             >
               {isProcessing ? (
