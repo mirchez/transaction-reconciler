@@ -11,7 +11,7 @@ interface AnimatedNumberProps {
 export function AnimatedNumber({ value, duration = 500, className }: AnimatedNumberProps) {
   const [displayValue, setDisplayValue] = useState(value);
   const previousValue = useRef(value);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | null>(null);
 
   useEffect(() => {
     const startValue = previousValue.current;

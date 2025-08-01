@@ -19,7 +19,14 @@ interface GmailCheckResponse {
   processed: number;
   emailsFound: number;
   emailsWithPdfs: number;
+  failedPdfs?: Array<{
+    filename: string;
+    reason: string;
+    message: string;
+  }>;
+  duplicates?: number;
   stats?: EmailStats;
+  message?: string;
 }
 
 // Hook to fetch Gmail stats
@@ -70,7 +77,7 @@ export function useGmailCheck(email: string) {
       // Invalidate and refetch stats after successful check
       queryClient.invalidateQueries({ queryKey: ["gmail", "stats", email] });
 
-      if (data.totalChecked === 0) {
+      if (data.emailsFound === 0) {
         toast.info("No unread emails found");
       } else if (data.emailsFound > 0) {
         toast.info(
@@ -95,7 +102,7 @@ export function useGmailCheck(email: string) {
       
       // Mostrar información sobre PDFs fallidos
       if (data.failedPdfs && data.failedPdfs.length > 0) {
-        data.failedPdfs.forEach((pdf: any) => {
+        data.failedPdfs.forEach((pdf) => {
           if (pdf.reason === "Not a receipt") {
             toast.warning(`${pdf.filename}: Not a receipt`);
           } else if (pdf.reason === "Invalid receipt") {

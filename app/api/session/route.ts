@@ -10,8 +10,8 @@ export async function POST(request: NextRequest) {
     
     // Get current transaction counts to track what was uploaded in this session
     const [ledgerCount, bankCount] = await Promise.all([
-      prisma.ledgerEntry.count(),
-      prisma.bankTransaction.count(),
+      prisma.ledger.count(),
+      prisma.bank.count(),
     ]);
     
     // Store session info (in production, you'd use a session store or database)
@@ -47,16 +47,16 @@ export async function GET(request: NextRequest) {
     
     // Get all transactions
     const [ledgerEntries, bankTransactions, matches] = await Promise.all([
-      prisma.ledgerEntry.findMany({
+      prisma.ledger.findMany({
         orderBy: { createdAt: "desc" },
       }),
-      prisma.bankTransaction.findMany({
+      prisma.bank.findMany({
         orderBy: { createdAt: "desc" },
       }),
-      prisma.matchLog.findMany({
+      prisma.matched.findMany({
         include: {
-          ledgerEntry: true,
-          bankTransaction: true,
+          ledger: true,
+          bank: true,
         },
       }),
     ]);
@@ -70,8 +70,8 @@ export async function GET(request: NextRequest) {
         totalLedgerEntries: ledgerEntries.length,
         totalBankTransactions: bankTransactions.length,
         totalMatches: matches.length,
-        unmatchedLedger: ledgerEntries.filter(l => !l.matched).length,
-        unmatchedBank: bankTransactions.filter(b => !b.matched).length,
+        unmatchedLedger: ledgerEntries.length - matches.length,
+        unmatchedBank: bankTransactions.length - matches.length,
       },
     });
   } catch (error) {

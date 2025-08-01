@@ -3,21 +3,25 @@ import { z } from "zod";
 import { NextResponse } from "next/server";
 
 const PatchSchema = z.object({
-  matched: z.boolean().optional(),
+  description: z.string().optional(),
+  amount: z.number().optional(),
+  date: z.string().datetime().optional(),
 });
 
 export async function DELETE(
   _: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  await prisma.bankTransaction.delete({ where: { id: params.id } });
+  const { id } = await params;
+  await prisma.bank.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const body = await req.json();
   const result = PatchSchema.safeParse(body);
 
@@ -28,8 +32,8 @@ export async function PATCH(
     );
   }
 
-  const updated = await prisma.bankTransaction.update({
-    where: { id: params.id },
+  const updated = await prisma.bank.update({
+    where: { id },
     data: result.data,
   });
 

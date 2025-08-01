@@ -5,105 +5,99 @@ import { prisma } from "@/lib/db";
  */
 export class EmailService {
   /**
-   * Get or create an email record
+   * Get or create a user record
    */
   static async getOrCreateEmail(email: string, name?: string) {
     try {
-      let emailRecord = await prisma.email.findUnique({
+      let userRecord = await prisma.user.findUnique({
         where: { email }
       });
 
-      if (!emailRecord) {
-        emailRecord = await prisma.email.create({
+      if (!userRecord) {
+        userRecord = await prisma.user.create({
           data: {
             email,
-            name: name || null,
           }
         });
       }
 
-      return emailRecord;
+      return userRecord;
     } catch (error) {
-      console.error('Error getting or creating email:', error);
-      throw new Error('Failed to get or create email record');
+      console.error('Error getting or creating user:', error);
+      throw new Error('Failed to get or create user record');
     }
   }
 
   /**
-   * Get all ledger entries for a specific email
+   * Get all ledger entries for an email
    */
   static async getLedgerEntries(email: string) {
     try {
-      const emailRecord = await prisma.email.findUnique({
-        where: { email },
-        include: {
-          ledgerEntries: {
-            orderBy: { date: 'desc' }
-          }
-        }
+      const entries = await prisma.ledger.findMany({
+        where: { userEmail: email },
+        orderBy: { date: 'desc' }
       });
 
-      return emailRecord?.ledgerEntries || [];
+      return entries;
     } catch (error) {
       console.error('Error getting ledger entries:', error);
-      throw new Error('Failed to get ledger entries');
+      return [];
     }
   }
 
   /**
-   * Get all bank transactions for a specific email
+   * Get all bank transactions for an email
    */
   static async getBankTransactions(email: string) {
     try {
-      const emailRecord = await prisma.email.findUnique({
-        where: { email },
-        include: {
-          bankTransactions: {
-            orderBy: { date: 'desc' }
-          }
-        }
+      const transactions = await prisma.bank.findMany({
+        where: { userEmail: email },
+        orderBy: { date: 'desc' }
       });
 
-      return emailRecord?.bankTransactions || [];
+      return transactions;
     } catch (error) {
       console.error('Error getting bank transactions:', error);
-      throw new Error('Failed to get bank transactions');
+      return [];
     }
   }
 
   /**
-   * Get all matches for a specific email
+   * Get all matches for an email
    */
   static async getMatches(email: string) {
     try {
-      const emailRecord = await prisma.email.findUnique({
-        where: { email },
+      const matches = await prisma.matched.findMany({
+        where: { userEmail: email },
         include: {
-          matches: {
-            include: {
-              ledgerEntry: true,
-              bankTransaction: true
-            },
-            orderBy: { date: 'desc' }
-          }
-        }
+          ledger: true,
+          bank: true
+        },
+        orderBy: { createdAt: 'desc' }
       });
 
-      return emailRecord?.matches || [];
+      return matches;
     } catch (error) {
       console.error('Error getting matches:', error);
-      throw new Error('Failed to get matches');
+      return [];
     }
   }
 
   /**
-   * Delete all data for a specific email (cascade delete)
+   * Delete all data for an email
    */
   static async deleteEmailData(email: string) {
     try {
-      await prisma.email.delete({
-        where: { email }
-      });
+      // Delete in order to respect foreign key constraints
+      await prisma.matched.deleteMany({ where: { userEmail: email } });
+      await prisma.ledger.deleteMany({ where: { userEmail: email } });
+      await prisma.bank.deleteMany({ where: { userEmail: email } });
+      await prisma.processedEmail.deleteMany({ where: { userEmail: email } });
+      
+      // Optionally delete the user record
+      // await prisma.user.delete({ where: { email } });
+
+      return { success: true };
     } catch (error) {
       console.error('Error deleting email data:', error);
       throw new Error('Failed to delete email data');
@@ -115,9 +109,9 @@ export class EmailService {
    */
   static async hasLedgerData(email: string): Promise<boolean> {
     try {
-      const count = await prisma.ledgerEntry.count({
+      const count = await prisma.ledger.count({
         where: {
-          email: { email }
+          userEmail: email
         }
       });
       return count > 0;
@@ -132,9 +126,9 @@ export class EmailService {
    */
   static async hasBankData(email: string): Promise<boolean> {
     try {
-      const count = await prisma.bankTransaction.count({
+      const count = await prisma.bank.count({
         where: {
-          email: { email }
+          userEmail: email
         }
       });
       return count > 0;
@@ -149,20 +143,20 @@ export class EmailService {
    */
   static async getEmailStats(email: string) {
     try {
-      const emailRecord = await prisma.email.findUnique({
+      const userRecord = await prisma.user.findUnique({
         where: { email },
         include: {
           _count: {
             select: {
-              ledgerEntries: true,
-              bankTransactions: true,
-              matches: true
+              ledgers: true,
+              banks: true,
+              matched: true
             }
           }
         }
       });
 
-      if (!emailRecord) {
+      if (!userRecord) {
         return {
           ledgerEntries: 0,
           bankTransactions: 0,
@@ -175,28 +169,28 @@ export class EmailService {
       }
 
       // Get detailed match counts
-      const matchedLedgerCount = await prisma.ledgerEntry.count({
+      const matchedLedgerCount = await prisma.ledger.count({
         where: {
-          emailId: emailRecord.id,
-          matches: { some: {} }
+          userEmail: email,
+          matched: { some: {} }
         }
       });
 
-      const matchedBankCount = await prisma.bankTransaction.count({
+      const matchedBankCount = await prisma.bank.count({
         where: {
-          emailId: emailRecord.id,
-          matches: { some: {} }
+          userEmail: email,
+          matched: { some: {} }
         }
       });
 
       return {
-        ledgerEntries: emailRecord._count.ledgerEntries,
-        bankTransactions: emailRecord._count.bankTransactions,
-        matches: emailRecord._count.matches,
+        ledgerEntries: userRecord._count.ledgers,
+        bankTransactions: userRecord._count.banks,
+        matches: userRecord._count.matched,
         matchedLedgerEntries: matchedLedgerCount,
         matchedBankTransactions: matchedBankCount,
-        unmatchedLedgerEntries: emailRecord._count.ledgerEntries - matchedLedgerCount,
-        unmatchedBankTransactions: emailRecord._count.bankTransactions - matchedBankCount
+        unmatchedLedgerEntries: userRecord._count.ledgers - matchedLedgerCount,
+        unmatchedBankTransactions: userRecord._count.banks - matchedBankCount
       };
     } catch (error) {
       console.error('Error getting email stats:', error);

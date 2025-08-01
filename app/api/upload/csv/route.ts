@@ -165,13 +165,13 @@ async function matchTransactions(userEmail: string) {
     }),
   ]);
 
-  const matches = [];
+  const matches: any[] = [];
 
   for (const bank of bankEntries) {
     for (const ledger of ledgerEntries) {
-      // Check if amounts match (bank amount vs ledger debit or credit)
+      // Check if amounts match
       const bankAmount = Number(bank.amount);
-      const ledgerAmount = Number(ledger.debit || ledger.credit || 0);
+      const ledgerAmount = Number(ledger.amount);
 
       if (Math.abs(bankAmount - ledgerAmount) < 0.01) {
         // Check if dates are close (within 7 days)
@@ -184,16 +184,11 @@ async function matchTransactions(userEmail: string) {
         if (daysDiff <= 7) {
           // Check if descriptions are similar
           const bankDesc = bank.description.toLowerCase();
-          const ledgerDesc = (
-            ledger.description ||
-            ledger.name ||
-            ""
-          ).toLowerCase();
+          const ledgerDesc = ledger.description.toLowerCase();
 
           if (
             bankDesc.includes(ledgerDesc) ||
-            ledgerDesc.includes(bankDesc) ||
-            (ledger.name && bankDesc.includes(ledger.name.toLowerCase()))
+            ledgerDesc.includes(bankDesc)
           ) {
             matches.push({ bank, ledger });
           }
@@ -264,8 +259,8 @@ export async function POST(request: NextRequest) {
     const bankData = await extractBankDataWithAI(parseResult.data);
 
     // Check for duplicates and save bank transactions
-    const createdTransactions = [];
-    const duplicates = [];
+    const createdTransactions: any[] = [];
+    const duplicates: any[] = [];
 
     for (const transaction of bankData) {
       const transactionDate = new Date(transaction.date);

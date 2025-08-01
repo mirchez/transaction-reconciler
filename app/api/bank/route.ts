@@ -9,7 +9,7 @@ const BankSchema = z.object({
 });
 
 export async function GET() {
-  const data = await prisma.bankTransaction.findMany({
+  const data = await prisma.bank.findMany({
     orderBy: { date: "desc" },
   });
   return NextResponse.json(data);
@@ -26,8 +26,11 @@ export async function POST(req: Request) {
     );
   }
 
-  const tx = await prisma.bankTransaction.create({
-    data: result.data,
+  const tx = await prisma.bank.create({
+    data: {
+      ...result.data,
+      userEmail: "demo-user@example.com", // TODO: Get from session
+    },
   });
 
   return NextResponse.json(tx, { status: 201 });

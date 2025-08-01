@@ -5,6 +5,19 @@ import { parsePDF } from "@/lib/pdf-parser";
 import { extractLedgerDataWithOpenAI } from "@/lib/openai-service";
 import { Decimal } from "@prisma/client/runtime/library";
 
+interface EmailData {
+  id: string;
+  subject: string;
+  from: string;
+  date: string;
+  hasAttachments: boolean;
+  pdfAttachments: Array<{
+    filename: string;
+    attachmentId: string | undefined;
+    size: number;
+  }>;
+}
+
 async function getAuthenticatedClient(email: string) {
   const googleAuth = await prisma.googleAuth.findUnique({
     where: { email },
@@ -74,7 +87,7 @@ export async function POST(request: Request) {
     console.log(`   Checking from: ${fiveMinutesAgo.toLocaleString()}`);
 
     // Get only unread emails from the last 5 minutes
-    let messages = [];
+    let messages: any[] = [];
     try {
       // Get unread emails with PDF attachments from last 5 minutes
       const response = await gmail.users.messages.list({
@@ -152,8 +165,8 @@ export async function POST(request: Request) {
           continue;
         }
 
-        const emailData = {
-          id: message.id,
+        const emailData: EmailData = {
+          id: message.id!,
           subject:
             headers.find((h: any) => h.name === "Subject")?.value ||
             "No subject",
@@ -250,7 +263,7 @@ export async function POST(request: Request) {
                     console.log(
                       `   ⚠️  Invalid receipt: ${pdfAttachment.filename}`
                     );
-                    const missing = [];
+                    const missing: string[] = [];
                     if (!hasAmount) missing.push("amount");
                     if (!hasDescription) missing.push("description");
                     failedPdfs.push({
@@ -383,7 +396,7 @@ export async function POST(request: Request) {
     });
 
     // Track email statistics
-    const emailDetails = [];
+    const emailDetails: any[] = [];
     for (const msg of messages.slice(0, 5)) {
       if (!msg.id) continue;
       try {

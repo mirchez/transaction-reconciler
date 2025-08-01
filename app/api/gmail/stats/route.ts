@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Helper function to update tracking (call this from the check endpoint)
-export function updateEmailTracking(email: string, data: any) {
+function updateEmailTracking(email: string, data: any) {
   const current = emailTracking.get(email) || {
     totalChecked: 0,
     pdfsFound: 0,

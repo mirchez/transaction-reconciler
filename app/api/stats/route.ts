@@ -6,22 +6,18 @@ export async function GET() {
   
   try {
     // Get counts for each type
-    const [matchedCount, ledgerOnlyCount, bankOnlyCount] = await Promise.all([
-      // Count matched transactions (both ledger and bank entries that are matched)
-      prisma.matchLog.count(),
-      // Count ledger entries that are not matched
-      prisma.ledgerEntry.count({
-        where: {
-          matched: false,
-        },
-      }),
-      // Count bank transactions that are not matched
-      prisma.bankTransaction.count({
-        where: {
-          matched: false,
-        },
-      }),
+    const [matchedCount, totalLedger, totalBank] = await Promise.all([
+      // Count matched transactions
+      prisma.matched.count(),
+      // Count total ledger entries
+      prisma.ledger.count(),
+      // Count total bank transactions
+      prisma.bank.count(),
     ]);
+    
+    // Calculate unmatched counts
+    const ledgerOnlyCount = totalLedger - matchedCount;
+    const bankOnlyCount = totalBank - matchedCount;
 
     return NextResponse.json({
       matched: matchedCount,

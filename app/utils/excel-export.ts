@@ -24,6 +24,7 @@ interface MatchedTransaction {
 export const exportMatchedTransactions = (transactions: MatchedTransaction[], filename: string = 'matched-transactions') => {
   const data: TransactionExport[] = transactions.map(transaction => ({
     Date: formatDateForExcel(transaction.date),
+    Description: transaction.description,
     'Ledger Description': transaction.vendor || transaction.description,
     'Bank Description': transaction.description,
     Amount: `$${Math.abs(transaction.amount).toFixed(2)}`,

@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       existingMatches.map(m => `${m.ledgerId}-${m.bankId}`)
     );
 
-    const matches = [];
+    const matches: any[] = [];
     const usedLedgerIds = new Set();
     const usedBankIds = new Set();
 

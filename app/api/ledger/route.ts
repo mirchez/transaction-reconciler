@@ -5,12 +5,11 @@ import { z } from "zod";
 const LedgerSchema = z.object({
   date: z.string().datetime(),
   amount: z.number(),
-  vendor: z.string(),
-  category: z.string().optional(),
+  description: z.string(),
 });
 
 export async function GET() {
-  const data = await prisma.ledgerEntry.findMany({ orderBy: { date: "desc" } });
+  const data = await prisma.ledger.findMany({ orderBy: { date: "desc" } });
   return NextResponse.json(data);
 }
 
@@ -25,8 +24,11 @@ export async function POST(req: Request) {
     );
   }
 
-  const entry = await prisma.ledgerEntry.create({
-    data: result.data,
+  const entry = await prisma.ledger.create({
+    data: {
+      ...result.data,
+      userEmail: "demo-user@example.com", // TODO: Get from session
+    },
   });
 
   return NextResponse.json(entry, { status: 201 });

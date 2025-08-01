@@ -161,7 +161,7 @@ export function UploadCsvModal({
           }
           setIsParsing(false);
         },
-        error: (error) => {
+        error: (error: any) => {
           setParseError(error.message);
           toast.error("Failed to parse CSV file");
           setIsParsing(false);

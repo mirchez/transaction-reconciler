@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     });
     
     // Format transactions for display - the frontend expects ALL ledger and ALL bank entries
-    const transactions = [];
+    const transactions: any[] = [];
     
     // Add ALL ledger entries (both matched and unmatched)
     ledgerEntries.forEach(entry => {

@@ -4,16 +4,16 @@ import { prisma } from "@/lib/db";
 export async function GET() {
   try {
     const [ledgerCount, bankCount, matchCount] = await Promise.all([
-      prisma.ledgerEntry.count(),
-      prisma.bankTransaction.count(),
-      prisma.matchLog.count(),
+      prisma.ledger.count(),
+      prisma.bank.count(),
+      prisma.matched.count(),
     ]);
     
     // Get a few sample records
     const [ledgerSamples, bankSamples, matchSamples] = await Promise.all([
-      prisma.ledgerEntry.findMany({ take: 3 }),
-      prisma.bankTransaction.findMany({ take: 3 }),
-      prisma.matchLog.findMany({ take: 3, include: { ledgerEntry: true, bankTransaction: true } }),
+      prisma.ledger.findMany({ take: 3 }),
+      prisma.bank.findMany({ take: 3 }),
+      prisma.matched.findMany({ take: 3, include: { ledger: true, bank: true } }),
     ]);
     
     return NextResponse.json({

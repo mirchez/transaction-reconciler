@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { EmailService } from "@/lib/email-service";
-import { matchTransactionsWithAI } from "@/lib/openai-service";
+import { matchTransactionsWithAI } from "@/lib/match-transactions";
 import { z } from "zod";
 
 const MatchRequestSchema = z.object({
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     if (!result.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: result.error.errors },
+        { error: "Invalid data", details: result.error.format() },
         { status: 400 }
       );
     }
@@ -26,19 +26,19 @@ export async function POST(request: NextRequest) {
     const emailRecord = await EmailService.getOrCreateEmail(email);
 
     // Get all bank transactions for this email that aren't matched yet
-    const bankTransactions = await prisma.bankTransaction.findMany({
+    const bankTransactions = await prisma.bank.findMany({
       where: {
-        emailId: emailRecord.id,
-        matches: { none: {} } // Not matched yet
+        userEmail: email,
+        matched: { none: {} } // Not matched yet
       },
       orderBy: { date: 'desc' }
     });
 
     // Get all ledger entries for this email that aren't matched yet
-    const ledgerEntries = await prisma.ledgerEntry.findMany({
+    const ledgerEntries = await prisma.ledger.findMany({
       where: {
-        emailId: emailRecord.id,
-        matches: { none: {} } // Not matched yet
+        userEmail: email,
+        matched: { none: {} } // Not matched yet
       },
       orderBy: { date: 'desc' }
     });
@@ -74,9 +74,9 @@ export async function POST(request: NextRequest) {
     const ledgerData = ledgerEntries.map(le => ({
       id: le.id,
       date: le.date,
-      description: le.description,
-      debit: le.debit ? Number(le.debit) : undefined,
-      credit: le.credit ? Number(le.credit) : undefined
+      amount: Number(le.amount),
+      vendor: le.description || "Unknown",
+      category: null
     }));
 
     // Use AI to find matches
@@ -85,9 +85,9 @@ export async function POST(request: NextRequest) {
     let createdMatches = 0;
 
     // Process each AI-suggested match
-    for (const match of aiMatches.matches) {
-      // Only create matches with high confidence (0.6 or higher)
-      if (match.matchScore >= 0.6) {
+    for (const match of aiMatches) {
+      // Only create matches with high confidence (60% or higher)
+      if (match.matchScore >= 60) {
         try {
           // Find the actual bank transaction and ledger entry
           const bankTransaction = bankTransactions.find(bt => bt.id === match.bankTransactionId);
@@ -101,24 +101,24 @@ export async function POST(request: NextRequest) {
           // Create the match record
           await prisma.matched.create({
             data: {
-              emailId: emailRecord.id,
-              ledgerEntryId: match.ledgerEntryId,
-              bankTransactionId: match.bankTransactionId,
-              bankTransactionFormatted: `${bankTransaction.date.toLocaleDateString()}: ${bankTransaction.description} - $${bankTransaction.amount}`,
+              userEmail: email,
+              ledgerId: match.ledgerEntryId,
+              bankId: match.bankTransactionId,
+              bankTransaction: `${bankTransaction.date.toLocaleDateString()}: ${bankTransaction.description} - $${bankTransaction.amount}`,
               description: ledgerEntry.description,
               amount: bankTransaction.amount,
               date: bankTransaction.date,
-              matchScore: match.matchScore,
+              // matchScore field doesn't exist in schema
             }
           });
 
           createdMatches++;
-          console.log(`✅ Created match: ${ledgerEntry.name} <-> ${bankTransaction.description} (score: ${match.matchScore})`);
+          console.log(`✅ Created match: ${ledgerEntry.description} <-> ${bankTransaction.description} (score: ${match.matchScore})`);
         } catch (error) {
           console.error(`Error creating match:`, error);
         }
       } else {
-        console.log(`⚠️ Skipping low-confidence match (score: ${match.matchScore}): ${match.reasoning}`);
+        console.log(`⚠️ Skipping low-confidence match (score: ${match.matchScore}): ${match.matchReason}`);
       }
     }
 
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Successfully matched ${createdMatches} transaction(s)`,
       matches: createdMatches,
-      totalSuggestions: aiMatches.matches.length,
+      totalSuggestions: aiMatches.length,
       processed: {
         bankTransactions: bankTransactions.length,
         ledgerEntries: ledgerEntries.length

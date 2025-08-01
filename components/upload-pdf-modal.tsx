@@ -328,12 +328,12 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                   doc.text('$29.75', 170, 182, { align: 'right' });
                   
                   doc.setFontSize(12);
-                  doc.setFont(undefined, 'bold');
+                  doc.setFont('helvetica', 'bold');
                   doc.text('Total:', 130, 192);
                   doc.text('$379.73', 170, 192, { align: 'right' });
                   
                   // Payment info
-                  doc.setFont(undefined, 'normal');
+                  doc.setFont('helvetica', 'normal');
                   doc.setFontSize(10);
                   doc.text('Payment Method: Credit Card ****1234', 20, 207);
                   doc.text('Transaction ID: TXN-20240115-1045', 20, 215);
