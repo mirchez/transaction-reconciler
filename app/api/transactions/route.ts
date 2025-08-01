@@ -47,55 +47,55 @@ export async function GET(request: NextRequest) {
       matchMap.set(`bank-${match.bankId}`, match);
     });
     
-    // Format transactions for display - separate matched and unmatched clearly
+    // Format transactions for display - the frontend expects ALL ledger and ALL bank entries
     const transactions = [];
     
-    // Add matched transaction pairs (one entry per match showing both ledger and bank info)
+    // Add ALL ledger entries (both matched and unmatched)
+    ledgerEntries.forEach(entry => {
+      const matchData = matchMap.get(`ledger-${entry.id}`);
+      transactions.push({
+        id: entry.id,
+        date: entry.date.toISOString(),
+        amount: Number(entry.amount),
+        description: entry.description,
+        source: "Ledger" as const,
+        status: matchData ? "matched" as const : "ledger-only" as const,
+        ledgerEntryId: entry.id,
+        bankTransactionId: matchData?.bankId,
+        matchScore: matchData ? 100 : undefined,
+      });
+    });
+    
+    // Add ALL bank transactions (both matched and unmatched)
+    bankTransactions.forEach(transaction => {
+      const matchData = matchMap.get(`bank-${transaction.id}`);
+      transactions.push({
+        id: transaction.id,
+        date: transaction.date.toISOString(),
+        amount: Number(transaction.amount),
+        description: transaction.description,
+        source: "Bank" as const,
+        status: matchData ? "matched" as const : "bank-only" as const,
+        bankTransactionId: transaction.id,
+        ledgerEntryId: matchData?.ledgerId,
+        matchScore: matchData ? 100 : undefined,
+      });
+    });
+    
+    // Keep matched transactions separate for reconciliation summary
     matches.forEach(match => {
       transactions.push({
         id: match.id,
         date: match.date.toISOString(),
         amount: Number(match.amount),
-        description: match.description, // This is the ledger description
+        description: match.description,
         source: "Both" as const,
         status: "matched" as const,
         ledgerEntryId: match.ledgerId,
         bankTransactionId: match.bankId,
         matchScore: 100,
-        bankDescription: match.bankTransaction, // Bank transaction formatted string
+        bankDescription: match.bankTransaction,
       });
-    });
-    
-    // Add ONLY unmatched ledger entries
-    ledgerEntries.forEach(entry => {
-      const hasMatch = matchMap.has(`ledger-${entry.id}`);
-      if (!hasMatch) {
-        transactions.push({
-          id: entry.id,
-          date: entry.date.toISOString(),
-          amount: Number(entry.amount),
-          description: entry.description,
-          source: "Ledger" as const,
-          status: "ledger-only" as const,
-          ledgerEntryId: entry.id,
-        });
-      }
-    });
-    
-    // Add ONLY unmatched bank transactions
-    bankTransactions.forEach(transaction => {
-      const hasMatch = matchMap.has(`bank-${transaction.id}`);
-      if (!hasMatch) {
-        transactions.push({
-          id: transaction.id,
-          date: transaction.date.toISOString(),
-          amount: Number(transaction.amount),
-          description: transaction.description,
-          source: "Bank" as const,
-          status: "bank-only" as const,
-          bankTransactionId: transaction.id,
-        });
-      }
     });
     
     // Sort by date (newest first)

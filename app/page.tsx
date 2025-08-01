@@ -236,14 +236,14 @@ export default function HomePage() {
     }
   };
 
-  // Separate transactions by type - now properly filtered with no duplicates
+  // Simple filtering by source - show all entries from database
+  const allLedgerEntries = transactions.filter((t) => t.source === "Ledger");
+  const allBankEntries = transactions.filter((t) => t.source === "Bank");
+  const matchedTransactions = transactions.filter((t) => t.source === "Both");
+  
+  // For reconciliation summary counts
   const ledgerOnlyTransactions = transactions.filter((t) => t.status === "ledger-only");
   const bankOnlyTransactions = transactions.filter((t) => t.status === "bank-only");
-  const matchedTransactions = transactions.filter((t) => t.status === "matched");
-  
-  // For display purposes, we want to show ALL ledger entries and ALL bank entries
-  const allLedgerEntries = [...ledgerOnlyTransactions, ...matchedTransactions];
-  const allBankEntries = [...bankOnlyTransactions, ...matchedTransactions];
 
   const formatAmount = (amount: string | number) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount.replace(/[$,]/g, '')) : amount;
