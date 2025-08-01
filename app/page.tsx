@@ -494,20 +494,18 @@ export default function HomePage() {
                         </div>
                         <div className="border border-border rounded-lg overflow-hidden bg-card">
                           {/* Data source info */}
-                          <div className="px-4 py-3 bg-muted/50 border-b border-border">
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <Mail className="w-3 h-3" />
-                              <span className="font-medium">
-                                {gmailStatus?.email || "Gmail Receipts"}
-                              </span>
-                              <span className="text-muted-foreground/50">
-                                •
-                              </span>
+                          <div className="px-2 sm:px-4 py-2 sm:py-3 bg-muted/50 border-b border-border">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Mail className="w-3 h-3 flex-shrink-0" />
+                                <span className="font-medium truncate max-w-[150px] sm:max-w-none">
+                                  {gmailStatus?.email || "Gmail Receipts"}
+                                </span>
+                              </div>
+                              <span className="text-muted-foreground/50 hidden sm:inline">•</span>
                               <span>{allLedgerEntries.length} entries</span>
-                              <span className="text-muted-foreground/50">
-                                •
-                              </span>
-                              <span>
+                              <span className="text-muted-foreground/50 hidden sm:inline">•</span>
+                              <span className="hidden sm:inline">
                                 Last synced: {new Date().toLocaleTimeString()}
                               </span>
                             </div>
@@ -580,24 +578,20 @@ export default function HomePage() {
                         </div>
                         <div className="border border-border rounded-lg overflow-hidden bg-card">
                           {/* Data source info */}
-                          <div className="px-4 py-3 bg-muted/50 border-b border-border">
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <File className="w-3 h-3" />
-                              <span className="font-medium">
-                                {csvFileInfo?.name || "Bank Statement.csv"}
-                              </span>
-                              <span className="text-muted-foreground/50">
-                                •
-                              </span>
+                          <div className="px-2 sm:px-4 py-2 sm:py-3 bg-muted/50 border-b border-border">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <File className="w-3 h-3 flex-shrink-0" />
+                                <span className="font-medium truncate max-w-[150px] sm:max-w-none">
+                                  {csvFileInfo?.name || "Bank Statement.csv"}
+                                </span>
+                              </div>
+                              <span className="text-muted-foreground/50 hidden sm:inline">•</span>
                               <span>{allBankEntries.length} entries</span>
-                              <span className="text-muted-foreground/50">
-                                •
-                              </span>
-                              <span>{csvFileInfo?.size || "0.1 MB"}</span>
-                              <span className="text-muted-foreground/50">
-                                •
-                              </span>
-                              <span>
+                              <span className="text-muted-foreground/50 hidden sm:inline">•</span>
+                              <span className="hidden sm:inline">{csvFileInfo?.size || "0.1 MB"}</span>
+                              <span className="text-muted-foreground/50 hidden sm:inline">•</span>
+                              <span className="hidden sm:inline">
                                 {csvFileInfo?.uploadTime ||
                                   new Date().toLocaleTimeString()}
                               </span>
@@ -668,7 +662,7 @@ export default function HomePage() {
                             <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 sm:mb-2">
                               Reconcile Files
                             </h3>
-                            <div className="text-xs sm:text-sm text-muted-foreground">
+                            <div className="hidden sm:block text-xs sm:text-sm text-muted-foreground">
                               <p>
                                 {allBankEntries.length} Bank statement(s) •{" "}
                                 {allLedgerEntries.length} Ledger file(s)

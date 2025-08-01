@@ -52,16 +52,16 @@ export function GmailStatus({ email }: GmailStatusProps) {
   if (disconnectMutation.isError || checkMutation.isError || statsError) {
     return (
       <div className="space-y-4">
-        <Card className="rounded-lg bg-red-500/10 dark:bg-red-500/20 border-red-500/30 dark:border-red-500/40">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 flex-1">
-                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-500" />
-                <div className="flex-1">
-                  <p className="font-medium text-red-700 dark:text-red-300">
+        <Card className="rounded-none bg-red-500/10 dark:bg-red-500/20 border-red-500/30 dark:border-red-500/40">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-start gap-3 flex-1">
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-500 mt-0.5 sm:mt-0 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm sm:text-base font-medium text-red-700 dark:text-red-300">
                     Gmail Connection Error
                   </p>
-                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                  <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 mt-1">
                     There was an error with your Gmail connection. You may need to force disconnect and reconnect.
                   </p>
                 </div>
@@ -71,7 +71,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
                 size="sm"
                 onClick={handleForceDisconnect}
                 disabled={forceDisconnectMutation.isPending}
-                className="rounded-lg"
+                className="rounded-none w-full sm:w-auto text-xs sm:text-sm"
               >
                 {forceDisconnectMutation.isPending ? "Disconnecting..." : "Force Disconnect"}
               </Button>
@@ -86,16 +86,16 @@ export function GmailStatus({ email }: GmailStatusProps) {
     <div className="space-y-4">
       {/* Reconnect Alert */}
       {needsReconnect && (
-        <Card className="rounded-lg bg-orange-500/10 dark:bg-orange-500/20 border-orange-500/30 dark:border-orange-500/40">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 flex-1">
-                <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-500" />
-                <div className="flex-1">
-                  <p className="font-medium text-orange-700 dark:text-orange-300">
+        <Card className="rounded-none bg-orange-500/10 dark:bg-orange-500/20 border-orange-500/30 dark:border-orange-500/40">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-start gap-3 flex-1">
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 dark:text-orange-500 mt-0.5 sm:mt-0 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm sm:text-base font-medium text-orange-700 dark:text-orange-300">
                     Reconnection Required
                   </p>
-                  <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
+                  <p className="text-xs sm:text-sm text-orange-600 dark:text-orange-400 mt-1">
                     Please reconnect your Gmail account to grant the necessary permissions for reading emails and attachments.
                   </p>
                 </div>
@@ -104,7 +104,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
                 variant="default"
                 size="sm"
                 onClick={handleDisconnect}
-                className="rounded-lg bg-orange-600 hover:bg-orange-700 text-white"
+                className="rounded-none bg-orange-600 hover:bg-orange-700 text-white w-full sm:w-auto text-xs sm:text-sm"
               >
                 Reconnect
               </Button>
@@ -114,28 +114,28 @@ export function GmailStatus({ email }: GmailStatusProps) {
       )}
 
       {/* Status Card */}
-      <Card className="rounded-lg bg-card border-border shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                <Mail className="w-5 h-5 text-muted-foreground" />
+      <Card className="rounded-none bg-card border-border shadow-sm">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-none bg-muted flex items-center justify-center flex-shrink-0">
+                <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
               </div>
-              <div>
-                <h3 className="font-semibold">Gmail Monitor</h3>
-                <p className="text-sm text-muted-foreground">{email}</p>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm sm:text-base font-semibold truncate">Gmail Monitor</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">{email}</p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Button
                 size="sm"
                 onClick={handleCheckNow}
                 disabled={checkMutation.isPending}
-                className="rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="rounded-none bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto text-xs sm:text-sm"
               >
                 {checkMutation.isPending ? (
                   <>
-                    <Clock className="w-4 h-4 mr-2 animate-spin" />
+                    <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-2 animate-spin" />
                     Checking...
                   </>
                 ) : (
@@ -145,14 +145,14 @@ export function GmailStatus({ email }: GmailStatusProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-lg"
+                className="rounded-none w-full sm:w-auto"
                 onClick={handleDisconnect}
                 disabled={disconnectMutation.isPending}
               >
                 {disconnectMutation.isPending ? (
-                  <Clock className="w-4 h-4 animate-spin" />
+                  <Clock className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
                 ) : (
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
                 )}
               </Button>
             </div>
