@@ -89,7 +89,6 @@ export async function POST(request: Request) {
         userId: "me",
         q: `has:attachment filename:pdf`,
         maxResults: 10,
-        orderBy: "date",
       });
       messages = response.data.messages || [];
       console.log(
