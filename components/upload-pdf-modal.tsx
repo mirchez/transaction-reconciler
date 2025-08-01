@@ -251,7 +251,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose} modal={true}>
-      <DialogContent className="max-w-[95vw] sm:max-w-2xl rounded-none">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl">
         <DialogHeader className="pb-4 sm:pb-6">
           <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">Upload PDF Receipts</DialogTitle>
           <DialogDescription className="text-sm sm:text-base text-muted-foreground mt-2">
@@ -261,7 +261,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
 
         <div className="space-y-4 sm:space-y-6">
           {/* Example Download Section */}
-          <div className="bg-muted/50 p-3 sm:p-4 rounded-none border border-muted">
+          <div className="bg-muted/50 p-3 sm:p-4 rounded-lg border border-muted">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
               <div>
                 <p className="text-xs sm:text-sm font-medium text-foreground">New to this?</p>
@@ -270,7 +270,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-none w-full sm:w-auto"
+                className="w-full sm:w-auto"
                 onClick={() => {
                   // Create a proper PDF receipt with clear data structure
                   const doc = new jsPDF();
@@ -361,7 +361,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
           </div>
 
           {/* Upload Zone */}
-          <div className="border-2 border-dashed border-muted rounded-none p-4 sm:p-8 lg:p-12 text-center hover:border-primary/50 transition-colors bg-card">
+          <div className="border-2 border-dashed border-muted rounded-lg p-4 sm:p-8 lg:p-12 text-center hover:border-primary/50 transition-colors bg-card">
             <div className="mb-4 sm:mb-6">
               <Upload className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mx-auto mb-3 sm:mb-4 text-muted-foreground" />
               <p className="text-base sm:text-lg font-medium text-foreground mb-2">
@@ -383,7 +383,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
               <Button
                 variant="outline"
                 asChild
-                className="rounded-none text-xs sm:text-sm px-3 sm:px-4"
+                className="text-xs sm:text-sm px-3 sm:px-4"
               >
                 <span>
                   <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
@@ -402,7 +402,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
               <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
                 {files.map((file) => (
                   <div key={file.id} className="space-y-2">
-                    <div className="flex items-center justify-between p-2 sm:p-3 bg-muted rounded-none">
+                    <div className="flex items-center justify-between p-2 sm:p-3 bg-muted rounded-lg">
                       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                         {file.status === "pending" ? (
                           <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0" />
@@ -429,7 +429,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                     {file.status === "success" && file.extractedData && file.extractedData.length > 0 && (
                       <div className="ml-2 sm:ml-4 mr-2 sm:mr-4 mb-2">
                         <p className="text-xs font-medium text-muted-foreground mb-2">Extracted Data:</p>
-                        <div className="border border-border rounded-none overflow-hidden">
+                        <div className="border border-border rounded-lg overflow-hidden">
                           <Table>
                             <TableHeader>
                               <TableRow className="h-8">
@@ -468,7 +468,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                   size="sm"
                   onClick={clearFiles}
                   disabled={isProcessing}
-                  className="rounded-none text-xs sm:text-sm"
+                  className="text-xs sm:text-sm"
                 >
                   Clear all
                 </Button>
@@ -479,7 +479,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                 variant="outline"
                 onClick={handleClose}
                 disabled={isProcessing}
-                className="rounded-none text-xs sm:text-sm order-2 sm:order-1"
+                className="text-xs sm:text-sm order-2 sm:order-1"
               >
                 {files.some(f => f.status === "success") ? "Done" : "Cancel"}
               </Button>
@@ -490,7 +490,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                   files.length === 0 ||
                   !files.some((f) => f.status === "pending")
                 }
-                className="rounded-none text-xs sm:text-sm order-1 sm:order-2"
+                className="text-xs sm:text-sm order-1 sm:order-2"
               >
                 {isProcessing ? (
                   <>

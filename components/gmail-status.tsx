@@ -52,7 +52,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
   if (disconnectMutation.isError || checkMutation.isError || statsError) {
     return (
       <div className="space-y-4">
-        <Card className="rounded-none bg-red-500/10 dark:bg-red-500/20 border-red-500/30 dark:border-red-500/40">
+        <Card className="bg-red-500/10 dark:bg-red-500/20 border-red-500/30 dark:border-red-500/40">
           <CardContent className="p-3 sm:p-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex items-start gap-3 flex-1">
@@ -71,7 +71,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
                 size="sm"
                 onClick={handleForceDisconnect}
                 disabled={forceDisconnectMutation.isPending}
-                className="rounded-none w-full sm:w-auto text-xs sm:text-sm"
+                className="w-full sm:w-auto text-xs sm:text-sm"
               >
                 {forceDisconnectMutation.isPending ? "Disconnecting..." : "Force Disconnect"}
               </Button>
@@ -86,7 +86,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
     <div className="space-y-4">
       {/* Reconnect Alert */}
       {needsReconnect && (
-        <Card className="rounded-none bg-orange-500/10 dark:bg-orange-500/20 border-orange-500/30 dark:border-orange-500/40">
+        <Card className="bg-orange-500/10 dark:bg-orange-500/20 border-orange-500/30 dark:border-orange-500/40">
           <CardContent className="p-3 sm:p-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex items-start gap-3 flex-1">
@@ -104,7 +104,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
                 variant="default"
                 size="sm"
                 onClick={handleDisconnect}
-                className="rounded-none bg-orange-600 hover:bg-orange-700 text-white w-full sm:w-auto text-xs sm:text-sm"
+                className="bg-orange-600 hover:bg-orange-700 text-white w-full sm:w-auto text-xs sm:text-sm"
               >
                 Reconnect
               </Button>
@@ -114,11 +114,11 @@ export function GmailStatus({ email }: GmailStatusProps) {
       )}
 
       {/* Status Card */}
-      <Card className="rounded-none bg-card border-border shadow-sm">
+      <Card className="bg-card border-border shadow-sm">
         <CardContent className="p-3 sm:p-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-3 flex-1">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-none bg-muted flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
                 <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
               </div>
               <div className="min-w-0 flex-1">
@@ -131,7 +131,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
                 size="sm"
                 onClick={handleCheckNow}
                 disabled={checkMutation.isPending}
-                className="rounded-none bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto text-xs sm:text-sm"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto text-xs sm:text-sm"
               >
                 {checkMutation.isPending ? (
                   <>
@@ -145,7 +145,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-none w-full sm:w-auto"
+                className="w-full sm:w-auto"
                 onClick={handleDisconnect}
                 disabled={disconnectMutation.isPending}
               >

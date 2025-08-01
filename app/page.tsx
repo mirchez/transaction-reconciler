@@ -463,7 +463,7 @@ export default function HomePage() {
             <div className="max-w-7xl mx-auto">
               {/* Transaction Tables */}
               {loading ? (
-                <Card className="rounded-none bg-card border shadow-sm">
+                <Card className="bg-card border shadow-sm">
                   <CardContent className="p-6 sm:p-12 text-center">
                     <p className="text-muted-foreground">
                       Loading transactions...
@@ -474,7 +474,7 @@ export default function HomePage() {
                 <Card className="rounded-lg bg-card border shadow-sm">
                   <CardContent className="p-6 sm:p-12 text-center">
                     <div className="max-w-md mx-auto space-y-4">
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-muted rounded-none flex items-center justify-center">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-muted rounded-lg flex items-center justify-center">
                         {gmailStatus?.connected ? (
                           <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
                         ) : (
@@ -509,7 +509,7 @@ export default function HomePage() {
                   {/* Two tables side by side */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Ledger Only Table */}
-                    <Card className="rounded-none bg-card border shadow-sm">
+                    <Card className="bg-card border shadow-sm">
                       <CardContent className="p-4 sm:p-6">
                         <div className="mb-4">
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -527,7 +527,7 @@ export default function HomePage() {
                                 disabled={checkingEmails}
                                 variant="outline"
                                 size="sm"
-                                className="rounded-none w-full sm:w-auto"
+                                className="w-full sm:w-auto"
                               >
                                 {checkingEmails ? (
                                   <>
@@ -617,7 +617,7 @@ export default function HomePage() {
                     </Card>
 
                     {/* Bank Only Table */}
-                    <Card className="rounded-none bg-card border shadow-sm">
+                    <Card className="bg-card border shadow-sm">
                       <CardContent className="p-4 sm:p-6">
                         <div className="mb-4">
                           <h3 className="text-base sm:text-lg font-semibold text-foreground">
@@ -730,7 +730,7 @@ export default function HomePage() {
                               (allLedgerEntries.length === 0 &&
                                 allBankEntries.length === 0)
                             }
-                            className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
                             size="default"
                           >
                             {reconciling ? (
@@ -829,7 +829,7 @@ export default function HomePage() {
                               }
                               variant="outline"
                               size="sm"
-                              className="rounded-none w-full sm:w-auto text-xs sm:text-sm"
+                              className="w-full sm:w-auto text-xs sm:text-sm"
                               disabled={matchedTransactions.length === 0}
                             >
                               <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
@@ -937,7 +937,7 @@ export default function HomePage() {
                               }
                               variant="outline"
                               size="sm"
-                              className="rounded-none w-full sm:w-auto text-xs sm:text-sm"
+                              className="w-full sm:w-auto text-xs sm:text-sm"
                               disabled={
                                 ledgerOnlyTransactions.length === 0 &&
                                 bankOnlyTransactions.length === 0
