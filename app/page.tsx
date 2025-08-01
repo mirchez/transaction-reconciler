@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,7 +53,6 @@ interface Transaction {
 }
 
 export default function HomePage() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [csvModalOpen, setCsvModalOpen] = useState(false);
   const [gmailModalOpen, setGmailModalOpen] = useState(false);
@@ -560,12 +558,7 @@ export default function HomePage() {
                                   allLedgerEntries.map((transaction) => (
                                     <TableRow
                                       key={transaction.id}
-                                      className="cursor-pointer hover:bg-muted/50 border-b border-border/50"
-                                      onClick={() =>
-                                        router.push(
-                                          `/transaction/${transaction.id}`
-                                        )
-                                      }
+                                      className="hover:bg-muted/50 border-b border-border/50"
                                     >
                                       <TableCell className="font-medium px-4 py-3">
                                         {formatDate(transaction.date)}
@@ -647,12 +640,7 @@ export default function HomePage() {
                                   allBankEntries.map((transaction) => (
                                     <TableRow
                                       key={transaction.id}
-                                      className="cursor-pointer hover:bg-muted/50 border-b border-border/50"
-                                      onClick={() =>
-                                        router.push(
-                                          `/transaction/${transaction.id}`
-                                        )
-                                      }
+                                      className="hover:bg-muted/50 border-b border-border/50"
                                     >
                                       <TableCell className="font-medium px-4 py-3">
                                         {formatDate(transaction.date)}
@@ -840,12 +828,7 @@ export default function HomePage() {
                                     matchedTransactions.map((transaction) => (
                                       <TableRow
                                         key={transaction.id}
-                                        className="cursor-pointer hover:bg-muted/50 border-b border-border/50"
-                                        onClick={() =>
-                                          router.push(
-                                            `/transaction/${transaction.id}`
-                                          )
-                                        }
+                                        className="hover:bg-muted/50 border-b border-border/50"
                                       >
                                         <TableCell className="font-medium px-4 py-3">
                                           {formatDate(transaction.date)}
@@ -958,12 +941,7 @@ export default function HomePage() {
                                     ].map((transaction) => (
                                       <TableRow
                                         key={transaction.id}
-                                        className="cursor-pointer hover:bg-muted/50 border-b border-border/50"
-                                        onClick={() =>
-                                          router.push(
-                                            `/transaction/${transaction.id}`
-                                          )
-                                        }
+                                        className="hover:bg-muted/50 border-b border-border/50"
                                       >
                                         <TableCell className="font-medium px-4 py-3">
                                           {formatDate(transaction.date)}
