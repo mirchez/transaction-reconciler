@@ -121,6 +121,19 @@ export default function HomePage() {
     }
   }, []);
 
+  // Simple filtering by source - show all entries from database
+  const allLedgerEntries = transactions.filter((t) => t.source === "Ledger");
+  const allBankEntries = transactions.filter((t) => t.source === "Bank");
+  const matchedTransactions = transactions.filter((t) => t.source === "Both");
+
+  // For reconciliation summary counts
+  const ledgerOnlyTransactions = transactions.filter(
+    (t) => t.status === "ledger-only"
+  );
+  const bankOnlyTransactions = transactions.filter(
+    (t) => t.status === "bank-only"
+  );
+
   // Auto-show reconciliation results if there are matched transactions
   useEffect(() => {
     if (transactions.length > 0) {
@@ -136,6 +149,27 @@ export default function HomePage() {
   const handleReconciliation = async () => {
     if (!gmailStatus?.email) {
       toast.error("Please connect your email first");
+      return;
+    }
+
+    // Check if both tables have data
+    const hasLedgerData = allLedgerEntries.length > 0;
+    const hasBankData = allBankEntries.length > 0;
+
+    if (!hasLedgerData && !hasBankData) {
+      toast.error("No data to reconcile", {
+        description: "Please upload both bank CSV and email receipts first",
+      });
+      return;
+    } else if (!hasLedgerData) {
+      toast.error("Missing ledger data", {
+        description: "Please connect your email and check for receipts to load ledger transactions",
+      });
+      return;
+    } else if (!hasBankData) {
+      toast.error("Missing bank data", {
+        description: "Please upload your bank statement CSV file to load bank transactions",
+      });
       return;
     }
 
@@ -271,19 +305,6 @@ export default function HomePage() {
       setCheckingEmails(false);
     }
   };
-
-  // Simple filtering by source - show all entries from database
-  const allLedgerEntries = transactions.filter((t) => t.source === "Ledger");
-  const allBankEntries = transactions.filter((t) => t.source === "Bank");
-  const matchedTransactions = transactions.filter((t) => t.source === "Both");
-
-  // For reconciliation summary counts
-  const ledgerOnlyTransactions = transactions.filter(
-    (t) => t.status === "ledger-only"
-  );
-  const bankOnlyTransactions = transactions.filter(
-    (t) => t.status === "bank-only"
-  );
 
   const formatAmount = (amount: string | number) => {
     const numAmount =
