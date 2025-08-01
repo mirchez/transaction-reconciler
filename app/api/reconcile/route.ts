@@ -60,15 +60,14 @@ export async function POST(request: NextRequest) {
 
     const matches = [];
     const usedLedgerIds = new Set();
-    const usedBankIds = new Set();
+    // Remove usedBankIds to allow multiple matches per bank entry
 
     // Sort by date to prioritize matching closer dates first
     const sortedBankEntries = [...bankEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     const sortedLedgerEntries = [...ledgerEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     for (const bank of sortedBankEntries) {
-      // Skip if this bank entry was already matched
-      if (usedBankIds.has(bank.id)) continue;
+      // Allow bank entries to match multiple ledger entries
       
       for (const ledger of sortedLedgerEntries) {
         // Skip if this ledger entry was already matched
@@ -101,10 +100,9 @@ export async function POST(request: NextRequest) {
               const matchPairKey = `${ledger.id}-${bank.id}`;
               if (!existingMatchPairs.has(matchPairKey)) {
                 matches.push({ bank, ledger });
-                // Mark both as used so they won't be matched again in this run
+                // Mark only ledger as used (allow bank to match more ledger entries)
                 usedLedgerIds.add(ledger.id);
-                usedBankIds.add(bank.id);
-                break; // Move to next bank entry
+                // Don't break - continue looking for more ledger entries that match this bank entry
               }
             }
           }
