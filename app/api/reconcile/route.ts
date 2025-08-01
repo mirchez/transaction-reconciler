@@ -79,12 +79,11 @@ export async function POST(request: NextRequest) {
         const ledgerAmount = Number(ledger.amount);
         
         if (Math.abs(bankAmount - ledgerAmount) < 0.01) {
-          // Check if dates are close (within 7 days)
-          const bankDate = new Date(bank.date);
-          const ledgerDate = new Date(ledger.date);
-          const daysDiff = Math.abs(bankDate.getTime() - ledgerDate.getTime()) / (1000 * 60 * 60 * 24);
+          // Check if dates match exactly (same day)
+          const bankDate = new Date(bank.date).toISOString().split('T')[0];
+          const ledgerDate = new Date(ledger.date).toISOString().split('T')[0];
           
-          if (daysDiff <= 7) {
+          if (bankDate === ledgerDate) {
             // Check if descriptions are similar
             const bankDesc = bank.description.toLowerCase();
             const ledgerDesc = ledger.description.toLowerCase();
