@@ -251,25 +251,26 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose} modal={true}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Upload PDF Receipts</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl rounded-none">
+        <DialogHeader className="pb-4 sm:pb-6">
+          <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">Upload PDF Receipts</DialogTitle>
+          <DialogDescription className="text-sm sm:text-base text-muted-foreground mt-2">
             Select multiple PDF files to process
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Example Download Section */}
-          <div className="bg-muted/50 p-4 rounded-lg border border-muted">
-            <div className="flex items-center justify-between">
+          <div className="bg-muted/50 p-3 sm:p-4 rounded-none border border-muted">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
               <div>
-                <p className="text-sm font-medium text-foreground">New to this?</p>
-                <p className="text-sm text-muted-foreground">Download an example PDF receipt to see the expected format</p>
+                <p className="text-xs sm:text-sm font-medium text-foreground">New to this?</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Download an example PDF receipt to see the expected format</p>
               </div>
               <Button
                 variant="outline"
                 size="sm"
+                className="rounded-none w-full sm:w-auto"
                 onClick={() => {
                   // Create a proper PDF receipt with clear data structure
                   const doc = new jsPDF();
@@ -353,20 +354,20 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                   toast.success("Example PDF receipt downloaded");
                 }}
               >
-                <Download className="w-4 h-4 mr-2" />
-                Example PDF
+                <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                <span className="text-xs sm:text-sm">Example PDF</span>
               </Button>
             </div>
           </div>
 
           {/* Upload Zone */}
-          <div className="border-2 border-dashed border-muted rounded-lg p-8 sm:p-12 text-center hover:border-primary/50 transition-colors bg-card">
-            <div className="mb-6">
-              <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-lg font-medium text-foreground mb-2">
+          <div className="border-2 border-dashed border-muted rounded-none p-4 sm:p-8 lg:p-12 text-center hover:border-primary/50 transition-colors bg-card">
+            <div className="mb-4 sm:mb-6">
+              <Upload className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mx-auto mb-3 sm:mb-4 text-muted-foreground" />
+              <p className="text-base sm:text-lg font-medium text-foreground mb-2">
                 Drop PDF files here
               </p>
-              <p className="text-sm text-muted-foreground">or click to browse</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">or click to browse</p>
             </div>
             <input
               ref={fileInputRef}
@@ -382,9 +383,10 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
               <Button
                 variant="outline"
                 asChild
+                className="rounded-none text-xs sm:text-sm px-3 sm:px-4"
               >
                 <span>
-                  <Upload className="w-4 h-4 mr-2" />
+                  <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                   Choose Files
                 </span>
               </Button>
@@ -394,21 +396,21 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
           {/* File List */}
           {files.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-foreground">
+              <h3 className="text-xs sm:text-sm font-medium text-foreground">
                 Uploaded Files
               </h3>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
+              <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
                 {files.map((file) => (
                   <div key={file.id} className="space-y-2">
-                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                      <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between p-2 sm:p-3 bg-muted rounded-none">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                         {file.status === "pending" ? (
-                          <FileText className="w-4 h-4 text-muted-foreground" />
+                          <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0" />
                         ) : (
                           getStatusIcon(file.status)
                         )}
-                        <div>
-                          <p className="font-medium text-sm text-foreground">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-xs sm:text-sm text-foreground truncate">
                             {file.name}
                           </p>
                           <p className="text-xs text-muted-foreground">
@@ -418,28 +420,30 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                           </p>
                         </div>
                       </div>
-                      {getStatusBadge(file.status)}
+                      <div className="flex-shrink-0 ml-2">
+                        {getStatusBadge(file.status)}
+                      </div>
                     </div>
                     
                     {/* Show extracted data for successful files */}
                     {file.status === "success" && file.extractedData && file.extractedData.length > 0 && (
-                      <div className="ml-4 mr-4 mb-2">
+                      <div className="ml-2 sm:ml-4 mr-2 sm:mr-4 mb-2">
                         <p className="text-xs font-medium text-muted-foreground mb-2">Extracted Data:</p>
-                        <div className="border border-border rounded-lg overflow-hidden">
+                        <div className="border border-border rounded-none overflow-hidden">
                           <Table>
                             <TableHeader>
                               <TableRow className="h-8">
-                                <TableHead className="text-xs h-8 py-1">Date</TableHead>
-                                <TableHead className="text-xs h-8 py-1">Vendor</TableHead>
-                                <TableHead className="text-xs h-8 py-1 text-right">Amount</TableHead>
+                                <TableHead className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4">Date</TableHead>
+                                <TableHead className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4">Vendor</TableHead>
+                                <TableHead className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4 text-right">Amount</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
                               {file.extractedData.map((data, idx) => (
-                                <TableRow key={idx} className="h-8">
-                                  <TableCell className="text-xs h-8 py-1">{data.date}</TableCell>
-                                  <TableCell className="text-xs h-8 py-1">{data.vendor}</TableCell>
-                                  <TableCell className="text-xs h-8 py-1 text-right font-medium">
+                                <TableRow key={idx} className="h-6 sm:h-8">
+                                  <TableCell className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4">{data.date}</TableCell>
+                                  <TableCell className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4">{data.vendor}</TableCell>
+                                  <TableCell className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4 text-right font-medium">
                                     ${data.amount.toFixed(2)}
                                   </TableCell>
                                 </TableRow>
@@ -456,7 +460,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
           )}
 
           {/* Actions */}
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
             <div>
               {files.length > 0 && (
                 <Button
@@ -464,16 +468,18 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                   size="sm"
                   onClick={clearFiles}
                   disabled={isProcessing}
+                  className="rounded-none text-xs sm:text-sm"
                 >
                   Clear all
                 </Button>
               )}
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
               <Button
                 variant="outline"
                 onClick={handleClose}
                 disabled={isProcessing}
+                className="rounded-none text-xs sm:text-sm order-2 sm:order-1"
               >
                 {files.some(f => f.status === "success") ? "Done" : "Cancel"}
               </Button>
@@ -484,14 +490,15 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                   files.length === 0 ||
                   !files.some((f) => f.status === "pending")
                 }
+                className="rounded-none text-xs sm:text-sm order-1 sm:order-2"
               >
                 {isProcessing ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Processing...
+                    <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-2 animate-spin" />
+                    <span className="text-xs sm:text-sm">Processing...</span>
                   </>
                 ) : (
-                  "Process Files"
+                  <span className="text-xs sm:text-sm">Process Files</span>
                 )}
               </Button>
             </div>

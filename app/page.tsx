@@ -428,24 +428,24 @@ export default function HomePage() {
             <div className="max-w-7xl mx-auto">
               {/* Transaction Tables */}
               {loading ? (
-                <Card className="rounded-lg bg-card border shadow-sm">
-                  <CardContent className="p-12 text-center">
+                <Card className="rounded-none bg-card border shadow-sm">
+                  <CardContent className="p-6 sm:p-12 text-center">
                     <p className="text-muted-foreground">
                       Loading transactions...
                     </p>
                   </CardContent>
                 </Card>
               ) : transactions.length === 0 ? (
-                <Card className="rounded-lg bg-card border shadow-sm">
-                  <CardContent className="p-12 text-center">
+                <Card className="rounded-none bg-card border shadow-sm">
+                  <CardContent className="p-6 sm:p-12 text-center">
                     <div className="max-w-md mx-auto space-y-4">
-                      <div className="w-16 h-16 mx-auto bg-muted rounded-lg flex items-center justify-center">
-                        <FileText className="w-8 h-8 text-muted-foreground" />
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-muted rounded-none flex items-center justify-center">
+                        <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
                       </div>
-                      <h3 className="text-xl font-semibold text-foreground">
+                      <h3 className="text-lg sm:text-xl font-semibold text-foreground">
                         No Transactions Yet!
                       </h3>
-                      <p className="text-muted-foreground">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         Upload your receipts and bank statements above to start
                         managing transactions.
                       </p>
@@ -457,15 +457,15 @@ export default function HomePage() {
                   {/* Two tables side by side */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Ledger Only Table */}
-                    <Card className=" bg-card border shadow-sm">
-                      <CardContent className="p-6">
+                    <Card className="rounded-none bg-card border shadow-sm">
+                      <CardContent className="p-4 sm:p-6">
                         <div className="mb-4">
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                             <div>
-                              <h3 className="text-lg font-semibold text-foreground">
+                              <h3 className="text-base sm:text-lg font-semibold text-foreground">
                                 Ledger Transactions
                               </h3>
-                              <p className="text-sm text-muted-foreground mt-1">
+                              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                                 All receipts and invoices from your emails
                               </p>
                             </div>
@@ -475,16 +475,16 @@ export default function HomePage() {
                                 disabled={checkingEmails}
                                 variant="outline"
                                 size="sm"
-                                className="rounded-lg"
+                                className="rounded-none w-full sm:w-auto"
                               >
                                 {checkingEmails ? (
                                   <>
-                                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                    <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-2 animate-spin" />
                                     Checking...
                                   </>
                                 ) : (
                                   <>
-                                    <Mail className="w-4 h-4 mr-2" />
+                                    <Mail className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                                     Check Now
                                   </>
                                 )}
@@ -568,13 +568,13 @@ export default function HomePage() {
                     </Card>
 
                     {/* Bank Only Table */}
-                    <Card className="rounded-lg bg-card border shadow-sm">
-                      <CardContent className="p-6">
+                    <Card className="rounded-none bg-card border shadow-sm">
+                      <CardContent className="p-4 sm:p-6">
                         <div className="mb-4">
-                          <h3 className="text-lg font-semibold text-foreground">
+                          <h3 className="text-base sm:text-lg font-semibold text-foreground">
                             Bank Transactions
                           </h3>
-                          <p className="text-sm text-muted-foreground mt-1">
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                             All transactions from your bank statement
                           </p>
                         </div>
@@ -661,14 +661,14 @@ export default function HomePage() {
 
                   {/* Run Reconciliation Card */}
                   {transactions.length > 0 && (
-                    <Card className="rounded-lg bg-card border shadow-sm mt-8">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
+                    <Card className="rounded-none bg-card border shadow-sm mt-8">
+                      <CardContent className="p-4 sm:p-6">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                           <div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">
+                            <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 sm:mb-2">
                               Reconcile Files
                             </h3>
-                            <div className="text-sm text-muted-foreground">
+                            <div className="text-xs sm:text-sm text-muted-foreground">
                               <p>
                                 {allBankEntries.length} Bank statement(s) •{" "}
                                 {allLedgerEntries.length} Ledger file(s)
@@ -682,12 +682,12 @@ export default function HomePage() {
                               (allLedgerEntries.length === 0 &&
                                 allBankEntries.length === 0)
                             }
-                            className="rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
-                            size="lg"
+                            className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
+                            size="default"
                           >
                             {reconciling ? (
                               <>
-                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-2 animate-spin" />
                                 Reconciling...
                               </>
                             ) : (
@@ -701,13 +701,13 @@ export default function HomePage() {
 
                   {/* Reconciliation Summary - Show when there are matched transactions */}
                   {showReconciled && (
-                    <Card className="rounded-lg bg-card border shadow-sm mt-8">
-                      <CardContent className="p-6">
-                        <div className="mb-6">
-                          <h2 className="text-xl font-semibold text-foreground">
+                    <Card className="rounded-none bg-card border shadow-sm mt-8">
+                      <CardContent className="p-4 sm:p-6">
+                        <div className="mb-4 sm:mb-6">
+                          <h2 className="text-lg sm:text-xl font-semibold text-foreground">
                             Reconciliation Summary
                           </h2>
-                          <p className="text-sm text-muted-foreground mt-1">
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                             Overview of all matched and unmatched transactions
                           </p>
                         </div>
@@ -766,8 +766,8 @@ export default function HomePage() {
 
                         {/* Matched Transactions Table */}
                         <div className="mb-8">
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-foreground">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                            <h3 className="text-base sm:text-lg font-semibold text-foreground">
                               Matched Transactions
                             </h3>
                             <Button
@@ -781,11 +781,12 @@ export default function HomePage() {
                               }
                               variant="outline"
                               size="sm"
-                              className="rounded-lg"
+                              className="rounded-none w-full sm:w-auto text-xs sm:text-sm"
                               disabled={matchedTransactions.length === 0}
                             >
-                              <Download className="w-4 h-4 mr-2" />
-                              Download Matched Excel
+                              <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                              <span className="hidden sm:inline">Download Matched Excel</span>
+                              <span className="sm:hidden">Download Excel</span>
                             </Button>
                           </div>
                           <div className="border border-border rounded-lg overflow-hidden bg-card">
@@ -873,8 +874,8 @@ export default function HomePage() {
 
                         {/* Unmatched Transactions */}
                         <div>
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-foreground">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                            <h3 className="text-base sm:text-lg font-semibold text-foreground">
                               Unmatched Transactions
                             </h3>
                             <Button
@@ -891,14 +892,15 @@ export default function HomePage() {
                               }
                               variant="outline"
                               size="sm"
-                              className="rounded-lg"
+                              className="rounded-none w-full sm:w-auto text-xs sm:text-sm"
                               disabled={
                                 ledgerOnlyTransactions.length === 0 &&
                                 bankOnlyTransactions.length === 0
                               }
                             >
-                              <Download className="w-4 h-4 mr-2" />
-                              Download Unmatched Excel
+                              <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                              <span className="hidden sm:inline">Download Unmatched Excel</span>
+                              <span className="sm:hidden">Download Excel</span>
                             </Button>
                           </div>
                           <div className="border border-border rounded-lg overflow-hidden bg-card">

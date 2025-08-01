@@ -255,30 +255,30 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
 
   return (
     <Dialog open={open} onOpenChange={handleClose} modal={true}>
-      <DialogContent className="sm:max-w-[700px] bg-white dark:bg-popover border-border rounded-lg">
-        <DialogHeader className="pb-6">
-          <DialogTitle className="text-2xl font-semibold text-foreground">Upload Bank Statement</DialogTitle>
-          <DialogDescription className="text-muted-foreground mt-2">
+      <DialogContent className="max-w-[95vw] sm:max-w-[700px] bg-white dark:bg-popover border-border rounded-none">
+        <DialogHeader className="pb-4 sm:pb-6">
+          <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">Upload Bank Statement</DialogTitle>
+          <DialogDescription className="text-sm sm:text-base text-muted-foreground mt-2">
             Select your CSV file to preview and import bank transactions
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Example Download Section */}
-          <div className="bg-muted/50 p-4 rounded-lg border border-border">
-            <div className="flex items-center justify-between">
+          <div className="bg-muted/50 p-3 sm:p-4 rounded-none border border-border">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
               <div>
-                <p className="text-sm font-medium text-foreground">Need a template?</p>
-                <p className="text-sm text-muted-foreground">Download an example CSV file with the correct format</p>
+                <p className="text-xs sm:text-sm font-medium text-foreground">Need a template?</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Download an example CSV file with the correct format</p>
               </div>
               <a href="/example-bank-statement.csv" download>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-lg"
+                  className="rounded-none w-full sm:w-auto"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Example CSV
+                  <span className="text-xs sm:text-sm">Example CSV</span>
                 </Button>
               </a>
             </div>
@@ -286,7 +286,7 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
 
           {/* Upload Zone */}
           <div 
-            className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+            className={`border-2 border-dashed rounded-none p-3 sm:p-4 text-center transition-colors ${
               isDragging 
                 ? "border-primary bg-accent/10" 
                 : "border-border hover:border-muted-foreground bg-muted/30"
@@ -295,12 +295,12 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
-            <div className="mb-6">
-              <Upload className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-lg font-medium text-foreground mb-2">
+            <div className="mb-4 sm:mb-6">
+              <Upload className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-3 sm:mb-4 text-muted-foreground" />
+              <p className="text-base sm:text-lg font-medium text-foreground mb-2">
                 Drop CSV file here
               </p>
-              <p className="text-sm text-muted-foreground">or click to browse</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">or click to browse</p>
             </div>
             <input
               ref={fileInputRef}
@@ -315,10 +315,10 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
               <Button
                 variant="outline"
                 asChild
-                className="rounded-lg border-gray-300 dark:border-border"
+                className="rounded-none border-gray-300 dark:border-border text-xs sm:text-sm px-3 sm:px-4"
               >
                 <span>
-                  <Upload className="w-4 h-4 mr-2" />
+                  <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                   Choose File
                 </span>
               </Button>
@@ -327,35 +327,35 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
 
           {/* Error Message */}
           {parseError && (
-            <div className="flex items-center gap-2 p-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive-foreground">
+            <div className="flex items-center gap-2 p-3 sm:p-4 bg-destructive/10 border border-destructive/30 rounded-none text-destructive-foreground">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <p className="text-sm">{parseError}</p>
+              <p className="text-xs sm:text-sm">{parseError}</p>
             </div>
           )}
 
           {/* Preview Table */}
           {isParsing ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-muted-foreground">Parsing CSV...</span>
+            <div className="flex items-center justify-center py-6 sm:py-8">
+              <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-sm sm:text-base text-muted-foreground">Parsing CSV...</span>
             </div>
           ) : csvData.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-foreground">Preview</h3>
-                <p className="text-sm text-muted-foreground">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+                <h3 className="text-xs sm:text-sm font-medium text-foreground">Preview</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Showing {csvData.length} of {selectedFile ? "many" : "0"} transactions
                 </p>
               </div>
-              <div className="border border-border rounded-lg overflow-hidden bg-card">
+              <div className="border border-border rounded-none overflow-hidden bg-card">
                 <div className="w-full bg-muted/30 border-b border-border">
-                  <div className="flex text-sm font-medium text-foreground">
-                    <div className="px-6 py-3 w-[140px]">Date</div>
-                    <div className="px-6 py-3 w-[120px] text-right">Amount</div>
-                    <div className="px-6 py-3 flex-1">Description</div>
+                  <div className="flex text-xs sm:text-sm font-medium text-foreground">
+                    <div className="px-3 sm:px-6 py-2 sm:py-3 w-[100px] sm:w-[140px]">Date</div>
+                    <div className="px-3 sm:px-6 py-2 sm:py-3 w-[80px] sm:w-[120px] text-right">Amount</div>
+                    <div className="px-3 sm:px-6 py-2 sm:py-3 flex-1">Description</div>
                   </div>
                 </div>
-                <div className="max-h-[110px] overflow-y-auto">
+                <div className="max-h-[110px] sm:max-h-[110px] overflow-y-auto">
                   <Table>
                     <TableHeader className="sr-only">
                       <TableRow>
@@ -370,13 +370,13 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
                           key={index}
                           className="border-b border-border"
                         >
-                          <TableCell className="font-medium px-6 py-3 w-[140px]">
+                          <TableCell className="font-medium px-3 sm:px-6 py-2 sm:py-3 w-[100px] sm:w-[140px] text-xs sm:text-sm">
                             {row.date}
                           </TableCell>
-                          <TableCell className="text-right px-6 py-3 w-[120px]">
+                          <TableCell className="text-right px-3 sm:px-6 py-2 sm:py-3 w-[80px] sm:w-[120px] text-xs sm:text-sm">
                             {formatAmount(row.amount)}
                           </TableCell>
-                          <TableCell className="text-muted-foreground px-6 py-3">
+                          <TableCell className="text-muted-foreground px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm">
                             {row.description}
                           </TableCell>
                         </TableRow>
@@ -389,27 +389,27 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
           )}
 
           {/* Actions */}
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
             <Button
               variant="outline"
               onClick={handleClose}
               disabled={isProcessing || isParsing}
-              className="rounded-lg border-gray-300 dark:border-gray-700"
+              className="rounded-none border-gray-300 dark:border-gray-700 text-xs sm:text-sm order-2 sm:order-1"
             >
               Cancel
             </Button>
             <Button
               onClick={processStatement}
               disabled={csvData.length === 0 || isProcessing || isParsing || !!parseError}
-              className="rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="rounded-none bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm order-1 sm:order-2"
             >
               {isProcessing ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Processing...
+                  <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-2 animate-spin" />
+                  <span className="text-xs sm:text-sm">Processing...</span>
                 </>
               ) : (
-                "Process Statement"
+                <span className="text-xs sm:text-sm">Process Statement</span>
               )}
             </Button>
           </div>
