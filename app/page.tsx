@@ -713,7 +713,7 @@ export default function HomePage() {
                         </div>
 
                         {/* Summary Stats */}
-                        <div className="grid grid-cols-4 gap-4 mb-8">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-8">
                           <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-lg">
                             <div className="text-2xl font-bold text-foreground">
                               {allBankEntries.length}
@@ -746,9 +746,6 @@ export default function HomePage() {
                               Ambiguous
                             </div>
                           </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mb-8">
                           <div className="text-center p-4 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 rounded-lg">
                             <div className="text-2xl font-bold text-red-600 dark:text-red-500">
                               {bankOnlyTransactions.length}
