@@ -512,28 +512,19 @@ export default function HomePage() {
                               </span>
                             </div>
                           </div>
-                          <Table className="w-full">
-                            <TableHeader>
-                              <TableRow className="border-b border-border">
-                                <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">
-                                  Date
-                                </TableHead>
-                                <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">
-                                  Description
-                                </TableHead>
-                                <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">
-                                  Amount
-                                </TableHead>
-                              </TableRow>
-                            </TableHeader>
-                          </Table>
-                          <div className="max-h-[250px] overflow-y-auto">
+                          <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
                             <Table className="w-full">
-                              <TableHeader className="sr-only">
-                                <TableRow>
-                                  <TableHead className="w-32">Date</TableHead>
-                                  <TableHead>Description</TableHead>
-                                  <TableHead className="w-28">Amount</TableHead>
+                              <TableHeader>
+                                <TableRow className="border-b border-border">
+                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">
+                                    Date
+                                  </TableHead>
+                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">
+                                    Description
+                                  </TableHead>
+                                  <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">
+                                    Amount
+                                  </TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -550,11 +541,7 @@ export default function HomePage() {
                                   allLedgerEntries.map((transaction) => (
                                     <TableRow
                                       key={transaction.id}
-                                      className={`cursor-pointer hover:bg-muted/50 border-b border-border/50 ${
-                                        transaction.status === "matched"
-                                          ? "bg-green-50 dark:bg-green-900/20"
-                                          : ""
-                                      }`}
+                                      className="cursor-pointer hover:bg-muted/50 border-b border-border/50"
                                       onClick={() =>
                                         router.push(
                                           `/transaction/${transaction.id}`
@@ -565,12 +552,7 @@ export default function HomePage() {
                                         {formatDate(transaction.date)}
                                       </TableCell>
                                       <TableCell className="px-4 py-3">
-                                        <div className="flex items-center gap-2">
-                                          {transaction.description}
-                                          {transaction.status === "matched" && (
-                                            <CheckCircle2 className="w-4 h-4 text-green-600" />
-                                          )}
-                                        </div>
+                                        {transaction.description}
                                       </TableCell>
                                       <TableCell className="text-right px-4 py-3">
                                         {formatAmount(transaction.amount)}
@@ -621,28 +603,19 @@ export default function HomePage() {
                               </span>
                             </div>
                           </div>
-                          <Table className="w-full">
-                            <TableHeader>
-                              <TableRow className="border-b border-border">
-                                <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">
-                                  Date
-                                </TableHead>
-                                <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">
-                                  Description
-                                </TableHead>
-                                <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">
-                                  Amount
-                                </TableHead>
-                              </TableRow>
-                            </TableHeader>
-                          </Table>
-                          <div className="max-h-[250px] overflow-y-auto">
+                          <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
                             <Table className="w-full">
-                              <TableHeader className="sr-only">
-                                <TableRow>
-                                  <TableHead className="w-32">Date</TableHead>
-                                  <TableHead>Description</TableHead>
-                                  <TableHead className="w-28">Amount</TableHead>
+                              <TableHeader>
+                                <TableRow className="border-b border-border">
+                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">
+                                    Date
+                                  </TableHead>
+                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">
+                                    Description
+                                  </TableHead>
+                                  <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">
+                                    Amount
+                                  </TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -659,11 +632,7 @@ export default function HomePage() {
                                   allBankEntries.map((transaction) => (
                                     <TableRow
                                       key={transaction.id}
-                                      className={`cursor-pointer hover:bg-muted/50 border-b border-border/50 ${
-                                        transaction.status === "matched"
-                                          ? "bg-green-50 dark:bg-green-900/20"
-                                          : ""
-                                      }`}
+                                      className="cursor-pointer hover:bg-muted/50 border-b border-border/50"
                                       onClick={() =>
                                         router.push(
                                           `/transaction/${transaction.id}`
@@ -674,20 +643,7 @@ export default function HomePage() {
                                         {formatDate(transaction.date)}
                                       </TableCell>
                                       <TableCell className="px-4 py-3">
-                                        <div className="flex items-center gap-2">
-                                          {transaction.status === "matched" &&
-                                          transaction.bankDescription
-                                            ? transaction.bankDescription
-                                                .replace(/^From: /, "")
-                                                .replace(
-                                                  / \$[\d,.-]+ on [\d-]+$/,
-                                                  ""
-                                                )
-                                            : transaction.description}
-                                          {transaction.status === "matched" && (
-                                            <CheckCircle2 className="w-4 h-4 text-green-600" />
-                                          )}
-                                        </div>
+                                        {transaction.description}
                                       </TableCell>
                                       <TableCell className="text-right px-4 py-3">
                                         {formatAmount(transaction.amount)}
