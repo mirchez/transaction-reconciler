@@ -359,120 +359,77 @@ export default function HomePage() {
 
       {/* Scrollable Content Container */}
       <main className="relative flex-1 overflow-y-auto bg-background">
-        <div className="min-h-full">
-          {/* Upload Data Card */}
-          <section className="p-6">
-            <div className="max-w-7xl mx-auto">
-              <Card className="rounded-lg bg-card border shadow-sm">
-                <CardContent className="p-6">
-                  <div className="space-y-1 mb-6">
-                    <h2 className="text-xl font-semibold text-foreground">
-                      Upload your data
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      Automatically reconcile bank statements and ledger
-                    </p>
-                  </div>
+        <div className="min-h-full flex flex-col">
+          {/* Content wrapper that grows */}
+          <div className="flex-1">
+            {/* Upload Data Card */}
+            <section className="p-6">
+              <div className="max-w-7xl mx-auto">
+                <Card className="rounded-lg bg-card border shadow-sm">
+                  <CardContent className="p-6">
+                    <div className="space-y-1 mb-6">
+                      <h2 className="text-xl font-semibold text-foreground">
+                        Upload your data
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Automatically reconcile bank statements and ledger
+                      </p>
+                    </div>
 
-                  <div className="border-t border-border my-6"></div>
+                    <div className="border-t border-border my-6"></div>
 
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div>
-                          <Button
-                            size="default"
-                            className="rounded-lg"
-                            onClick={() => setCsvModalOpen(true)}
-                            disabled={!gmailStatus?.connected}
-                          >
-                            <FileUp className="w-4 h-4 mr-2" />
-                            Upload bank CSV
-                          </Button>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-xs bg-white text-black border-gray-200">
-                        <div className="flex items-start gap-2">
-                          <div className="mt-0.5">
-                            <FileUp className="h-4 w-4 text-gray-600" />
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div>
+                            <Button
+                              size="default"
+                              className="rounded-lg"
+                              onClick={() => setCsvModalOpen(true)}
+                              disabled={!gmailStatus?.connected}
+                            >
+                              <FileUp className="w-4 h-4 mr-2" />
+                              Upload bank CSV
+                            </Button>
                           </div>
-                          <div className="space-y-1">
-                            <p className="font-semibold text-sm">
-                              {!gmailStatus?.connected ? "Connect Email First" : "Upload Bank Statement"}
-                            </p>
-                            <p className="text-xs text-gray-600 leading-relaxed">
-                              {!gmailStatus?.connected 
-                                ? "You need to connect your email account before uploading bank statements"
-                                : "Import your bank transactions from a CSV file to match them with email receipts"
-                              }
-                            </p>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs bg-white text-black border-gray-200">
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5">
+                              <FileUp className="h-4 w-4 text-gray-600" />
+                            </div>
+                            <div className="space-y-1">
+                              <p className="font-semibold text-sm">
+                                {!gmailStatus?.connected
+                                  ? "Connect Email First"
+                                  : "Upload Bank Statement"}
+                              </p>
+                              <p className="text-xs text-gray-600 leading-relaxed">
+                                {!gmailStatus?.connected
+                                  ? "You need to connect your email account before uploading bank statements"
+                                  : "Import your bank transactions from a CSV file to match them with email receipts"}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          size="default"
-                          variant="outline"
-                          className="rounded-lg"
-                          onClick={() => setGmailModalOpen(true)}
-                        >
-                          {gmailStatus?.connected ? (
-                            <>
-                              <MailCheck className="w-4 h-4 mr-2" />
-                              Check Email
-                            </>
-                          ) : (
-                            <>
-                              <Mail className="w-4 h-4 mr-2" />
-                              Connect Email
-                            </>
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-xs bg-white text-black border-gray-200">
-                        <div className="flex items-start gap-2">
-                          <div className="mt-0.5">
-                            {gmailStatus?.connected ? (
-                              <MailCheck className="h-4 w-4 text-gray-600" />
-                            ) : (
-                              <Mail className="h-4 w-4 text-gray-600" />
-                            )}
-                          </div>
-                          <div className="space-y-1">
-                            <p className="font-semibold text-sm">
-                              {gmailStatus?.connected ? "Email Management" : "Connect Gmail Account"}
-                            </p>
-                            <p className="text-xs text-gray-600 leading-relaxed">
-                              {gmailStatus?.connected 
-                                ? "Check for new receipts, view email statistics, or disconnect your Gmail account"
-                                : "Connect your Gmail to automatically import PDF receipts from your inbox"
-                              }
-                            </p>
-                          </div>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                    {gmailStatus?.connected && (
+                        </TooltipContent>
+                      </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             size="default"
                             variant="outline"
                             className="rounded-lg"
-                            onClick={handleSendTestEmail}
-                            disabled={sendingTestEmail}
+                            onClick={() => setGmailModalOpen(true)}
                           >
-                            {sendingTestEmail ? (
+                            {gmailStatus?.connected ? (
                               <>
-                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                                Sending...
+                                <MailCheck className="w-4 h-4 mr-2" />
+                                Check Email
                               </>
                             ) : (
                               <>
-                                <FileText className="w-4 h-4 mr-2" />
-                                Send Test Email
+                                <Mail className="w-4 h-4 mr-2" />
+                                Connect Email
                               </>
                             )}
                           </Button>
@@ -480,442 +437,209 @@ export default function HomePage() {
                         <TooltipContent className="max-w-xs bg-white text-black border-gray-200">
                           <div className="flex items-start gap-2">
                             <div className="mt-0.5">
-                              <Mail className="h-4 w-4 text-gray-600" />
+                              {gmailStatus?.connected ? (
+                                <MailCheck className="h-4 w-4 text-gray-600" />
+                              ) : (
+                                <Mail className="h-4 w-4 text-gray-600" />
+                              )}
                             </div>
                             <div className="space-y-1">
                               <p className="font-semibold text-sm">
-                                Test Email
+                                {gmailStatus?.connected
+                                  ? "Email Management"
+                                  : "Connect Gmail Account"}
                               </p>
                               <p className="text-xs text-gray-600 leading-relaxed">
-                                Sends a sample receipt PDF to your connected
-                                email for testing the automatic import feature
+                                {gmailStatus?.connected
+                                  ? "Check for new receipts, view email statistics, or disconnect your Gmail account"
+                                  : "Connect your Gmail to automatically import PDF receipts from your inbox"}
                               </p>
                             </div>
                           </div>
                         </TooltipContent>
                       </Tooltip>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </section>
-
-          {/* Transaction Management Section */}
-          <section className="p-6">
-            <div className="max-w-7xl mx-auto">
-              {/* Transaction Tables */}
-              {loading ? (
-                <Card className="bg-card border shadow-sm">
-                  <CardContent className="p-6 sm:p-12 text-center">
-                    <p className="text-muted-foreground">
-                      Loading transactions...
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : transactions.length === 0 ? (
-                <Card className="rounded-lg bg-card border shadow-sm">
-                  <CardContent className="p-6 sm:p-12 text-center">
-                    <div className="max-w-md mx-auto space-y-4">
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-muted rounded-lg flex items-center justify-center">
-                        {gmailStatus?.connected ? (
-                          <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
-                        ) : (
-                          <Mail className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
-                        )}
-                      </div>
-                      <h3 className="text-lg sm:text-xl font-semibold text-foreground">
-                        {gmailStatus?.connected
-                          ? "No Transactions Yet!"
-                          : "Connect Your Email to Start"}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        {gmailStatus?.connected
-                          ? "Upload your receipts and bank statements above to start managing transactions."
-                          : "Connect your Gmail account to automatically import receipts and enable bank statement uploads."}
-                      </p>
-                      {!gmailStatus?.connected && (
-                        <Button
-                          onClick={() => setGmailModalOpen(true)}
-                          className="rounded-lg mt-4"
-                          size="default"
-                        >
-                          <Mail className="w-4 h-4 mr-2" />
-                          Connect Email Now
-                        </Button>
+                      {gmailStatus?.connected && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="default"
+                              variant="outline"
+                              className="rounded-lg"
+                              onClick={handleSendTestEmail}
+                              disabled={sendingTestEmail}
+                            >
+                              {sendingTestEmail ? (
+                                <>
+                                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                  Sending...
+                                </>
+                              ) : (
+                                <>
+                                  <FileText className="w-4 h-4 mr-2" />
+                                  Send Test Email
+                                </>
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs bg-white text-black border-gray-200">
+                            <div className="flex items-start gap-2">
+                              <div className="mt-0.5">
+                                <Mail className="h-4 w-4 text-gray-600" />
+                              </div>
+                              <div className="space-y-1">
+                                <p className="font-semibold text-sm">
+                                  Test Email
+                                </p>
+                                <p className="text-xs text-gray-600 leading-relaxed">
+                                  Sends a sample receipt PDF to your connected
+                                  email for testing the automatic import feature
+                                </p>
+                              </div>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                     </div>
                   </CardContent>
                 </Card>
-              ) : (
-                <div className="space-y-8">
-                  {/* Two tables side by side */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Ledger Only Table */}
-                    <Card className="bg-card border shadow-sm">
-                      <CardContent className="p-4 sm:p-6">
-                        <div className="mb-4">
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                            <div>
-                              <h3 className="text-base sm:text-lg font-semibold text-foreground">
-                                Ledger Transactions
-                              </h3>
-                              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                                All receipts and invoices from your emails
-                              </p>
-                            </div>
-                            {gmailStatus?.connected && (
-                              <Button
-                                onClick={handleCheckEmails}
-                                disabled={checkingEmails}
-                                variant="outline"
-                                size="sm"
-                                className="w-full sm:w-auto"
-                              >
-                                {checkingEmails ? (
-                                  <>
-                                    <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-2 animate-spin" />
-                                    Checking...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Mail className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                                    Check Now
-                                  </>
-                                )}
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                        <div className="border border-border rounded-lg overflow-hidden bg-card">
-                          {/* Data source info */}
-                          <div className="px-2 sm:px-4 py-2 sm:py-3 bg-muted/50 border-b border-border">
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Mail className="w-3 h-3 flex-shrink-0" />
-                                <span className="font-medium truncate max-w-[150px] sm:max-w-none">
-                                  {gmailStatus?.email || "Gmail Receipts"}
-                                </span>
-                              </div>
-                              <span className="text-muted-foreground/50 hidden sm:inline">
-                                •
-                              </span>
-                              <span>{allLedgerEntries.length} entries</span>
-                              <span className="text-muted-foreground/50 hidden sm:inline">
-                                •
-                              </span>
-                              <span className="hidden sm:inline">
-                                Last synced: {new Date().toLocaleTimeString()}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
-                            <Table className="w-full">
-                              <TableHeader>
-                                <TableRow className="border-b border-border">
-                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">
-                                    Date
-                                  </TableHead>
-                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">
-                                    Description
-                                  </TableHead>
-                                  <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">
-                                    Amount
-                                  </TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {allLedgerEntries.length === 0 ? (
-                                  <TableRow>
-                                    <TableCell
-                                      colSpan={3}
-                                      className="text-center py-8 text-muted-foreground"
-                                    >
-                                      No ledger transactions
-                                    </TableCell>
-                                  </TableRow>
-                                ) : (
-                                  allLedgerEntries.map((transaction) => (
-                                    <TableRow
-                                      key={transaction.id}
-                                      className="hover:bg-muted/50 border-b border-border/50"
-                                    >
-                                      <TableCell className="font-medium px-4 py-3">
-                                        {formatDate(transaction.date)}
-                                      </TableCell>
-                                      <TableCell className="px-4 py-3">
-                                        {transaction.description}
-                                      </TableCell>
-                                      <TableCell className="text-right px-4 py-3">
-                                        {formatAmount(transaction.amount)}
-                                      </TableCell>
-                                    </TableRow>
-                                  ))
-                                )}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+              </div>
+            </section>
 
-                    {/* Bank Only Table */}
-                    <Card className="bg-card border shadow-sm">
-                      <CardContent className="p-4 sm:p-6">
-                        <div className="mb-4">
-                          <h3 className="text-base sm:text-lg font-semibold text-foreground">
-                            Bank Transactions
-                          </h3>
-                          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                            All transactions from your bank statement
-                          </p>
+            {/* Transaction Management Section */}
+            <section className="p-6">
+              <div className="max-w-7xl mx-auto">
+                {/* Transaction Tables */}
+                {loading ? (
+                  <Card className="bg-card border shadow-sm">
+                    <CardContent className="p-6 sm:p-12 text-center">
+                      <p className="text-muted-foreground">
+                        Loading transactions...
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : transactions.length === 0 ? (
+                  <Card className="rounded-lg bg-card border shadow-sm">
+                    <CardContent className="p-6 sm:p-12 text-center">
+                      <div className="max-w-md mx-auto space-y-4">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-muted rounded-lg flex items-center justify-center">
+                          {gmailStatus?.connected ? (
+                            <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
+                          ) : (
+                            <Mail className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
+                          )}
                         </div>
-                        <div className="border border-border rounded-lg overflow-hidden bg-card">
-                          {/* Data source info */}
-                          <div className="px-2 sm:px-4 py-2 sm:py-3 bg-muted/50 border-b border-border">
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <File className="w-3 h-3 flex-shrink-0" />
-                                <span className="font-medium truncate max-w-[150px] sm:max-w-none">
-                                  {csvFileInfo?.name || "Bank Statement.csv"}
-                                </span>
-                              </div>
-                              <span className="text-muted-foreground/50 hidden sm:inline">
-                                •
-                              </span>
-                              <span>{allBankEntries.length} entries</span>
-                              <span className="text-muted-foreground/50 hidden sm:inline">
-                                •
-                              </span>
-                              <span className="hidden sm:inline">
-                                {csvFileInfo?.size || "0.1 MB"}
-                              </span>
-                              <span className="text-muted-foreground/50 hidden sm:inline">
-                                •
-                              </span>
-                              <span className="hidden sm:inline">
-                                {csvFileInfo?.uploadTime ||
-                                  new Date().toLocaleTimeString()}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
-                            <Table className="w-full">
-                              <TableHeader>
-                                <TableRow className="border-b border-border">
-                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">
-                                    Date
-                                  </TableHead>
-                                  <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">
-                                    Description
-                                  </TableHead>
-                                  <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">
-                                    Amount
-                                  </TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {allBankEntries.length === 0 ? (
-                                  <TableRow>
-                                    <TableCell
-                                      colSpan={3}
-                                      className="text-center py-8 text-muted-foreground"
-                                    >
-                                      No bank transactions
-                                    </TableCell>
-                                  </TableRow>
-                                ) : (
-                                  allBankEntries.map((transaction) => (
-                                    <TableRow
-                                      key={transaction.id}
-                                      className="hover:bg-muted/50 border-b border-border/50"
-                                    >
-                                      <TableCell className="font-medium px-4 py-3">
-                                        {formatDate(transaction.date)}
-                                      </TableCell>
-                                      <TableCell className="px-4 py-3">
-                                        {transaction.description}
-                                      </TableCell>
-                                      <TableCell className="text-right px-4 py-3">
-                                        {formatAmount(transaction.amount)}
-                                      </TableCell>
-                                    </TableRow>
-                                  ))
-                                )}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Run Reconciliation Card */}
-                  {transactions.length > 0 && (
-                    <Card className="rounded-none bg-card border shadow-sm mt-8">
-                      <CardContent className="p-4 sm:p-6">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                          <div>
-                            <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 sm:mb-2">
-                              Reconcile Files
-                            </h3>
-                            <div className="hidden sm:block text-xs sm:text-sm text-muted-foreground">
-                              <p>
-                                {allBankEntries.length} Bank statement(s) •{" "}
-                                {allLedgerEntries.length} Ledger file(s)
-                              </p>
-                            </div>
-                          </div>
+                        <h3 className="text-lg sm:text-xl font-semibold text-foreground">
+                          {gmailStatus?.connected
+                            ? "No Transactions Yet!"
+                            : "Connect Your Email to Start"}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          {gmailStatus?.connected
+                            ? "Upload your receipts and bank statements above to start managing transactions."
+                            : "Connect your Gmail account to automatically import receipts and enable bank statement uploads."}
+                        </p>
+                        {!gmailStatus?.connected && (
                           <Button
-                            onClick={handleReconciliation}
-                            disabled={
-                              reconciling ||
-                              (allLedgerEntries.length === 0 &&
-                                allBankEntries.length === 0)
-                            }
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
+                            onClick={() => setGmailModalOpen(true)}
+                            className="rounded-lg mt-4"
                             size="default"
                           >
-                            {reconciling ? (
-                              <>
-                                <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-2 animate-spin" />
-                                Reconciling...
-                              </>
-                            ) : (
-                              <>Start Reconciliation</>
-                            )}
+                            <Mail className="w-4 h-4 mr-2" />
+                            Connect Email Now
                           </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Reconciliation Summary - Show when there are matched transactions */}
-                  {showReconciled && (
-                    <Card className="rounded-none bg-card border shadow-sm mt-8">
-                      <CardContent className="p-4 sm:p-6">
-                        <div className="mb-4 sm:mb-6">
-                          <h2 className="text-lg sm:text-xl font-semibold text-foreground">
-                            Reconciliation Summary
-                          </h2>
-                          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                            Overview of all matched and unmatched transactions
-                          </p>
-                        </div>
-
-                        {/* Summary Stats */}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-8">
-                          <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-lg">
-                            <div className="text-2xl font-bold text-foreground">
-                              {allBankEntries.length}
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-8">
+                    {/* Two tables side by side */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Ledger Only Table */}
+                      <Card className="bg-card border shadow-sm">
+                        <CardContent className="p-4 sm:p-6">
+                          <div className="mb-4">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                              <div>
+                                <h3 className="text-base sm:text-lg font-semibold text-foreground">
+                                  Ledger Transactions
+                                </h3>
+                                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                                  All receipts and invoices from your emails
+                                </p>
+                              </div>
+                              {gmailStatus?.connected && (
+                                <Button
+                                  onClick={handleCheckEmails}
+                                  disabled={checkingEmails}
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full sm:w-auto"
+                                >
+                                  {checkingEmails ? (
+                                    <>
+                                      <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-2 animate-spin" />
+                                      Checking...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Mail className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                                      Check Now
+                                    </>
+                                  )}
+                                </Button>
+                              )}
                             </div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Bank Transactions
-                            </div>
-                          </div>
-                          <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-lg">
-                            <div className="text-2xl font-bold text-foreground">
-                              {allLedgerEntries.length}
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Ledger Transactions
-                            </div>
-                          </div>
-                          <div className="text-center p-4 bg-green-500/10 dark:bg-green-500/20 border border-green-500/30 dark:border-green-500/40 rounded-lg">
-                            <div className="text-2xl font-bold text-green-600 dark:text-green-500">
-                              {matchedTransactions.length}
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Matched
-                            </div>
-                          </div>
-                          <div className="text-center p-4 bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/30 dark:border-orange-500/40 rounded-lg">
-                            <div className="text-2xl font-bold text-orange-600 dark:text-orange-500">
-                              0
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Ambiguous
-                            </div>
-                          </div>
-                          <div className="text-center p-4 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 rounded-lg">
-                            <div className="text-2xl font-bold text-red-600 dark:text-red-500">
-                              {bankOnlyTransactions.length}
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Unmatched Bank
-                            </div>
-                          </div>
-                          <div className="text-center p-4 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 rounded-lg">
-                            <div className="text-2xl font-bold text-red-600 dark:text-red-500">
-                              {ledgerOnlyTransactions.length}
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Unmatched Ledger
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Matched Transactions Table */}
-                        <div className="mb-8">
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-                            <h3 className="text-base sm:text-lg font-semibold text-foreground">
-                              Matched Transactions
-                            </h3>
-                            <Button
-                              onClick={() =>
-                                exportMatchedTransactions(
-                                  matchedTransactions,
-                                  `matched-transactions-${
-                                    new Date().toISOString().split("T")[0]
-                                  }`
-                                )
-                              }
-                              variant="outline"
-                              size="sm"
-                              className="w-full sm:w-auto text-xs sm:text-sm"
-                              disabled={matchedTransactions.length === 0}
-                            >
-                              <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                              <span className="hidden sm:inline">
-                                Download Matched Excel
-                              </span>
-                              <span className="sm:hidden">Download Excel</span>
-                            </Button>
                           </div>
                           <div className="border border-border rounded-lg overflow-hidden bg-card">
-                            <div className="overflow-x-auto">
+                            {/* Data source info */}
+                            <div className="px-2 sm:px-4 py-2 sm:py-3 bg-muted/50 border-b border-border">
+                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <Mail className="w-3 h-3 flex-shrink-0" />
+                                  <span className="font-medium truncate max-w-[150px] sm:max-w-none">
+                                    {gmailStatus?.email || "Gmail Receipts"}
+                                  </span>
+                                </div>
+                                <span className="text-muted-foreground/50 hidden sm:inline">
+                                  •
+                                </span>
+                                <span>{allLedgerEntries.length} entries</span>
+                                <span className="text-muted-foreground/50 hidden sm:inline">
+                                  •
+                                </span>
+                                <span className="hidden sm:inline">
+                                  Last synced: {new Date().toLocaleTimeString()}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
                               <Table className="w-full">
                                 <TableHeader>
                                   <TableRow className="border-b border-border">
-                                    <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-left px-4 py-3 w-32">
+                                    <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">
                                       Date
                                     </TableHead>
-                                    <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-left px-4 py-3">
-                                      Ledger Description
+                                    <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">
+                                      Description
                                     </TableHead>
-                                    <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-left px-4 py-3">
-                                      Bank Description
-                                    </TableHead>
-                                    <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-right px-4 py-3 w-28">
+                                    <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">
                                       Amount
-                                    </TableHead>
-                                    <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-left px-4 py-3 w-32">
-                                      Match Score
                                     </TableHead>
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                  {matchedTransactions.length === 0 ? (
+                                  {allLedgerEntries.length === 0 ? (
                                     <TableRow>
                                       <TableCell
-                                        colSpan={5}
+                                        colSpan={3}
                                         className="text-center py-8 text-muted-foreground"
                                       >
-                                        No matched transactions found
+                                        No ledger transactions
                                       </TableCell>
                                     </TableRow>
                                   ) : (
-                                    matchedTransactions.map((transaction) => (
+                                    allLedgerEntries.map((transaction) => (
                                       <TableRow
                                         key={transaction.id}
                                         className="hover:bg-muted/50 border-b border-border/50"
@@ -926,30 +650,8 @@ export default function HomePage() {
                                         <TableCell className="px-4 py-3">
                                           {transaction.description}
                                         </TableCell>
-                                        <TableCell className="text-muted-foreground px-4 py-3">
-                                          {transaction.bankDescription
-                                            ? transaction.bankDescription
-                                                .replace(/^From: /, "")
-                                                .replace(
-                                                  / \$[\d,.-]+ on [\d-]+$/,
-                                                  ""
-                                                )
-                                            : "N/A"}
-                                        </TableCell>
                                         <TableCell className="text-right px-4 py-3">
                                           {formatAmount(transaction.amount)}
-                                        </TableCell>
-                                        <TableCell className="px-4 py-3">
-                                          <Badge
-                                            variant="outline"
-                                            className="rounded-lg"
-                                          >
-                                            {transaction.matchScore
-                                              ? `${Math.round(
-                                                  transaction.matchScore
-                                                )}%`
-                                              : "100%"}
-                                          </Badge>
                                         </TableCell>
                                       </TableRow>
                                     ))
@@ -958,129 +660,460 @@ export default function HomePage() {
                               </Table>
                             </div>
                           </div>
-                        </div>
+                        </CardContent>
+                      </Card>
 
-                        {/* Unmatched Transactions */}
-                        <div>
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                      {/* Bank Only Table */}
+                      <Card className="bg-card border shadow-sm">
+                        <CardContent className="p-4 sm:p-6">
+                          <div className="mb-4">
                             <h3 className="text-base sm:text-lg font-semibold text-foreground">
-                              Unmatched Transactions
+                              Bank Transactions
                             </h3>
-                            <Button
-                              onClick={() =>
-                                exportUnmatchedTransactions(
-                                  [
-                                    ...ledgerOnlyTransactions,
-                                    ...bankOnlyTransactions,
-                                  ],
-                                  `unmatched-transactions-${
-                                    new Date().toISOString().split("T")[0]
-                                  }`
-                                )
-                              }
-                              variant="outline"
-                              size="sm"
-                              className="w-full sm:w-auto text-xs sm:text-sm"
-                              disabled={
-                                ledgerOnlyTransactions.length === 0 &&
-                                bankOnlyTransactions.length === 0
-                              }
-                            >
-                              <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                              <span className="hidden sm:inline">
-                                Download Unmatched Excel
-                              </span>
-                              <span className="sm:hidden">Download Excel</span>
-                            </Button>
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                              All transactions from your bank statement
+                            </p>
                           </div>
                           <div className="border border-border rounded-lg overflow-hidden bg-card">
-                            <div className="overflow-x-auto">
+                            {/* Data source info */}
+                            <div className="px-2 sm:px-4 py-2 sm:py-3 bg-muted/50 border-b border-border">
+                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <File className="w-3 h-3 flex-shrink-0" />
+                                  <span className="font-medium truncate max-w-[150px] sm:max-w-none">
+                                    {csvFileInfo?.name || "Bank Statement.csv"}
+                                  </span>
+                                </div>
+                                <span className="text-muted-foreground/50 hidden sm:inline">
+                                  •
+                                </span>
+                                <span>{allBankEntries.length} entries</span>
+                                <span className="text-muted-foreground/50 hidden sm:inline">
+                                  •
+                                </span>
+                                <span className="hidden sm:inline">
+                                  {csvFileInfo?.size || "0.1 MB"}
+                                </span>
+                                <span className="text-muted-foreground/50 hidden sm:inline">
+                                  •
+                                </span>
+                                <span className="hidden sm:inline">
+                                  {csvFileInfo?.uploadTime ||
+                                    new Date().toLocaleTimeString()}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
                               <Table className="w-full">
                                 <TableHeader>
                                   <TableRow className="border-b border-border">
-                                    <TableHead className="font-medium bg-red-500/10 dark:bg-red-500/20 text-left px-4 py-3 w-32">
+                                    <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">
                                       Date
                                     </TableHead>
-                                    <TableHead className="font-medium bg-red-500/10 dark:bg-red-500/20 text-left px-4 py-3">
+                                    <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">
                                       Description
                                     </TableHead>
-                                    <TableHead className="font-medium bg-red-500/10 dark:bg-red-500/20 text-left px-4 py-3 w-24">
-                                      Source
-                                    </TableHead>
-                                    <TableHead className="font-medium bg-red-500/10 dark:bg-red-500/20 text-right px-4 py-3 w-28">
+                                    <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">
                                       Amount
-                                    </TableHead>
-                                    <TableHead className="font-medium bg-red-500/10 dark:bg-red-500/20 text-left px-4 py-3 w-36">
-                                      Status
                                     </TableHead>
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                  {ledgerOnlyTransactions.length === 0 &&
-                                  bankOnlyTransactions.length === 0 ? (
+                                  {allBankEntries.length === 0 ? (
                                     <TableRow>
                                       <TableCell
-                                        colSpan={5}
+                                        colSpan={3}
                                         className="text-center py-8 text-muted-foreground"
                                       >
-                                        No unmatched transactions
+                                        No bank transactions
                                       </TableCell>
                                     </TableRow>
                                   ) : (
+                                    allBankEntries.map((transaction) => (
+                                      <TableRow
+                                        key={transaction.id}
+                                        className="hover:bg-muted/50 border-b border-border/50"
+                                      >
+                                        <TableCell className="font-medium px-4 py-3">
+                                          {formatDate(transaction.date)}
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
+                                          {transaction.description}
+                                        </TableCell>
+                                        <TableCell className="text-right px-4 py-3">
+                                          {formatAmount(transaction.amount)}
+                                        </TableCell>
+                                      </TableRow>
+                                    ))
+                                  )}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Run Reconciliation Card */}
+                    {transactions.length > 0 && (
+                      <Card className="rounded-lg bg-card border shadow-sm mt-8">
+                        <CardContent className="p-4 sm:p-6">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                              <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 sm:mb-2">
+                                Reconcile Files
+                              </h3>
+                              <div className="hidden sm:block text-xs sm:text-sm text-muted-foreground">
+                                <p>
+                                  {allBankEntries.length} Bank statement(s) •{" "}
+                                  {allLedgerEntries.length} Ledger file(s)
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              onClick={handleReconciliation}
+                              disabled={
+                                reconciling ||
+                                (allLedgerEntries.length === 0 &&
+                                  allBankEntries.length === 0)
+                              }
+                              className="bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
+                              size="default"
+                            >
+                              {reconciling ? (
+                                <>
+                                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-2 animate-spin" />
+                                  Reconciling...
+                                </>
+                              ) : (
+                                <>Start Reconciliation</>
+                              )}
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Reconciliation Summary - Show when there are matched transactions */}
+                    {showReconciled && (
+                      <Card className="rounded-lg bg-card border shadow-sm mt-8">
+                        <CardContent className="p-4 sm:p-6">
+                          <div className="mb-4 sm:mb-6">
+                            <h2 className="text-lg sm:text-xl font-semibold text-foreground">
+                              Reconciliation Summary
+                            </h2>
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                              Overview of all matched and unmatched transactions
+                            </p>
+                          </div>
+
+                          {/* Summary Stats */}
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-8">
+                            <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-lg">
+                              <div className="text-2xl font-bold text-foreground">
+                                {allBankEntries.length}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Bank Transactions
+                              </div>
+                            </div>
+                            <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-lg">
+                              <div className="text-2xl font-bold text-foreground">
+                                {allLedgerEntries.length}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Ledger Transactions
+                              </div>
+                            </div>
+                            <div className="text-center p-4 bg-green-500/10 dark:bg-green-500/20 border border-green-500/30 dark:border-green-500/40 rounded-lg">
+                              <div className="text-2xl font-bold text-green-600 dark:text-green-500">
+                                {matchedTransactions.length}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Matched
+                              </div>
+                            </div>
+                            <div className="text-center p-4 bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/30 dark:border-orange-500/40 rounded-lg">
+                              <div className="text-2xl font-bold text-orange-600 dark:text-orange-500">
+                                0
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Ambiguous
+                              </div>
+                            </div>
+                            <div className="text-center p-4 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 rounded-lg">
+                              <div className="text-2xl font-bold text-red-600 dark:text-red-500">
+                                {bankOnlyTransactions.length}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Unmatched Bank
+                              </div>
+                            </div>
+                            <div className="text-center p-4 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 rounded-lg">
+                              <div className="text-2xl font-bold text-red-600 dark:text-red-500">
+                                {ledgerOnlyTransactions.length}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Unmatched Ledger
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Matched Transactions Table */}
+                          <div className="mb-8">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                              <h3 className="text-base sm:text-lg font-semibold text-foreground">
+                                Matched Transactions
+                              </h3>
+                              <Button
+                                onClick={() =>
+                                  exportMatchedTransactions(
+                                    matchedTransactions,
+                                    `matched-transactions-${
+                                      new Date().toISOString().split("T")[0]
+                                    }`
+                                  )
+                                }
+                                variant="outline"
+                                size="sm"
+                                className="w-full sm:w-auto text-xs sm:text-sm"
+                                disabled={matchedTransactions.length === 0}
+                              >
+                                <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                                <span className="hidden sm:inline">
+                                  Download Matched Excel
+                                </span>
+                                <span className="sm:hidden">
+                                  Download Excel
+                                </span>
+                              </Button>
+                            </div>
+                            <div className="border border-border rounded-lg overflow-hidden bg-card">
+                              <div className="overflow-x-auto">
+                                <Table className="w-full">
+                                  <TableHeader>
+                                    <TableRow className="border-b border-border">
+                                      <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-left px-4 py-3 w-32">
+                                        Date
+                                      </TableHead>
+                                      <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-left px-4 py-3">
+                                        Ledger Description
+                                      </TableHead>
+                                      <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-left px-4 py-3">
+                                        Bank Description
+                                      </TableHead>
+                                      <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-right px-4 py-3 w-28">
+                                        Amount
+                                      </TableHead>
+                                      <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-left px-4 py-3 w-32">
+                                        Match Score
+                                      </TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {matchedTransactions.length === 0 ? (
+                                      <TableRow>
+                                        <TableCell
+                                          colSpan={5}
+                                          className="text-center py-8 text-muted-foreground"
+                                        >
+                                          No matched transactions found
+                                        </TableCell>
+                                      </TableRow>
+                                    ) : (
+                                      matchedTransactions.map((transaction) => (
+                                        <TableRow
+                                          key={transaction.id}
+                                          className="hover:bg-muted/50 border-b border-border/50"
+                                        >
+                                          <TableCell className="font-medium px-4 py-3">
+                                            {formatDate(transaction.date)}
+                                          </TableCell>
+                                          <TableCell className="px-4 py-3">
+                                            {transaction.description}
+                                          </TableCell>
+                                          <TableCell className="text-muted-foreground px-4 py-3">
+                                            {transaction.bankDescription
+                                              ? transaction.bankDescription
+                                                  .replace(/^From: /, "")
+                                                  .replace(
+                                                    / \$[\d,.-]+ on [\d-]+$/,
+                                                    ""
+                                                  )
+                                              : "N/A"}
+                                          </TableCell>
+                                          <TableCell className="text-right px-4 py-3">
+                                            {formatAmount(transaction.amount)}
+                                          </TableCell>
+                                          <TableCell className="px-4 py-3">
+                                            <Badge
+                                              variant="outline"
+                                              className="rounded-lg"
+                                            >
+                                              {transaction.matchScore
+                                                ? `${Math.round(
+                                                    transaction.matchScore
+                                                  )}%`
+                                                : "100%"}
+                                            </Badge>
+                                          </TableCell>
+                                        </TableRow>
+                                      ))
+                                    )}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Unmatched Transactions */}
+                          <div>
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                              <h3 className="text-base sm:text-lg font-semibold text-foreground">
+                                Unmatched Transactions
+                              </h3>
+                              <Button
+                                onClick={() =>
+                                  exportUnmatchedTransactions(
                                     [
                                       ...ledgerOnlyTransactions,
                                       ...bankOnlyTransactions,
-                                    ].map((transaction) => (
-                                      <TableRow
-                                        key={transaction.id}
-                                        className="hover:bg-muted/50 border-b border-border/50"
-                                      >
-                                        <TableCell className="font-medium px-4 py-3">
-                                          {formatDate(transaction.date)}
-                                        </TableCell>
-                                        <TableCell className="px-4 py-3">
-                                          {transaction.description}
-                                        </TableCell>
-                                        <TableCell className="px-4 py-3">
-                                          <Badge
-                                            variant="outline"
-                                            className="rounded-lg"
-                                          >
-                                            {transaction.source}
-                                          </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right px-4 py-3">
-                                          {formatAmount(transaction.amount)}
-                                        </TableCell>
-                                        <TableCell className="px-4 py-3">
-                                          {transaction.status ===
-                                          "ledger-only" ? (
-                                            <Badge className="rounded-lg bg-orange-500/10 text-orange-700 border-orange-200 dark:bg-orange-500/20 dark:text-orange-300 dark:border-orange-500/30">
-                                              <FileText className="w-3 h-3 mr-1" />
-                                              Ledger Only
-                                            </Badge>
-                                          ) : (
-                                            <Badge className="rounded-lg bg-accent/20 text-accent-foreground border-accent/30 dark:bg-accent/20 dark:text-accent-foreground dark:border-accent/30">
-                                              <TrendingUp className="w-3 h-3 mr-1" />
-                                              Bank Only
-                                            </Badge>
-                                          )}
+                                    ],
+                                    `unmatched-transactions-${
+                                      new Date().toISOString().split("T")[0]
+                                    }`
+                                  )
+                                }
+                                variant="outline"
+                                size="sm"
+                                className="w-full sm:w-auto text-xs sm:text-sm"
+                                disabled={
+                                  ledgerOnlyTransactions.length === 0 &&
+                                  bankOnlyTransactions.length === 0
+                                }
+                              >
+                                <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                                <span className="hidden sm:inline">
+                                  Download Unmatched Excel
+                                </span>
+                                <span className="sm:hidden">
+                                  Download Excel
+                                </span>
+                              </Button>
+                            </div>
+                            <div className="border border-border rounded-lg overflow-hidden bg-card">
+                              <div className="overflow-x-auto">
+                                <Table className="w-full">
+                                  <TableHeader>
+                                    <TableRow className="border-b border-border">
+                                      <TableHead className="font-medium bg-red-500/10 dark:bg-red-500/20 text-left px-4 py-3 w-32">
+                                        Date
+                                      </TableHead>
+                                      <TableHead className="font-medium bg-red-500/10 dark:bg-red-500/20 text-left px-4 py-3">
+                                        Description
+                                      </TableHead>
+                                      <TableHead className="font-medium bg-red-500/10 dark:bg-red-500/20 text-left px-4 py-3 w-24">
+                                        Source
+                                      </TableHead>
+                                      <TableHead className="font-medium bg-red-500/10 dark:bg-red-500/20 text-right px-4 py-3 w-28">
+                                        Amount
+                                      </TableHead>
+                                      <TableHead className="font-medium bg-red-500/10 dark:bg-red-500/20 text-left px-4 py-3 w-36">
+                                        Status
+                                      </TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {ledgerOnlyTransactions.length === 0 &&
+                                    bankOnlyTransactions.length === 0 ? (
+                                      <TableRow>
+                                        <TableCell
+                                          colSpan={5}
+                                          className="text-center py-8 text-muted-foreground"
+                                        >
+                                          No unmatched transactions
                                         </TableCell>
                                       </TableRow>
-                                    ))
-                                  )}
-                                </TableBody>
-                              </Table>
+                                    ) : (
+                                      [
+                                        ...ledgerOnlyTransactions,
+                                        ...bankOnlyTransactions,
+                                      ].map((transaction) => (
+                                        <TableRow
+                                          key={transaction.id}
+                                          className="hover:bg-muted/50 border-b border-border/50"
+                                        >
+                                          <TableCell className="font-medium px-4 py-3">
+                                            {formatDate(transaction.date)}
+                                          </TableCell>
+                                          <TableCell className="px-4 py-3">
+                                            {transaction.description}
+                                          </TableCell>
+                                          <TableCell className="px-4 py-3">
+                                            <Badge
+                                              variant="outline"
+                                              className="rounded-lg"
+                                            >
+                                              {transaction.source}
+                                            </Badge>
+                                          </TableCell>
+                                          <TableCell className="text-right px-4 py-3">
+                                            {formatAmount(transaction.amount)}
+                                          </TableCell>
+                                          <TableCell className="px-4 py-3">
+                                            {transaction.status ===
+                                            "ledger-only" ? (
+                                              <Badge className="rounded-lg bg-orange-500/10 text-orange-700 border-orange-200 dark:bg-orange-500/20 dark:text-orange-300 dark:border-orange-500/30">
+                                                <FileText className="w-3 h-3 mr-1" />
+                                                Ledger Only
+                                              </Badge>
+                                            ) : (
+                                              <Badge className="rounded-lg bg-accent/20 text-accent-foreground border-accent/30 dark:bg-accent/20 dark:text-accent-foreground dark:border-accent/30">
+                                                <TrendingUp className="w-3 h-3 mr-1" />
+                                                Bank Only
+                                              </Badge>
+                                            )}
+                                          </TableCell>
+                                        </TableRow>
+                                      ))
+                                    )}
+                                  </TableBody>
+                                </Table>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              )}
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+
+          {/* Footer */}
+          <footer className="border-t border-border bg-background">
+            <div className="max-w-7xl mx-auto px-6 py-4">
+              <div className="text-center space-y-1">
+                <p className="text-sm text-muted-foreground">
+                  Built with dedication for{" "}
+                  <span className="font-semibold text-foreground">
+                    Om Agarwal
+                  </span>{" "}
+                  and the{" "}
+                  <span className="font-semibold text-foreground">
+                    Minerva team
+                  </span>
+                  <span className="mx-2">•</span>
+                  <span className="text-xs">
+                    Thank you for this opportunity
+                  </span>
+                  <span className="mx-2">•</span>
+                  <span className="text-xs font-medium">Miguel Miranda</span>
+                </p>
+              </div>
             </div>
-          </section>
+          </footer>
         </div>
       </main>
 
