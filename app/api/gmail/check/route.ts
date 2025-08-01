@@ -78,41 +78,36 @@ export async function POST(request: Request) {
 
     const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
-    // Calculate the time 5 minutes ago
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const gmailDateQuery = Math.floor(fiveMinutesAgo.getTime() / 1000); // Gmail uses Unix timestamp
-
-    console.log(`\n🕐 Checking emails from last 5 minutes`);
+    console.log(`\n🕐 Checking 10 most recent emails`);
     console.log(`   Current time: ${new Date().toLocaleString()}`);
-    console.log(`   Checking from: ${fiveMinutesAgo.toLocaleString()}`);
 
-    // Get only unread emails from the last 5 minutes
+    // Get the 10 most recent emails (regardless of read status)
     let messages: any[] = [];
     try {
-      // Get unread emails with PDF attachments from last 5 minutes
+      // Get the most recent emails with PDF attachments
       const response = await gmail.users.messages.list({
         userId: "me",
-        q: `is:unread has:attachment filename:pdf after:${gmailDateQuery}`,
-        maxResults: 20,
+        q: `has:attachment filename:pdf`,
+        maxResults: 10,
+        orderBy: "date",
       });
       messages = response.data.messages || [];
       console.log(
-        `📧 Found ${messages.length} unread emails with PDFs from last 5 minutes`
+        `📧 Found ${messages.length} recent emails with PDFs`
       );
     } catch (error: any) {
-      // If search fails, try a simpler approach - just get unread emails
+      // If search fails, try a simpler approach - just get recent emails
       console.log(
         "⚠️ Complex search failed, trying simpler approach:",
         error.message
       );
       const response = await gmail.users.messages.list({
         userId: "me",
-        q: `is:unread after:${gmailDateQuery}`,
-        maxResults: 20,
+        maxResults: 10,
       });
       messages = response.data.messages || [];
       console.log(
-        `📧 Found ${messages.length} unread emails from last 5 minutes`
+        `📧 Found ${messages.length} recent emails`
       );
     }
     const processedPdfs: any[] = [];
@@ -153,17 +148,6 @@ export async function POST(request: Request) {
         const headers = fullMessage.data.payload?.headers || [];
         const dateHeader = headers.find((h: any) => h.name === "Date")?.value;
         const emailDate = dateHeader ? new Date(dateHeader) : new Date();
-
-        // Check if email is from the last 5 minutes
-        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-        if (emailDate < fiveMinutesAgo) {
-          console.log(
-            `⏭️ Email ${message.id} is older than 5 minutes, skipping...`
-          );
-          console.log(`   Email date: ${emailDate.toLocaleString()}`);
-          console.log(`   Cutoff time: ${fiveMinutesAgo.toLocaleString()}`);
-          continue;
-        }
 
         const emailData: EmailData = {
           id: message.id!,
@@ -454,7 +438,7 @@ export async function POST(request: Request) {
       totalChecked: messages.length,
       message:
         processedPdfs.length > 0
-          ? `Processed ${processedPdfs.length} PDF${
+          ? `Processed ${processedPdfs.length} new PDF${
               processedPdfs.length > 1 ? "s" : ""
             } successfully`
           : duplicatePdfs.length > 0
@@ -466,12 +450,12 @@ export async function POST(request: Request) {
               otherFailedPdfs.length > 1 ? "s" : ""
             } but they were not valid receipts`
           : messages.length > 0
-          ? "Found emails but no new PDFs to process"
-          : "No unread emails found",
+          ? "All recent emails have already been processed"
+          : "No recent emails found with PDFs",
     };
 
     console.log(
-      `\n📊 Summary: ${messages.length} emails | ${response.emailsWithPdfs} with PDFs | ${processedPdfs.length} processed`
+      `\n📊 Summary: ${messages.length} recent emails checked | ${response.emailsWithPdfs} with PDFs | ${processedPdfs.length} newly processed`
     );
 
     // Si se procesaron PDFs, mostrar los resultados
@@ -485,14 +469,15 @@ export async function POST(request: Request) {
     }
     console.log("------------------------\n");
 
-    // Mark successfully processed emails as read
+    // Mark successfully processed emails as read (if they were unread)
     if (successfullyProcessedMessageIds.length > 0) {
       try {
         console.log(
-          `\n🔖 Marking ${successfullyProcessedMessageIds.length} processed emails as read...`
+          `\n🔖 Marking newly processed emails as read...`
         );
 
         // Mark emails as read using Gmail API directly
+        let markedAsRead = 0;
         for (const messageId of successfullyProcessedMessageIds) {
           try {
             await gmail.users.messages.modify({
@@ -502,14 +487,20 @@ export async function POST(request: Request) {
                 removeLabelIds: ["UNREAD"],
               },
             });
-          } catch (error) {
-            console.log(`Failed to mark message ${messageId} as read:`, error);
+            markedAsRead++;
+          } catch (error: any) {
+            // Email might already be read, which is fine
+            if (!error.message?.includes("labelIds")) {
+              console.log(`Failed to mark message ${messageId} as read:`, error.message);
+            }
           }
         }
 
-        console.log(
-          `✅ Marked ${successfullyProcessedMessageIds.length} emails as read`
-        );
+        if (markedAsRead > 0) {
+          console.log(
+            `✅ Marked ${markedAsRead} emails as read`
+          );
+        }
       } catch (error) {
         console.error("Failed to mark emails as read:", error);
         // Don't fail the whole operation if marking as read fails

@@ -78,10 +78,10 @@ export function useGmailCheck(email: string) {
       queryClient.invalidateQueries({ queryKey: ["gmail", "stats", email] });
 
       if (data.emailsFound === 0) {
-        toast.info("No unread emails found");
+        toast.info("No recent emails with PDFs found");
       } else if (data.emailsFound > 0) {
         toast.info(
-          `Found ${data.emailsFound} unread email${
+          `Checked ${data.emailsFound} recent email${
             data.emailsFound > 1 ? "s" : ""
           }, ${data.emailsWithPdfs} with PDFs`
         );
