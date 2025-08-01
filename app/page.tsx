@@ -263,6 +263,19 @@ export default function HomePage() {
 
   const formatDate = (dateString: string) => {
     try {
+      // If the date string already looks like YYYY-MM-DD, return it as is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        return dateString;
+      }
+      
+      // Parse ISO date string and extract just the date part
+      // This avoids timezone conversion issues
+      const datePart = dateString.split('T')[0];
+      if (datePart && /^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+        return datePart;
+      }
+      
+      // Fallback to parsing
       const date = new Date(dateString);
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');

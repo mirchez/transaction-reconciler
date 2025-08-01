@@ -13,30 +13,67 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get unmatched ledger and bank entries
-    const [ledgerEntries, bankEntries] = await Promise.all([
+    // Get ALL ledger and bank entries (not just unmatched)
+    const [ledgerEntries, bankEntries, existingMatches] = await Promise.all([
       prisma.ledger.findMany({
         where: { 
-          userEmail: email,
-          matched: {
-            none: {}
-          }
+          userEmail: email
         }
       }),
       prisma.bank.findMany({
         where: { 
-          userEmail: email,
-          matched: {
-            none: {}
-          }
+          userEmail: email
+        }
+      }),
+      prisma.matched.findMany({
+        where: {
+          userEmail: email
         }
       })
     ]);
 
-    const matches = [];
+    // Validation: Ensure at least one entry exists in both ledger and bank
+    if (ledgerEntries.length === 0) {
+      return NextResponse.json(
+        { 
+          error: "No ledger entries found", 
+          message: "Please upload receipts or add ledger entries before reconciling" 
+        },
+        { status: 400 }
+      );
+    }
 
-    for (const bank of bankEntries) {
-      for (const ledger of ledgerEntries) {
+    if (bankEntries.length === 0) {
+      return NextResponse.json(
+        { 
+          error: "No bank entries found", 
+          message: "Please upload a bank statement CSV before reconciling" 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Create a set of already matched pairs to avoid duplicates
+    const existingMatchPairs = new Set(
+      existingMatches.map(m => `${m.ledgerId}-${m.bankId}`)
+    );
+
+    const matches = [];
+    const usedLedgerIds = new Set();
+    const usedBankIds = new Set();
+
+    // Sort by date to prioritize matching closer dates first
+    const sortedBankEntries = [...bankEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const sortedLedgerEntries = [...ledgerEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    for (const bank of sortedBankEntries) {
+      // Skip if this bank entry was already matched
+      if (usedBankIds.has(bank.id)) continue;
+      
+      for (const ledger of sortedLedgerEntries) {
+        // Skip if this ledger entry was already matched
+        if (usedLedgerIds.has(ledger.id)) continue;
+        
         // Check if amounts match
         const bankAmount = Number(bank.amount);
         const ledgerAmount = Number(ledger.amount);
@@ -61,7 +98,15 @@ export async function POST(request: NextRequest) {
             );
             
             if (hasCommonWords || bankDesc.includes(ledgerDesc) || ledgerDesc.includes(bankDesc)) {
-              matches.push({ bank, ledger });
+              // Check if this pair hasn't been matched before
+              const matchPairKey = `${ledger.id}-${bank.id}`;
+              if (!existingMatchPairs.has(matchPairKey)) {
+                matches.push({ bank, ledger });
+                // Mark both as used so they won't be matched again in this run
+                usedLedgerIds.add(ledger.id);
+                usedBankIds.add(bank.id);
+                break; // Move to next bank entry
+              }
             }
           }
         }
@@ -94,14 +139,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Matched ${matches.length} transactions`,
+      message: matches.length > 0 
+        ? `Successfully matched ${matches.length} new transaction${matches.length > 1 ? 's' : ''}`
+        : "No new matches found",
       stats: {
         newMatches: matches.length,
         totalMatched: totalMatched,
         totalLedger: totalLedger,
         totalBank: totalBank,
         unmatchedLedger: totalLedger - totalMatched,
-        unmatchedBank: totalBank - totalMatched
+        unmatchedBank: totalBank - totalMatched,
+        totalComparisons: ledgerEntries.length * bankEntries.length
       }
     });
   } catch (error) {

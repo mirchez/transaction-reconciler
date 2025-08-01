@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       const matchData = matchMap.get(`ledger-${entry.id}`);
       transactions.push({
         id: entry.id,
-        date: entry.date.toISOString(),
+        date: entry.date.toISOString().split('T')[0],
         amount: Number(entry.amount),
         description: entry.description,
         source: "Ledger" as const,
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
       const matchData = matchMap.get(`bank-${transaction.id}`);
       transactions.push({
         id: transaction.id,
-        date: transaction.date.toISOString(),
+        date: transaction.date.toISOString().split('T')[0],
         amount: Number(transaction.amount),
         description: transaction.description,
         source: "Bank" as const,
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
     matches.forEach(match => {
       transactions.push({
         id: match.id,
-        date: match.date.toISOString(),
+        date: match.date.toISOString().split('T')[0],
         amount: Number(match.amount),
         description: match.description,
         source: "Both" as const,
