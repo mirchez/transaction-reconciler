@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Mail, FileText, CheckCircle2, Clock, AlertCircle, LogOut } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useGmailStats, useGmailCheck, useGmailDisconnect, useGmailForceDisconnect } from "@/hooks/use-gmail";
+import { toast } from "sonner";
 
 interface GmailStatusProps {
   email: string;
@@ -23,6 +24,10 @@ export function GmailStatus({ email }: GmailStatusProps) {
   const forceDisconnectMutation = useGmailForceDisconnect();
 
   const handleCheckNow = async () => {
+    toast.info("Checking emails... This might take a few moments", {
+      duration: 3000,
+      icon: "📧",
+    });
     checkMutation.mutate();
   };
 

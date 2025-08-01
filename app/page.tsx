@@ -257,6 +257,11 @@ export default function HomePage() {
       return;
     }
 
+    toast.info("Checking emails... This might take a few moments", {
+      duration: 3000,
+      icon: "📧",
+    });
+    
     setCheckingEmails(true);
     try {
       const response = await fetch("/api/gmail/check", {
