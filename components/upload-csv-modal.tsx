@@ -189,8 +189,20 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
 
       const result = await response.json();
 
-      if (result.success) {
-        toast.success(result.message);
+      if (response.status === 409) {
+        // Handle duplicate file error
+        toast.error("File already exists", {
+          description: result.message || "This CSV file has already been uploaded - duplicate files are not allowed",
+        });
+      } else if (result.success) {
+        // Check if there were any duplicates skipped
+        if (result.stats?.duplicates > 0) {
+          toast.warning(result.message, {
+            description: `${result.stats.duplicates} duplicate transactions were skipped`,
+          });
+        } else {
+          toast.success(result.message);
+        }
         // Invalidate queries to refresh data smoothly
         await queryClient.invalidateQueries({ queryKey: ["transactions"] });
         await queryClient.invalidateQueries({ queryKey: ["gmail-status"] });

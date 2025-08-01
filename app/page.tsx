@@ -221,6 +221,10 @@ export default function HomePage() {
         });
         // Refresh transactions
         await queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      } else if (data.duplicates > 0) {
+        toast.warning(`Found ${data.duplicates} duplicate PDF${data.duplicates > 1 ? 's' : ''}`, {
+          description: "Files already exist - not loaded to avoid duplicates",
+        });
       } else {
         toast.info("No new receipts found", {
           description: "Your transactions are up to date",

@@ -241,28 +241,62 @@ export async function POST(request: NextRequest) {
     // Extract bank data using AI
     const bankData = await extractBankDataWithAI(parseResult.data);
 
-    // Save bank transactions
-    const createdTransactions = await Promise.all(
-      bankData.map(async (transaction) => {
-        return await prisma.bank.create({
+    // Check for duplicates and save bank transactions
+    const createdTransactions = [];
+    const duplicates = [];
+    
+    for (const transaction of bankData) {
+      const transactionDate = new Date(transaction.date);
+      const transactionAmount = new Decimal(transaction.amount);
+      
+      // Check if this exact transaction already exists
+      const existingTransaction = await prisma.bank.findFirst({
+        where: {
+          userEmail,
+          date: transactionDate,
+          description: transaction.description,
+          amount: transactionAmount,
+        },
+      });
+      
+      if (existingTransaction) {
+        duplicates.push(transaction);
+      } else {
+        const created = await prisma.bank.create({
           data: {
             userEmail,
-            date: new Date(transaction.date),
+            date: transactionDate,
             description: transaction.description,
-            amount: new Decimal(transaction.amount),
+            amount: transactionAmount,
           },
         });
-      })
-    );
+        createdTransactions.push(created);
+      }
+    }
+    
+    // If all transactions are duplicates, return error
+    if (createdTransactions.length === 0 && duplicates.length > 0) {
+      return NextResponse.json(
+        { 
+          error: "All transactions already exist", 
+          message: "This file has already been uploaded - duplicate files are not allowed",
+          duplicates: duplicates.length
+        },
+        { status: 409 } // Conflict status
+      );
+    }
 
     // Perform matching
     const matchedCount = await matchTransactions(userEmail);
 
     return NextResponse.json({
       success: true,
-      message: `Processed ${createdTransactions.length} transactions, matched ${matchedCount}`,
+      message: duplicates.length > 0 
+        ? `Processed ${createdTransactions.length} transactions (${duplicates.length} duplicates skipped), matched ${matchedCount}`
+        : `Processed ${createdTransactions.length} transactions, matched ${matchedCount}`,
       stats: {
         total: createdTransactions.length,
+        duplicates: duplicates.length,
         matched: matchedCount,
         unmatched: createdTransactions.length - matchedCount
       }
