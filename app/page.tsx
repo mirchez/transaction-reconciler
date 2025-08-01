@@ -7,6 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Table,
   TableBody,
   TableCell,
@@ -372,25 +377,45 @@ export default function HomePage() {
                       )}
                     </Button>
                     {gmailStatus?.connected && (
-                      <Button
-                        size="default"
-                        variant="outline"
-                        className="rounded-lg"
-                        onClick={handleSendTestEmail}
-                        disabled={sendingTestEmail}
-                      >
-                        {sendingTestEmail ? (
-                          <>
-                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                            Sending...
-                          </>
-                        ) : (
-                          <>
-                            <FileText className="w-4 h-4 mr-2" />
-                            Send Test Email
-                          </>
-                        )}
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="default"
+                            variant="outline"
+                            className="rounded-lg"
+                            onClick={handleSendTestEmail}
+                            disabled={sendingTestEmail}
+                          >
+                            {sendingTestEmail ? (
+                              <>
+                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                Sending...
+                              </>
+                            ) : (
+                              <>
+                                <FileText className="w-4 h-4 mr-2" />
+                                Send Test Email
+                              </>
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs bg-white text-black border-gray-200">
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5">
+                              <Mail className="h-4 w-4 text-gray-600" />
+                            </div>
+                            <div className="space-y-1">
+                              <p className="font-semibold text-sm">
+                                Test Email
+                              </p>
+                              <p className="text-xs text-gray-600 leading-relaxed">
+                                Sends a sample receipt PDF to your connected
+                                email for testing the automatic import feature
+                              </p>
+                            </div>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                   </div>
                 </CardContent>
@@ -807,7 +832,7 @@ export default function HomePage() {
                               disabled={matchedTransactions.length === 0}
                             >
                               <Download className="w-4 h-4 mr-2" />
-                              Download Excel
+                              Download Matched Excel
                             </Button>
                           </div>
                           <div className="border border-border rounded-lg overflow-hidden bg-card">
@@ -920,7 +945,7 @@ export default function HomePage() {
                               }
                             >
                               <Download className="w-4 h-4 mr-2" />
-                              Download Excel
+                              Download Unmatched Excel
                             </Button>
                           </div>
                           <div className="border border-border rounded-lg overflow-hidden bg-card">
