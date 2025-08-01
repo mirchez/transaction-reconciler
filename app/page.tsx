@@ -815,19 +815,19 @@ export default function HomePage() {
                               <Table className="w-full">
                                 <TableHeader>
                                   <TableRow className="border-b border-border">
-                                    <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">
+                                    <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-left px-4 py-3 w-32">
                                       Date
                                     </TableHead>
-                                    <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">
+                                    <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-left px-4 py-3">
                                       Ledger Description
                                     </TableHead>
-                                    <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">
+                                    <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-left px-4 py-3">
                                       Bank Description
                                     </TableHead>
-                                    <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">
+                                    <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-right px-4 py-3 w-28">
                                       Amount
                                     </TableHead>
-                                    <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">
+                                    <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-left px-4 py-3 w-32">
                                       Match Score
                                     </TableHead>
                                   </TableRow>
@@ -928,19 +928,19 @@ export default function HomePage() {
                               <Table className="w-full">
                                 <TableHeader>
                                   <TableRow className="border-b border-border">
-                                    <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-32">
+                                    <TableHead className="font-medium bg-red-500/10 dark:bg-red-500/20 text-left px-4 py-3 w-32">
                                       Date
                                     </TableHead>
-                                    <TableHead className="font-medium bg-muted/30 text-left px-4 py-3">
+                                    <TableHead className="font-medium bg-red-500/10 dark:bg-red-500/20 text-left px-4 py-3">
                                       Description
                                     </TableHead>
-                                    <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-24">
+                                    <TableHead className="font-medium bg-red-500/10 dark:bg-red-500/20 text-left px-4 py-3 w-24">
                                       Source
                                     </TableHead>
-                                    <TableHead className="font-medium bg-muted/30 text-right px-4 py-3 w-28">
+                                    <TableHead className="font-medium bg-red-500/10 dark:bg-red-500/20 text-right px-4 py-3 w-28">
                                       Amount
                                     </TableHead>
-                                    <TableHead className="font-medium bg-muted/30 text-left px-4 py-3 w-36">
+                                    <TableHead className="font-medium bg-red-500/10 dark:bg-red-500/20 text-left px-4 py-3 w-36">
                                       Status
                                     </TableHead>
                                   </TableRow>
