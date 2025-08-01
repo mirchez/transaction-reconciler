@@ -26,6 +26,8 @@ import {
   File,
   Mail,
   Download,
+  FileUp,
+  MailCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { UploadCsvModal } from "@/components/upload-csv-modal";
@@ -384,33 +386,74 @@ export default function HomePage() {
                             onClick={() => setCsvModalOpen(true)}
                             disabled={!gmailStatus?.connected}
                           >
+                            <FileUp className="w-4 h-4 mr-2" />
                             Upload bank CSV
                           </Button>
                         </div>
                       </TooltipTrigger>
-                      {!gmailStatus?.connected && (
-                        <TooltipContent className="bg-white text-black border-gray-200">
-                          <p className="text-sm">
-                            Please connect your Email first
-                          </p>
-                        </TooltipContent>
-                      )}
+                      <TooltipContent className="max-w-xs bg-white text-black border-gray-200">
+                        <div className="flex items-start gap-2">
+                          <div className="mt-0.5">
+                            <FileUp className="h-4 w-4 text-gray-600" />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="font-semibold text-sm">
+                              {!gmailStatus?.connected ? "Connect Email First" : "Upload Bank Statement"}
+                            </p>
+                            <p className="text-xs text-gray-600 leading-relaxed">
+                              {!gmailStatus?.connected 
+                                ? "You need to connect your email account before uploading bank statements"
+                                : "Import your bank transactions from a CSV file to match them with email receipts"
+                              }
+                            </p>
+                          </div>
+                        </div>
+                      </TooltipContent>
                     </Tooltip>
-                    <Button
-                      size="default"
-                      variant="outline"
-                      className="rounded-lg"
-                      onClick={() => setGmailModalOpen(true)}
-                    >
-                      {gmailStatus?.connected ? (
-                        <>
-                          <Mail className="w-4 h-4 mr-2" />
-                          Check Email
-                        </>
-                      ) : (
-                        "Connect Email"
-                      )}
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="default"
+                          variant="outline"
+                          className="rounded-lg"
+                          onClick={() => setGmailModalOpen(true)}
+                        >
+                          {gmailStatus?.connected ? (
+                            <>
+                              <MailCheck className="w-4 h-4 mr-2" />
+                              Check Email
+                            </>
+                          ) : (
+                            <>
+                              <Mail className="w-4 h-4 mr-2" />
+                              Connect Email
+                            </>
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs bg-white text-black border-gray-200">
+                        <div className="flex items-start gap-2">
+                          <div className="mt-0.5">
+                            {gmailStatus?.connected ? (
+                              <MailCheck className="h-4 w-4 text-gray-600" />
+                            ) : (
+                              <Mail className="h-4 w-4 text-gray-600" />
+                            )}
+                          </div>
+                          <div className="space-y-1">
+                            <p className="font-semibold text-sm">
+                              {gmailStatus?.connected ? "Email Management" : "Connect Gmail Account"}
+                            </p>
+                            <p className="text-xs text-gray-600 leading-relaxed">
+                              {gmailStatus?.connected 
+                                ? "Check for new receipts, view email statistics, or disconnect your Gmail account"
+                                : "Connect your Gmail to automatically import PDF receipts from your inbox"
+                              }
+                            </p>
+                          </div>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
                     {gmailStatus?.connected && (
                       <Tooltip>
                         <TooltipTrigger asChild>
