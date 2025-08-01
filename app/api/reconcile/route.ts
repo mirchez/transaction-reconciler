@@ -60,14 +60,15 @@ export async function POST(request: NextRequest) {
 
     const matches = [];
     const usedLedgerIds = new Set();
-    // Remove usedBankIds to allow multiple matches per bank entry
+    const usedBankIds = new Set();
 
     // Sort by date to prioritize matching closer dates first
     const sortedBankEntries = [...bankEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     const sortedLedgerEntries = [...ledgerEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     for (const bank of sortedBankEntries) {
-      // Allow bank entries to match multiple ledger entries
+      // Skip if this bank entry was already matched
+      if (usedBankIds.has(bank.id)) continue;
       
       for (const ledger of sortedLedgerEntries) {
         // Skip if this ledger entry was already matched
@@ -100,9 +101,29 @@ export async function POST(request: NextRequest) {
               const matchPairKey = `${ledger.id}-${bank.id}`;
               if (!existingMatchPairs.has(matchPairKey)) {
                 matches.push({ bank, ledger });
-                // Mark only ledger as used (allow bank to match more ledger entries)
+                // Mark both as used so they won't be matched again
                 usedLedgerIds.add(ledger.id);
-                // Don't break - continue looking for more ledger entries that match this bank entry
+                usedBankIds.add(bank.id);
+                
+                // Mark ALL similar entries as used to prevent duplicate matching
+                // This assumes no duplicate transactions should exist
+                for (const l of sortedLedgerEntries) {
+                  if (Number(l.amount) === ledgerAmount && 
+                      new Date(l.date).toISOString().split('T')[0] === ledgerDate &&
+                      l.description.toLowerCase() === ledgerDesc) {
+                    usedLedgerIds.add(l.id);
+                  }
+                }
+                
+                for (const b of sortedBankEntries) {
+                  if (Number(b.amount) === bankAmount && 
+                      new Date(b.date).toISOString().split('T')[0] === bankDate &&
+                      b.description.toLowerCase() === bankDesc) {
+                    usedBankIds.add(b.id);
+                  }
+                }
+                
+                break; // Move to next bank entry
               }
             }
           }
