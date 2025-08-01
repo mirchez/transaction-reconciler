@@ -161,12 +161,14 @@ export default function HomePage() {
       return;
     } else if (!hasLedgerData) {
       toast.error("Missing ledger data", {
-        description: "Please connect your email and check for receipts to load ledger transactions",
+        description:
+          "Please connect your email and check for receipts to load ledger transactions",
       });
       return;
     } else if (!hasBankData) {
       toast.error("Missing bank data", {
-        description: "Please upload your bank statement CSV file to load bank transactions",
+        description:
+          "Please upload your bank statement CSV file to load bank transactions",
       });
       return;
     }
@@ -373,13 +375,27 @@ export default function HomePage() {
                   <div className="border-t border-border my-6"></div>
 
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <Button
-                      size="default"
-                      className="rounded-lg"
-                      onClick={() => setCsvModalOpen(true)}
-                    >
-                      Upload bank CSV
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div>
+                          <Button
+                            size="default"
+                            className="rounded-lg"
+                            onClick={() => setCsvModalOpen(true)}
+                            disabled={!gmailStatus?.connected}
+                          >
+                            Upload bank CSV
+                          </Button>
+                        </div>
+                      </TooltipTrigger>
+                      {!gmailStatus?.connected && (
+                        <TooltipContent className="bg-white text-black border-gray-200">
+                          <p className="text-sm">
+                            Please connect your Email first
+                          </p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
                     <Button
                       size="default"
                       variant="outline"
@@ -455,19 +471,36 @@ export default function HomePage() {
                   </CardContent>
                 </Card>
               ) : transactions.length === 0 ? (
-                <Card className="rounded-none bg-card border shadow-sm">
+                <Card className="rounded-lg bg-card border shadow-sm">
                   <CardContent className="p-6 sm:p-12 text-center">
                     <div className="max-w-md mx-auto space-y-4">
                       <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-muted rounded-none flex items-center justify-center">
-                        <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
+                        {gmailStatus?.connected ? (
+                          <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
+                        ) : (
+                          <Mail className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
+                        )}
                       </div>
                       <h3 className="text-lg sm:text-xl font-semibold text-foreground">
-                        No Transactions Yet!
+                        {gmailStatus?.connected
+                          ? "No Transactions Yet!"
+                          : "Connect Your Email to Start"}
                       </h3>
                       <p className="text-xs sm:text-sm text-muted-foreground">
-                        Upload your receipts and bank statements above to start
-                        managing transactions.
+                        {gmailStatus?.connected
+                          ? "Upload your receipts and bank statements above to start managing transactions."
+                          : "Connect your Gmail account to automatically import receipts and enable bank statement uploads."}
                       </p>
+                      {!gmailStatus?.connected && (
+                        <Button
+                          onClick={() => setGmailModalOpen(true)}
+                          className="rounded-lg mt-4"
+                          size="default"
+                        >
+                          <Mail className="w-4 h-4 mr-2" />
+                          Connect Email Now
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -521,9 +554,13 @@ export default function HomePage() {
                                   {gmailStatus?.email || "Gmail Receipts"}
                                 </span>
                               </div>
-                              <span className="text-muted-foreground/50 hidden sm:inline">•</span>
+                              <span className="text-muted-foreground/50 hidden sm:inline">
+                                •
+                              </span>
                               <span>{allLedgerEntries.length} entries</span>
-                              <span className="text-muted-foreground/50 hidden sm:inline">•</span>
+                              <span className="text-muted-foreground/50 hidden sm:inline">
+                                •
+                              </span>
                               <span className="hidden sm:inline">
                                 Last synced: {new Date().toLocaleTimeString()}
                               </span>
@@ -600,11 +637,19 @@ export default function HomePage() {
                                   {csvFileInfo?.name || "Bank Statement.csv"}
                                 </span>
                               </div>
-                              <span className="text-muted-foreground/50 hidden sm:inline">•</span>
+                              <span className="text-muted-foreground/50 hidden sm:inline">
+                                •
+                              </span>
                               <span>{allBankEntries.length} entries</span>
-                              <span className="text-muted-foreground/50 hidden sm:inline">•</span>
-                              <span className="hidden sm:inline">{csvFileInfo?.size || "0.1 MB"}</span>
-                              <span className="text-muted-foreground/50 hidden sm:inline">•</span>
+                              <span className="text-muted-foreground/50 hidden sm:inline">
+                                •
+                              </span>
+                              <span className="hidden sm:inline">
+                                {csvFileInfo?.size || "0.1 MB"}
+                              </span>
+                              <span className="text-muted-foreground/50 hidden sm:inline">
+                                •
+                              </span>
                               <span className="hidden sm:inline">
                                 {csvFileInfo?.uploadTime ||
                                   new Date().toLocaleTimeString()}
@@ -788,7 +833,9 @@ export default function HomePage() {
                               disabled={matchedTransactions.length === 0}
                             >
                               <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                              <span className="hidden sm:inline">Download Matched Excel</span>
+                              <span className="hidden sm:inline">
+                                Download Matched Excel
+                              </span>
                               <span className="sm:hidden">Download Excel</span>
                             </Button>
                           </div>
@@ -897,7 +944,9 @@ export default function HomePage() {
                               }
                             >
                               <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                              <span className="hidden sm:inline">Download Unmatched Excel</span>
+                              <span className="hidden sm:inline">
+                                Download Unmatched Excel
+                              </span>
                               <span className="sm:hidden">Download Excel</span>
                             </Button>
                           </div>
