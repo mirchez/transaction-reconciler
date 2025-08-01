@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { ResetButton } from "./reset-button";
 
 export function Header() {
   return (
@@ -21,9 +20,8 @@ export function Header() {
             <span className="text-xl font-lovelace tracking-wide text-foreground">Minerva</span>
           </div>
           
-          {/* Theme Toggle and Reset Button */}
+          {/* Theme Toggle */}
           <div className="flex items-center gap-2">
-            <ResetButton />
             <ThemeToggle />
           </div>
           </div>

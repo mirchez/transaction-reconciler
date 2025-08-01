@@ -261,7 +261,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
 
         <div className="space-y-6">
           {/* Example Download Section */}
-          <div className="bg-muted/50 p-4 rounded-none border border-muted">
+          <div className="bg-muted/50 p-4 rounded-lg border border-muted">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground">New to this?</p>
@@ -360,7 +360,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
           </div>
 
           {/* Upload Zone */}
-          <div className="border-2 border-dashed border-muted rounded-none p-8 sm:p-12 text-center hover:border-primary/50 transition-colors bg-card">
+          <div className="border-2 border-dashed border-muted rounded-lg p-8 sm:p-12 text-center hover:border-primary/50 transition-colors bg-card">
             <div className="mb-6">
               <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
               <p className="text-lg font-medium text-foreground mb-2">
@@ -400,7 +400,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {files.map((file) => (
                   <div key={file.id} className="space-y-2">
-                    <div className="flex items-center justify-between p-3 bg-muted rounded-none">
+                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                       <div className="flex items-center gap-3">
                         {file.status === "pending" ? (
                           <FileText className="w-4 h-4 text-muted-foreground" />
@@ -425,7 +425,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                     {file.status === "success" && file.extractedData && file.extractedData.length > 0 && (
                       <div className="ml-4 mr-4 mb-2">
                         <p className="text-xs font-medium text-muted-foreground mb-2">Extracted Data:</p>
-                        <div className="border border-border rounded-none overflow-hidden">
+                        <div className="border border-border rounded-lg overflow-hidden">
                           <Table>
                             <TableHeader>
                               <TableRow className="h-8">

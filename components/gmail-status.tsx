@@ -71,7 +71,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
                 size="sm"
                 onClick={handleForceDisconnect}
                 disabled={forceDisconnectMutation.isPending}
-                className="rounded-none"
+                className="rounded-lg"
               >
                 {forceDisconnectMutation.isPending ? "Disconnecting..." : "Force Disconnect"}
               </Button>
@@ -104,7 +104,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
                 variant="default"
                 size="sm"
                 onClick={handleDisconnect}
-                className="rounded-none bg-orange-600 hover:bg-orange-700 text-white"
+                className="rounded-lg bg-orange-600 hover:bg-orange-700 text-white"
               >
                 Reconnect
               </Button>
@@ -131,7 +131,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
                 size="sm"
                 onClick={handleCheckNow}
                 disabled={checkMutation.isPending}
-                className="rounded-none bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 {checkMutation.isPending ? (
                   <>
@@ -145,7 +145,7 @@ export function GmailStatus({ email }: GmailStatusProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-none"
+                className="rounded-lg"
                 onClick={handleDisconnect}
                 disabled={disconnectMutation.isPending}
               >

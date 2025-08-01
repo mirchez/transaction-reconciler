@@ -275,7 +275,7 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-none"
+                  className="rounded-lg"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Example CSV
@@ -401,7 +401,7 @@ export function UploadCsvModal({ open, onOpenChange, onFileUpload }: UploadCsvMo
             <Button
               onClick={processStatement}
               disabled={csvData.length === 0 || isProcessing || isParsing || !!parseError}
-              className="rounded-none bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {isProcessing ? (
                 <>

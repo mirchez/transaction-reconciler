@@ -53,7 +53,7 @@ export function GmailMonitorModal({ open, onOpenChange }: GmailMonitorModalProps
                 <Button 
                   onClick={handleGoogleConnect} 
                   size="lg" 
-                  className="rounded-none bg-primary hover:bg-primary/90 text-primary-foreground px-8"
+                  className="rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground px-8"
                 >
                   Connect Gmail Account
                 </Button>
