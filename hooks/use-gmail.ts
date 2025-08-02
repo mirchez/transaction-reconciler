@@ -65,11 +65,35 @@ export function useGmailCheck(email: string) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to check Gmail");
+        let errorMessage = "Failed to check Gmail";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+          
+          // Handle specific error codes
+          if (response.status === 401) {
+            errorMessage = "Gmail authentication failed. Please reconnect your account.";
+          } else if (response.status === 403) {
+            errorMessage = "Gmail permissions denied. Please reconnect with proper permissions.";
+          } else if (response.status === 503) {
+            errorMessage = "Gmail service temporarily unavailable. Please try again later.";
+          }
+        } catch (e) {
+          // If response is not JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        
+        console.error("Gmail check error:", response.status, errorMessage);
+        throw new Error(errorMessage);
       }
 
-      return response.json();
+      try {
+        const data = await response.json();
+        return data;
+      } catch (e) {
+        console.error("Failed to parse Gmail response:", e);
+        throw new Error("Invalid response from Gmail service");
+      }
     },
     onSuccess: (data) => {
       console.log("📧 Gmail Check Response:", data);
@@ -118,9 +142,28 @@ export function useGmailCheck(email: string) {
         toast.info(data.message);
       }
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error("Error checking Gmail:", error);
-      toast.error("Failed to check Gmail");
+      
+      // Show specific error message to user
+      const errorMessage = error.message || "Failed to check Gmail";
+      
+      if (errorMessage.includes("authentication failed")) {
+        toast.error(errorMessage, {
+          action: {
+            label: "Reconnect",
+            onClick: () => window.location.href = "/",
+          },
+        });
+      } else if (errorMessage.includes("permissions denied")) {
+        toast.error(errorMessage, {
+          description: "Please reconnect your Gmail account with the required permissions",
+        });
+      } else {
+        toast.error(errorMessage, {
+          description: "Please try again or check your connection",
+        });
+      }
     },
   });
 }

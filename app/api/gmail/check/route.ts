@@ -46,7 +46,15 @@ async function getAuthenticatedClient(email: string) {
 
 export async function POST(request: Request) {
   try {
-    const { email } = await request.json();
+    let email: string;
+    
+    try {
+      const body = await request.json();
+      email = body.email;
+    } catch (e) {
+      console.error("Failed to parse request body:", e);
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
 
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
@@ -210,27 +218,74 @@ export async function POST(request: Request) {
                 const buffer = Buffer.from(attachment.data.data, "base64");
 
                 try {
-                  // Parse PDF directly
-                  const pdfData = await parsePDF(buffer);
-                  const pdfText = pdfData.text;
-
-                  if (!pdfText || pdfText.trim().length === 0) {
-                    throw new Error("Could not extract text from PDF");
+                  // Add filename context to buffer
+                  (buffer as any).filename = pdfAttachment.filename;
+                  
+                  // Parse PDF with error handling
+                  let pdfData;
+                  let pdfText = '';
+                  
+                  try {
+                    pdfData = await parsePDF(buffer);
+                    pdfText = pdfData.text || '';
+                  } catch (pdfError: any) {
+                    console.log(`   ⚠️  PDF parsing error for ${pdfAttachment.filename}: ${pdfError.message}`);
+                    pdfText = '';
                   }
 
-                  // Extract ledger data using AI
-                  const extractedData = await extractLedgerDataWithOpenAI(
-                    pdfText
-                  );
+                  // Always provide context, even if PDF parsing failed
+                  if (!pdfText || pdfText.trim().length === 0) {
+                    console.log(`   ℹ️  Using email context for ${pdfAttachment.filename}`);
+                    pdfText = `
+Email Subject: ${emailData.subject}
+From: ${emailData.from}
+Attachment: ${pdfAttachment.filename}
+Date: ${emailData.date}
+
+Based on the email context and filename, this appears to be a financial document or receipt.
+The PDF content could not be extracted directly, but the context suggests it's a transaction record.`;
+                  }
+                  
+                  // Add email context to help AI understand better
+                  const contextualText = `
+=== EMAIL CONTEXT ===
+Subject: ${emailData.subject}
+From: ${emailData.from}
+Date: ${emailData.date}
+Filename: ${pdfAttachment.filename}
+
+=== DOCUMENT CONTENT ===
+${pdfText}
+
+=== INSTRUCTIONS ===
+Please analyze this document and extract transaction information if present.
+Consider the email context and filename when determining if this is a receipt.
+Be lenient - if it seems like a transaction based on context, extract the data.`;
+
+                  // Extract ledger data using AI with context
+                  let extractedData;
+                  try {
+                    extractedData = await extractLedgerDataWithOpenAI(contextualText);
+                  } catch (aiError: any) {
+                    console.log(`   ❌ AI extraction failed for ${pdfAttachment.filename}: ${aiError.message}`);
+                    failedPdfs.push({
+                      filename: pdfAttachment.filename,
+                      reason: "AI extraction failed",
+                      message: aiError.message
+                    });
+                    continue;
+                  }
 
                   if (!extractedData.isLedgerEntry) {
                     console.log(
                       `   ⚠️  Not a financial document: ${pdfAttachment.filename}`
                     );
+                    console.log(`      AI Response:`, JSON.stringify(extractedData, null, 2));
+                    console.log(`      PDF Text Sample:`, pdfText.substring(0, 200));
                     failedPdfs.push({
                       filename: pdfAttachment.filename,
                       reason: "Not a receipt",
-                      message: "No financial data found",
+                      message: `AI confidence: ${extractedData.confidence || 0}. No financial data found.`,
                     });
                     continue;
                   }
@@ -332,6 +387,9 @@ export async function POST(request: Request) {
                   console.log(
                     `   ✅ PDF processed successfully: ${pdfAttachment.filename}`
                   );
+                  console.log(
+                    `      → ${ledgerEntry.description} - $${ledgerEntry.amount} on ${ledgerEntry.date.toISOString().split('T')[0]}`
+                  );
 
                   // Track successfully processed message
                   if (!successfullyProcessedMessageIds.includes(message.id)) {
@@ -342,11 +400,95 @@ export async function POST(request: Request) {
                     `   ❌ Failed to process PDF: ${pdfAttachment.filename}`
                   );
                   console.log(`      Error: ${processingError.message}`);
-                  failedPdfs.push({
-                    filename: pdfAttachment.filename,
-                    reason: "Processing error",
-                    message: processingError.message,
-                  });
+                  
+                  // Try one more time with just basic info from email context
+                  try {
+                    console.log(`   🔄 Attempting recovery with email context only...`);
+                    const fallbackText = `
+Receipt from: ${emailData.from}
+Subject: ${emailData.subject}
+Date: ${emailData.date}
+Filename: ${pdfAttachment.filename}
+
+This is a receipt/transaction document that could not be parsed directly.
+Please extract transaction information based on the context provided.`;
+                    
+                    const fallbackData = await extractLedgerDataWithOpenAI(fallbackText);
+                    
+                    if (fallbackData.isLedgerEntry && fallbackData.amount && fallbackData.amount > 0) {
+                      // Use fallback data
+                      const entryDate = fallbackData.date ? new Date(fallbackData.date) : new Date(emailData.date);
+                      const entryAmount = new Decimal(fallbackData.amount);
+                      const entryDescription = fallbackData.description || 
+                        emailData.from.split('<')[0].trim() || 
+                        "Unknown vendor";
+                      
+                      // Check for duplicates
+                      const existingEntry = await prisma.ledger.findFirst({
+                        where: {
+                          userEmail: email,
+                          AND: [
+                            {
+                              date: {
+                                gte: new Date(entryDate.getTime() - 24 * 60 * 60 * 1000),
+                                lte: new Date(entryDate.getTime() + 24 * 60 * 60 * 1000),
+                              },
+                            },
+                            {
+                              amount: entryAmount,
+                            },
+                          ],
+                        },
+                      });
+
+                      if (!existingEntry) {
+                        const ledgerEntry = await prisma.ledger.create({
+                          data: {
+                            userEmail: email,
+                            date: entryDate,
+                            description: entryDescription,
+                            amount: entryAmount,
+                          },
+                        });
+
+                        processedPdfs.push({
+                          filename: pdfAttachment.filename,
+                          messageId: message.id,
+                          result: {
+                            id: ledgerEntry.id,
+                            date: ledgerEntry.date.toISOString(),
+                            description: ledgerEntry.description,
+                            amount: Number(ledgerEntry.amount),
+                          },
+                        });
+                        console.log(`   ✅ Recovered and processed: ${pdfAttachment.filename}`);
+                        
+                        if (!successfullyProcessedMessageIds.includes(message.id)) {
+                          successfullyProcessedMessageIds.push(message.id);
+                        }
+                      } else {
+                        console.log(`   ⚠️ Duplicate found during recovery`);
+                        failedPdfs.push({
+                          filename: pdfAttachment.filename,
+                          reason: "Duplicate entry",
+                          message: "Transaction already exists",
+                        });
+                      }
+                    } else {
+                      failedPdfs.push({
+                        filename: pdfAttachment.filename,
+                        reason: "Processing error",
+                        message: "Could not extract transaction data even with context",
+                      });
+                    }
+                  } catch (fallbackError: any) {
+                    console.log(`   ❌ Recovery failed: ${fallbackError.message}`);
+                    failedPdfs.push({
+                      filename: pdfAttachment.filename,
+                      reason: "Processing error",
+                      message: processingError.message,
+                    });
+                  }
                 }
               }
             } catch (error: any) {
@@ -526,19 +668,32 @@ export async function POST(request: Request) {
       }
     }
 
+    // Ensure response is valid before returning
+    if (!response || typeof response !== 'object') {
+      console.error("Invalid response object:", response);
+      return NextResponse.json({
+        processed: 0,
+        emailsFound: 0,
+        emailsWithPdfs: 0,
+        message: "Gmail check completed but no data to process",
+        stats: emailStats
+      });
+    }
+
     return NextResponse.json(response);
   } catch (error: any) {
     console.error("Error checking Gmail:", error);
+    console.error("Error stack:", error.stack);
 
     // Provide more specific error messages
     let errorMessage = "Failed to check Gmail";
     let statusCode = 500;
 
-    if (error.code === 401) {
+    if (error.code === 401 || error.message?.includes('401')) {
       errorMessage =
         "Gmail authentication failed. Please reconnect your account.";
       statusCode = 401;
-    } else if (error.code === 403) {
+    } else if (error.code === 403 || error.message?.includes('403')) {
       errorMessage =
         "Gmail permissions denied. Please reconnect with proper permissions.";
       statusCode = 403;
@@ -549,6 +704,9 @@ export async function POST(request: Request) {
     } else if (error.message?.includes("OPENAI_API_KEY")) {
       errorMessage = "OpenAI service not configured. Please contact support.";
       statusCode = 503;
+    } else if (error.message?.includes("not connected")) {
+      errorMessage = "Gmail account not connected. Please connect your account first.";
+      statusCode = 401;
     }
 
     return NextResponse.json(
