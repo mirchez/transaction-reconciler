@@ -51,6 +51,8 @@ interface Transaction {
   ledgerEntryId?: string;
   bankTransactionId?: string;
   matchScore?: number;
+  matchType?: "logic" | "ai";
+  matchReason?: string;
   bankDescription?: string;
 }
 
@@ -192,9 +194,15 @@ export default function HomePage() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(data.message, {
-          description: `Found ${data.stats.newMatches} new matches`,
-        });
+        if (data.stats.newMatches > 0) {
+          toast.success("Reconciliation completed", {
+            description: `Found ${data.stats.newMatches} new match${data.stats.newMatches > 1 ? 'es' : ''}`,
+          });
+        } else {
+          toast.info("Reconciliation completed", {
+            description: "No new matches found",
+          });
+        }
 
         // Refresh transactions to show updated matches
         await queryClient.invalidateQueries({ queryKey: ["transactions"] });
@@ -211,8 +219,6 @@ export default function HomePage() {
       setReconciling(false);
     }
   };
-
-  const [checkingEmails, setCheckingEmails] = useState(false);
 
   const handleSendTestEmail = async () => {
     if (!gmailStatus?.email) {
@@ -248,68 +254,6 @@ export default function HomePage() {
       });
     } finally {
       setSendingTestEmail(false);
-    }
-  };
-
-  const handleCheckEmails = async () => {
-    if (!gmailStatus?.email) {
-      toast.error("Please connect your Gmail account first");
-      return;
-    }
-
-    toast.info("Checking emails... This might take a few moments", {
-      duration: 3000,
-      icon: "📧",
-    });
-    
-    setCheckingEmails(true);
-    try {
-      const response = await fetch("/api/gmail/check", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: gmailStatus?.email }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to check emails");
-      }
-
-      const data = await response.json();
-
-      if (data.newEmails > 0) {
-        toast.success(
-          `Found ${data.newEmails} new receipt${
-            data.newEmails > 1 ? "s" : ""
-          }!`,
-          {
-            description: "Refreshing transactions...",
-          }
-        );
-        // Refresh transactions
-        await queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      } else if (data.duplicates > 0) {
-        toast.warning(
-          `Found ${data.duplicates} duplicate PDF${
-            data.duplicates > 1 ? "s" : ""
-          }`,
-          {
-            description: "Files already exist - not loaded to avoid duplicates",
-          }
-        );
-      } else {
-        toast.info("No new receipts found", {
-          description: "Your transactions are up to date",
-        });
-      }
-    } catch (error) {
-      console.error("Error checking emails:", error);
-      toast.error("Failed to check emails", {
-        description: "Please try again or check your Gmail connection",
-      });
-    } finally {
-      setCheckingEmails(false);
     }
   };
 
@@ -386,15 +330,16 @@ export default function HomePage() {
                     <div className="flex flex-col sm:flex-row gap-3">
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div>
+                          <div className="w-full sm:w-auto">
                             <Button
                               size="default"
-                              className="rounded-lg"
+                              className="rounded-lg w-full sm:w-auto"
                               onClick={() => setCsvModalOpen(true)}
                               disabled={!gmailStatus?.connected}
                             >
                               <FileUp className="w-4 h-4 mr-2" />
-                              Upload bank CSV
+                              <span className="hidden sm:inline">Upload bank CSV</span>
+                              <span className="sm:hidden">Upload CSV</span>
                             </Button>
                           </div>
                         </TooltipTrigger>
@@ -423,18 +368,18 @@ export default function HomePage() {
                           <Button
                             size="default"
                             variant="outline"
-                            className="rounded-lg"
+                            className="rounded-lg w-full sm:w-auto"
                             onClick={() => setGmailModalOpen(true)}
                           >
                             {gmailStatus?.connected ? (
                               <>
                                 <MailCheck className="w-4 h-4 mr-2" />
-                                Check Email
+                                <span>Check Email</span>
                               </>
                             ) : (
                               <>
                                 <Mail className="w-4 h-4 mr-2" />
-                                Connect Email
+                                <span>Connect Email</span>
                               </>
                             )}
                           </Button>
@@ -469,19 +414,20 @@ export default function HomePage() {
                             <Button
                               size="default"
                               variant="outline"
-                              className="rounded-lg"
+                              className="rounded-lg w-full sm:w-auto"
                               onClick={handleSendTestEmail}
                               disabled={sendingTestEmail}
                             >
                               {sendingTestEmail ? (
                                 <>
                                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                                  Sending...
+                                  <span>Sending...</span>
                                 </>
                               ) : (
                                 <>
                                   <FileText className="w-4 h-4 mr-2" />
-                                  Send Test Email
+                                  <span className="hidden sm:inline">Send Test Email</span>
+                                  <span className="sm:hidden">Test Email</span>
                                 </>
                               )}
                             </Button>
@@ -573,27 +519,6 @@ export default function HomePage() {
                                   All receipts and invoices from your emails
                                 </p>
                               </div>
-                              {gmailStatus?.connected && (
-                                <Button
-                                  onClick={handleCheckEmails}
-                                  disabled={checkingEmails}
-                                  variant="outline"
-                                  size="sm"
-                                  className="w-full sm:w-auto"
-                                >
-                                  {checkingEmails ? (
-                                    <>
-                                      <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-2 animate-spin" />
-                                      Checking...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Mail className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                                      Check Now
-                                    </>
-                                  )}
-                                </Button>
-                              )}
                             </div>
                           </div>
                           <div className="border border-border rounded-lg overflow-hidden bg-card">
@@ -951,16 +876,38 @@ export default function HomePage() {
                                             {formatAmount(transaction.amount)}
                                           </TableCell>
                                           <TableCell className="px-4 py-3">
-                                            <Badge
-                                              variant="outline"
-                                              className="rounded-lg"
-                                            >
-                                              {transaction.matchScore
-                                                ? `${Math.round(
-                                                    transaction.matchScore
-                                                  )}%`
-                                                : "100%"}
-                                            </Badge>
+                                            <div className="flex items-center gap-2">
+                                              <Badge
+                                                variant="outline"
+                                                className="rounded-none"
+                                              >
+                                                {transaction.matchScore
+                                                  ? `${Math.round(
+                                                      transaction.matchScore
+                                                    )}%`
+                                                  : "100%"}
+                                              </Badge>
+                                              {transaction.matchType && (
+                                                <Tooltip>
+                                                  <TooltipTrigger>
+                                                    <Badge
+                                                      variant={transaction.matchType === "ai" ? "secondary" : "default"}
+                                                      className="rounded-none text-xs"
+                                                    >
+                                                      {transaction.matchType === "ai" ? "AI" : "Logic"}
+                                                    </Badge>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent>
+                                                    <p className="text-xs">
+                                                      {transaction.matchReason || 
+                                                        (transaction.matchType === "ai" 
+                                                          ? "Matched using AI analysis" 
+                                                          : "Matched using exact rules")}
+                                                    </p>
+                                                  </TooltipContent>
+                                                </Tooltip>
+                                              )}
+                                            </div>
                                           </TableCell>
                                         </TableRow>
                                       ))

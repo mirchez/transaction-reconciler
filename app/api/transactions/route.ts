@@ -62,7 +62,9 @@ export async function GET(request: NextRequest) {
         status: matchData ? "matched" as const : "ledger-only" as const,
         ledgerEntryId: entry.id,
         bankTransactionId: matchData?.bankId,
-        matchScore: matchData ? 100 : undefined,
+        matchScore: matchData?.matchScore || (matchData ? 100 : undefined),
+        matchType: matchData?.matchType,
+        matchReason: matchData?.matchReason,
       });
     });
     
@@ -78,7 +80,9 @@ export async function GET(request: NextRequest) {
         status: matchData ? "matched" as const : "bank-only" as const,
         bankTransactionId: transaction.id,
         ledgerEntryId: matchData?.ledgerId,
-        matchScore: matchData ? 100 : undefined,
+        matchScore: matchData?.matchScore || (matchData ? 100 : undefined),
+        matchType: matchData?.matchType,
+        matchReason: matchData?.matchReason,
       });
     });
     
@@ -93,7 +97,9 @@ export async function GET(request: NextRequest) {
         status: "matched" as const,
         ledgerEntryId: match.ledgerId,
         bankTransactionId: match.bankId,
-        matchScore: 100,
+        matchScore: match.matchScore || 100,
+        matchType: match.matchType || "logic",
+        matchReason: match.matchReason,
         bankDescription: match.bankTransaction,
       });
     });

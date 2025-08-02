@@ -11,6 +11,8 @@ interface Transaction {
   ledgerEntryId?: string;
   bankTransactionId?: string;
   matchScore?: number;
+  matchType?: "logic" | "ai";
+  matchReason?: string;
   bankDescription?: string;
 }
 

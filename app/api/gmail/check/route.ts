@@ -265,13 +265,28 @@ export async function POST(request: Request) {
                   const entryDescription =
                     extractedData.description || "Unknown transaction";
 
-                  // Check if this exact entry already exists
+                  // Check if this exact entry already exists (strict duplicate checking)
                   const existingEntry = await prisma.ledger.findFirst({
                     where: {
                       userEmail: email,
-                      date: entryDate,
-                      description: entryDescription,
-                      amount: entryAmount,
+                      AND: [
+                        {
+                          date: {
+                            gte: new Date(entryDate.getTime() - 24 * 60 * 60 * 1000), // 1 day before
+                            lte: new Date(entryDate.getTime() + 24 * 60 * 60 * 1000), // 1 day after
+                          },
+                        },
+                        {
+                          amount: entryAmount,
+                        },
+                        {
+                          OR: [
+                            { description: entryDescription },
+                            { description: { contains: entryDescription.split(' ')[0] } }, // Check first word
+                            { description: { contains: extractedData.vendor || '' } }, // Check vendor if available
+                          ],
+                        },
+                      ],
                     },
                   });
 
@@ -279,11 +294,17 @@ export async function POST(request: Request) {
                     console.log(
                       `⚠️ Duplicate entry found for ${pdfAttachment.filename}, skipping...`
                     );
+                    console.log(
+                      `   Existing: ${existingEntry.description} - $${existingEntry.amount} on ${existingEntry.date.toISOString().split('T')[0]}`
+                    );
+                    console.log(
+                      `   New: ${entryDescription} - $${entryAmount} on ${entryDate.toISOString().split('T')[0]}`
+                    );
                     failedPdfs.push({
                       filename: pdfAttachment.filename,
                       reason: "Duplicate entry",
                       message:
-                        "This receipt has already been processed - duplicate pdfs are not allowed",
+                        "This receipt appears to be a duplicate (same amount, similar date/description). Duplicate PDFs are strictly prohibited.",
                     });
                     continue;
                   }

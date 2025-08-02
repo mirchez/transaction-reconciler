@@ -62,6 +62,9 @@ model Matched {
   description      String   // Ledger description
   amount           Decimal  @db.Decimal(12, 2)
   date             DateTime // Ledger date
+  matchType        String   @default("logic") // "logic" or "ai"
+  matchScore       Int      @default(100) // 0-100 confidence score
+  matchReason      String?  // Optional explanation of the match
   createdAt        DateTime @default(now())
   
   user             User     @relation(fields: [userEmail], references: [email])

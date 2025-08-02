@@ -187,23 +187,61 @@ export async function POST(request: NextRequest) {
     // Check for duplicates and save bank transactions
     const createdTransactions: any[] = [];
     const duplicates: any[] = [];
+    const skippedSimilar: any[] = [];
 
     for (const transaction of bankData) {
       const transactionDate = new Date(transaction.date);
       const transactionAmount = new Decimal(transaction.amount);
 
-      // Check if this exact transaction already exists
+      // Strict duplicate checking - check for similar transactions
       const existingTransaction = await prisma.bank.findFirst({
         where: {
           userEmail,
-          date: transactionDate,
-          description: transaction.description,
-          amount: transactionAmount,
+          AND: [
+            {
+              date: {
+                gte: new Date(transactionDate.getTime() - 24 * 60 * 60 * 1000), // 1 day before
+                lte: new Date(transactionDate.getTime() + 24 * 60 * 60 * 1000), // 1 day after
+              },
+            },
+            {
+              amount: transactionAmount,
+            },
+            {
+              OR: [
+                { description: transaction.description },
+                { description: { contains: transaction.description.split(' ')[0] } }, // Check first word
+                { description: { contains: transaction.description.slice(-10) } }, // Check last 10 chars
+              ],
+            },
+          ],
         },
       });
 
       if (existingTransaction) {
-        duplicates.push(transaction);
+        const exactMatch = 
+          existingTransaction.date.toISOString().split('T')[0] === transactionDate.toISOString().split('T')[0] &&
+          existingTransaction.description === transaction.description &&
+          existingTransaction.amount.equals(transactionAmount);
+
+        if (exactMatch) {
+          duplicates.push({
+            ...transaction,
+            existingId: existingTransaction.id,
+            reason: "Exact duplicate"
+          });
+        } else {
+          skippedSimilar.push({
+            ...transaction,
+            existingId: existingTransaction.id,
+            reason: "Similar transaction detected",
+            existing: {
+              date: existingTransaction.date.toISOString().split('T')[0],
+              description: existingTransaction.description,
+              amount: Number(existingTransaction.amount)
+            }
+          });
+        }
       } else {
         const created = await prisma.bank.create({
           data: {
@@ -217,29 +255,52 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // If all transactions are duplicates, return error
-    if (createdTransactions.length === 0 && duplicates.length > 0) {
+    // If all transactions are duplicates or similar, return error
+    if (createdTransactions.length === 0 && (duplicates.length > 0 || skippedSimilar.length > 0)) {
       return NextResponse.json(
         {
-          error: "All transactions already exist",
+          error: "All transactions already exist or are too similar",
           message:
-            "This file has already been uploaded - duplicate files are not allowed",
+            "This CSV file appears to contain duplicate transactions. Duplicate bank statements are strictly prohibited to maintain data integrity.",
           duplicates: duplicates.length,
+          similar: skippedSimilar.length,
+          details: {
+            exactDuplicates: duplicates.slice(0, 5), // Show first 5
+            similarTransactions: skippedSimilar.slice(0, 5), // Show first 5
+          }
         },
         { status: 409 } // Conflict status
       );
     }
 
+    // Log details if we have duplicates or similar transactions
+    if (duplicates.length > 0 || skippedSimilar.length > 0) {
+      console.log(`⚠️ CSV Upload: Found ${duplicates.length} exact duplicates and ${skippedSimilar.length} similar transactions`);
+      if (duplicates.length > 0) {
+        console.log("Exact duplicates:", duplicates.slice(0, 3).map(d => `${d.date} - ${d.description} - $${d.amount}`));
+      }
+      if (skippedSimilar.length > 0) {
+        console.log("Similar transactions:", skippedSimilar.slice(0, 3).map(s => `${s.date} - ${s.description} - $${s.amount}`));
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message:
-        duplicates.length > 0
-          ? `Processed ${createdTransactions.length} transactions (${duplicates.length} duplicates skipped)`
-          : `Processed ${createdTransactions.length} transactions`,
+        duplicates.length > 0 || skippedSimilar.length > 0
+          ? `Processed ${createdTransactions.length} new transactions (${duplicates.length} exact duplicates and ${skippedSimilar.length} similar transactions skipped)`
+          : `Successfully processed ${createdTransactions.length} transactions`,
       stats: {
-        total: createdTransactions.length,
+        total: bankData.length,
+        created: createdTransactions.length,
         duplicates: duplicates.length,
+        similar: skippedSimilar.length,
       },
+      warnings: skippedSimilar.length > 0 ? {
+        message: "Some transactions were skipped because they appear to be similar to existing ones",
+        count: skippedSimilar.length,
+        examples: skippedSimilar.slice(0, 3)
+      } : undefined
     });
   } catch (error) {
     console.error("CSV upload error:", error);

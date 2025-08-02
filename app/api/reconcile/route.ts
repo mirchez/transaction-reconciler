@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { Decimal } from "@prisma/client/runtime/library";
+import { matchTransactionsWithAI } from "@/lib/match-transactions";
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,7 +59,9 @@ export async function POST(request: NextRequest) {
       existingMatches.map(m => `${m.ledgerId}-${m.bankId}`)
     );
 
-    const matches: any[] = [];
+    // Track different types of matches
+    const logicMatches: any[] = [];
+    const aiMatches: any[] = [];
     const usedLedgerIds = new Set();
     const usedBankIds = new Set();
 
@@ -100,7 +103,7 @@ export async function POST(request: NextRequest) {
               // Check if this pair hasn't been matched before
               const matchPairKey = `${ledger.id}-${bank.id}`;
               if (!existingMatchPairs.has(matchPairKey)) {
-                matches.push({ bank, ledger });
+                logicMatches.push({ bank, ledger, matchType: 'logic', matchScore: 100, matchReason: 'Exact amount, date, and description match' });
                 // Mark both as used so they won't be matched again
                 usedLedgerIds.add(ledger.id);
                 usedBankIds.add(bank.id);
@@ -131,9 +134,78 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Second pass: Use AI matching for unmatched transactions
+    if (process.env.OPENAI_API_KEY) {
+      // Get unmatched transactions
+      const unmatchedBankEntries = bankEntries.filter(b => 
+        !usedBankIds.has(b.id) && 
+        !existingMatches.some(m => m.bankId === b.id)
+      );
+      
+      const unmatchedLedgerEntries = ledgerEntries.filter(l => 
+        !usedLedgerIds.has(l.id) && 
+        !existingMatches.some(m => m.ledgerId === l.id)
+      );
+
+      if (unmatchedBankEntries.length > 0 && unmatchedLedgerEntries.length > 0) {
+        try {
+          // Prepare data for AI matching
+          const bankTransactionsForAI = unmatchedBankEntries.map(b => ({
+            id: b.id,
+            date: new Date(b.date),
+            amount: Number(b.amount),
+            description: b.description
+          }));
+
+          const ledgerEntriesForAI = unmatchedLedgerEntries.map(l => ({
+            id: l.id,
+            date: new Date(l.date),
+            amount: Number(l.amount),
+            vendor: l.description,
+            category: null
+          }));
+
+          // Call AI matching
+          const aiMatchResults = await matchTransactionsWithAI(
+            bankTransactionsForAI,
+            ledgerEntriesForAI
+          );
+
+          // Process AI matches
+          for (const aiMatch of aiMatchResults) {
+            const bank = unmatchedBankEntries.find(b => b.id === aiMatch.bankTransactionId);
+            const ledger = unmatchedLedgerEntries.find(l => l.id === aiMatch.ledgerEntryId);
+            
+            if (bank && ledger) {
+              const matchPairKey = `${ledger.id}-${bank.id}`;
+              if (!existingMatchPairs.has(matchPairKey) && 
+                  !usedLedgerIds.has(ledger.id) && 
+                  !usedBankIds.has(bank.id)) {
+                aiMatches.push({ 
+                  bank, 
+                  ledger, 
+                  matchType: 'ai',
+                  matchScore: aiMatch.matchScore,
+                  matchReason: aiMatch.matchReason 
+                });
+                usedLedgerIds.add(ledger.id);
+                usedBankIds.add(bank.id);
+              }
+            }
+          }
+        } catch (error) {
+          console.error("AI matching failed:", error);
+          // Continue without AI matches if it fails
+        }
+      }
+    }
+
+    // Combine all matches
+    const allMatches = [...logicMatches, ...aiMatches];
+
     // Create matched records
-    for (const match of matches) {
-      const { bank, ledger } = match;
+    for (const match of allMatches) {
+      const { bank, ledger, matchType, matchScore, matchReason } = match;
       
       await prisma.matched.create({
         data: {
@@ -143,7 +215,10 @@ export async function POST(request: NextRequest) {
           bankTransaction: `From: ${bank.description} $${bank.amount} on ${new Date(bank.date).toLocaleDateString()}`,
           description: ledger.description,
           amount: bank.amount,
-          date: ledger.date
+          date: ledger.date,
+          matchType: matchType,
+          matchScore: matchScore,
+          matchReason: matchReason
         }
       });
     }
@@ -155,20 +230,47 @@ export async function POST(request: NextRequest) {
       prisma.bank.count({ where: { userEmail: email } })
     ]);
 
+    // Build detailed message
+    let message = "";
+    if (allMatches.length > 0) {
+      if (logicMatches.length > 0 && aiMatches.length > 0) {
+        message = `Successfully matched ${allMatches.length} new transaction${allMatches.length > 1 ? 's' : ''} (${logicMatches.length} by logic, ${aiMatches.length} by AI)`;
+      } else if (logicMatches.length > 0) {
+        message = `Successfully matched ${logicMatches.length} new transaction${logicMatches.length > 1 ? 's' : ''} using logic-based matching`;
+      } else if (aiMatches.length > 0) {
+        message = `Successfully matched ${aiMatches.length} new transaction${aiMatches.length > 1 ? 's' : ''} using AI matching`;
+      }
+    } else {
+      message = "No new matches found";
+    }
+
     return NextResponse.json({
       success: true,
-      message: matches.length > 0 
-        ? `Successfully matched ${matches.length} new transaction${matches.length > 1 ? 's' : ''}`
-        : "No new matches found",
+      message,
       stats: {
-        newMatches: matches.length,
+        newMatches: allMatches.length,
+        logicMatches: logicMatches.length,
+        aiMatches: aiMatches.length,
         totalMatched: totalMatched,
         totalLedger: totalLedger,
         totalBank: totalBank,
         unmatchedLedger: totalLedger - totalMatched,
         unmatchedBank: totalBank - totalMatched,
-        totalComparisons: ledgerEntries.length * bankEntries.length
-      }
+        totalComparisons: ledgerEntries.length * bankEntries.length,
+        aiEnabled: !!process.env.OPENAI_API_KEY
+      },
+      matches: allMatches.map(m => ({
+        ledgerId: m.ledger.id,
+        bankId: m.bank.id,
+        matchType: m.matchType,
+        matchScore: m.matchScore,
+        matchReason: m.matchReason,
+        ledgerDescription: m.ledger.description,
+        bankDescription: m.bank.description,
+        amount: Number(m.bank.amount),
+        ledgerDate: m.ledger.date,
+        bankDate: m.bank.date
+      }))
     });
   } catch (error) {
     console.error("Reconciliation error:", error);
