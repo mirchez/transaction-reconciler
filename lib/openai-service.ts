@@ -236,7 +236,7 @@ function fallbackLedgerParsing(text: string): LedgerExtraction {
     /(?:^|\s)([\d,]+\.\d{2})(?:\s|$)/
   ];
   
-  let amountMatch = null;
+  let amountMatch: RegExpMatchArray | null = null;
   for (const pattern of amountPatterns) {
     const matches = Array.from(text.matchAll(pattern));
     if (matches.length > 0) {
@@ -244,7 +244,7 @@ function fallbackLedgerParsing(text: string): LedgerExtraction {
       const amounts = matches.map(m => parseFloat(m[1].replace(/,/g, '')));
       const maxAmount = Math.max(...amounts);
       if (maxAmount > 0) {
-        amountMatch = [null, maxAmount.toString()];
+        amountMatch = ['', maxAmount.toString()] as RegExpMatchArray;
         break;
       }
     }
