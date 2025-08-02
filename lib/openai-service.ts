@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { z } from "zod";
+import { parseReceiptRobust, type ParsingResult } from "./receipt-parser-strategy";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -109,7 +110,42 @@ Respond with JSON:
   "confidence": 0.95
 }`;
 
-export async function extractLedgerDataWithOpenAI(pdfText: string): Promise<LedgerExtraction> {
+export async function extractLedgerDataWithOpenAI(pdfText: string, filename?: string): Promise<LedgerExtraction> {
+  // First try the new robust parsing strategy
+  try {
+    console.log("🚀 Using robust multi-strategy parser");
+    const robustResult = await parseReceiptRobust(pdfText, {
+      filename,
+      useAI: true,
+      maxRetries: 3,
+      acceptPartialData: false,
+    });
+
+    if (robustResult.success && robustResult.data) {
+      console.log("✅ Robust parser succeeded:", {
+        method: robustResult.method,
+        confidence: robustResult.confidence,
+        amount: robustResult.data.amount,
+        vendor: robustResult.data.vendor,
+      });
+
+      return {
+        isLedgerEntry: true,
+        date: robustResult.data.date,
+        description: robustResult.data.description,
+        amount: robustResult.data.amount,
+        confidence: robustResult.confidence,
+      };
+    }
+
+    console.log("⚠️ Robust parser found partial data, falling back to original method");
+    // If robust parser fails, continue with original implementation
+  } catch (robustError) {
+    console.error("❌ Robust parser error:", robustError);
+    // Continue with original implementation
+  }
+
+  // Original implementation as fallback
   try {
     if (!process.env.OPENAI_API_KEY) {
       console.log("⚠️ OpenAI API key not found, using fallback parsing");

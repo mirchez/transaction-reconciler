@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
     console.log(`📄 Processing PDF: ${file.name}`);
     console.log(`📏 Text length: ${pdfText.length} characters`);
     
-    // Extract ledger data using AI
-    const extractedData = await extractLedgerDataWithOpenAI(pdfText);
+    // Extract ledger data using AI with filename context
+    const extractedData = await extractLedgerDataWithOpenAI(pdfText, file.name);
 
     if (!extractedData.isLedgerEntry) {
       console.log("❌ Document is not a ledger entry:", file.name);
