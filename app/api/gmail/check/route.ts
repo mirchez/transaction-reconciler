@@ -283,7 +283,6 @@ export async function POST(request: Request) {
                           OR: [
                             { description: entryDescription },
                             { description: { contains: entryDescription.split(' ')[0] } }, // Check first word
-                            { description: { contains: extractedData.vendor || '' } }, // Check vendor if available
                           ],
                         },
                       ],
