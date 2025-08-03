@@ -29,25 +29,25 @@ export async function POST(request: NextRequest) {
     const bankTransactions = await prisma.bank.findMany({
       where: {
         userEmail: email,
-        matched: { none: {} } // Not matched yet
+        matched: { none: {} }, // Not matched yet
       },
-      orderBy: { date: 'desc' }
+      orderBy: { date: "desc" },
     });
 
     // Get all ledger entries for this email that aren't matched yet
     const ledgerEntries = await prisma.ledger.findMany({
       where: {
         userEmail: email,
-        matched: { none: {} } // Not matched yet
+        matched: { none: {} }, // Not matched yet
       },
-      orderBy: { date: 'desc' }
+      orderBy: { date: "desc" },
     });
 
     if (bankTransactions.length === 0) {
       return NextResponse.json({
         success: true,
         message: "No bank transactions to match",
-        matches: 0
+        matches: 0,
       });
     }
 
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: "No ledger entries to match",
-        matches: 0
+        matches: 0,
       });
     }
 
@@ -64,19 +64,19 @@ export async function POST(request: NextRequest) {
     console.log(`- Ledger entries: ${ledgerEntries.length}`);
 
     // Prepare data for AI matching
-    const bankData = bankTransactions.map(bt => ({
+    const bankData = bankTransactions.map((bt) => ({
       id: bt.id,
       date: bt.date,
       description: bt.description,
-      amount: Number(bt.amount)
+      amount: Number(bt.amount),
     }));
 
-    const ledgerData = ledgerEntries.map(le => ({
+    const ledgerData = ledgerEntries.map((le) => ({
       id: le.id,
       date: le.date,
       amount: Number(le.amount),
       vendor: le.description || "Unknown",
-      category: null
+      category: null,
     }));
 
     // Use AI to find matches
@@ -87,38 +87,44 @@ export async function POST(request: NextRequest) {
     // Process each AI-suggested match
     for (const match of aiMatches) {
       // Create all AI-suggested matches (AI already filtered for confidence)
-      {
-        try {
-          // Find the actual bank transaction and ledger entry
-          const bankTransaction = bankTransactions.find(bt => bt.id === match.bankTransactionId);
-          const ledgerEntry = ledgerEntries.find(le => le.id === match.ledgerEntryId);
+      try {
+        // Find the actual bank transaction and ledger entry
+        const bankTransaction = bankTransactions.find(
+          (bt) => bt.id === match.bankTransactionId
+        );
+        const ledgerEntry = ledgerEntries.find(
+          (le) => le.id === match.ledgerEntryId
+        );
 
-          if (!bankTransaction || !ledgerEntry) {
-            console.warn(`Invalid match IDs: bank=${match.bankTransactionId}, ledger=${match.ledgerEntryId}`);
-            continue;
-          }
-
-          // Create the match record
-          await prisma.matched.create({
-            data: {
-              userEmail: email,
-              ledgerId: match.ledgerEntryId,
-              bankId: match.bankTransactionId,
-              bankTransaction: `${bankTransaction.date.toLocaleDateString()}: ${bankTransaction.description} - $${bankTransaction.amount}`,
-              description: ledgerEntry.description,
-              amount: bankTransaction.amount,
-              date: bankTransaction.date,
-              // matchScore field doesn't exist in schema
-            }
-          });
-
-          createdMatches++;
-          console.log(`✅ Created match: ${ledgerEntry.description} <-> ${bankTransaction.description} (score: ${match.matchScore})`);
-        } catch (error) {
-          console.error(`Error creating match:`, error);
+        if (!bankTransaction || !ledgerEntry) {
+          console.warn(
+            `Invalid match IDs: bank=${match.bankTransactionId}, ledger=${match.ledgerEntryId}`
+          );
+          continue;
         }
-      } else {
-        console.log(`⚠️ Skipping low-confidence match (score: ${match.matchScore}): ${match.matchReason}`);
+
+        // Create the match record
+        await prisma.matched.create({
+          data: {
+            userEmail: email,
+            ledgerId: match.ledgerEntryId,
+            bankId: match.bankTransactionId,
+            bankTransaction: `${bankTransaction.date.toLocaleDateString()}: ${
+              bankTransaction.description
+            } - $${bankTransaction.amount}`,
+            description: ledgerEntry.description,
+            amount: bankTransaction.amount,
+            date: bankTransaction.date,
+            // matchScore field doesn't exist in schema
+          },
+        });
+
+        createdMatches++;
+        console.log(
+          `✅ Created match: ${ledgerEntry.description} <-> ${bankTransaction.description} (score: ${match.matchScore})`
+        );
+      } catch (error) {
+        console.error(`Error creating match:`, error);
       }
     }
 
@@ -129,14 +135,16 @@ export async function POST(request: NextRequest) {
       totalSuggestions: aiMatches.length,
       processed: {
         bankTransactions: bankTransactions.length,
-        ledgerEntries: ledgerEntries.length
-      }
+        ledgerEntries: ledgerEntries.length,
+      },
     });
-
   } catch (error) {
-    console.error('Error in transaction matching:', error);
+    console.error("Error in transaction matching:", error);
     return NextResponse.json(
-      { error: "Failed to match transactions", details: error instanceof Error ? error.message : "Unknown error" },
+      {
+        error: "Failed to match transactions",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
@@ -145,7 +153,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const email = searchParams.get('email');
+    const email = searchParams.get("email");
 
     if (!email) {
       return NextResponse.json(
@@ -157,7 +165,7 @@ export async function GET(request: NextRequest) {
     const matches = await EmailService.getMatches(email);
     return NextResponse.json(matches);
   } catch (error) {
-    console.error('Error fetching matches:', error);
+    console.error("Error fetching matches:", error);
     return NextResponse.json(
       { error: "Failed to fetch matches" },
       { status: 500 }
