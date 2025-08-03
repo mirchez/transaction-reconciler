@@ -53,9 +53,9 @@ import { useQueryClient } from "@tanstack/react-query";
 
 interface Transaction {
   id: string;
-  date: string;
-  amount: number;
-  description: string;
+  date: string | null;
+  amount: number | null;
+  description: string | null;
   source: "Ledger" | "Bank" | "Both";
   status: "matched" | "ledger-only" | "bank-only";
   ledgerEntryId?: string;
@@ -374,7 +374,9 @@ export default function HomePage() {
     }
   };
 
-  const formatAmount = (amount: string | number) => {
+  const formatAmount = (amount: string | number | null | undefined) => {
+    if (amount === null || amount === undefined) return "N/A";
+    
     const numAmount =
       typeof amount === "string"
         ? parseFloat(amount.replace(/[$,]/g, ""))
@@ -393,7 +395,9 @@ export default function HomePage() {
     );
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "N/A";
+    
     try {
       // If the date string already looks like YYYY-MM-DD, return it as is
       if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
@@ -715,9 +719,9 @@ export default function HomePage() {
                                         <TableCell className="px-4 py-3">
                                           <div
                                             className="max-w-[300px] truncate"
-                                            title={transaction.description}
+                                            title={transaction.description || "N/A"}
                                           >
-                                            {transaction.description}
+                                            {transaction.description || "N/A"}
                                           </div>
                                         </TableCell>
                                         <TableCell className="text-right px-4 py-3">
@@ -828,9 +832,9 @@ export default function HomePage() {
                                         <TableCell className="px-4 py-3">
                                           <div
                                             className="max-w-[300px] truncate"
-                                            title={transaction.description}
+                                            title={transaction.description || "N/A"}
                                           >
-                                            {transaction.description}
+                                            {transaction.description || "N/A"}
                                           </div>
                                         </TableCell>
                                         <TableCell className="text-right px-4 py-3">

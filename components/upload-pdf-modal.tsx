@@ -3,11 +3,34 @@
 import type React from "react";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Upload, CheckCircle, XCircle, Loader2, FileText, Download, Calendar, DollarSign, Building } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Upload,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  FileText,
+  Download,
+  Calendar,
+  DollarSign,
+  Building,
+} from "lucide-react";
 import { toast } from "sonner";
 import { MAX_FILE_SIZE, ALLOWED_PDF_TYPES } from "@/lib/types/transactions";
 import { jsPDF } from "jspdf";
@@ -45,7 +68,10 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
 
     // Validate files
     const validFiles = uploadedFiles.filter((file) => {
-      if (!ALLOWED_PDF_TYPES.includes(file.type) && !file.name.endsWith('.pdf')) {
+      if (
+        !ALLOWED_PDF_TYPES.includes(file.type) &&
+        !file.name.endsWith(".pdf")
+      ) {
         toast.error(`${file.name} is not a PDF file`);
         return false;
       }
@@ -80,13 +106,13 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
   };
 
   const processFiles = async () => {
-    if (files.filter(f => f.status === "pending").length === 0) {
+    if (files.filter((f) => f.status === "pending").length === 0) {
       toast.error("No files to process");
       return;
     }
 
     setIsProcessing(true);
-    
+
     try {
       // Create a session first
       if (!sessionId) {
@@ -99,14 +125,16 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
 
       const formData = new FormData();
       const fileInput = fileInputRef.current;
-      
+
       if (!fileInput?.files) {
         throw new Error("No files selected");
       }
 
       // Add all pending files to FormData
       Array.from(fileInput.files).forEach((file) => {
-        const fileInfo = files.find(f => f.name === file.name && f.status === "pending");
+        const fileInfo = files.find(
+          (f) => f.name === file.name && f.status === "pending"
+        );
         if (fileInfo) {
           formData.append("files", file);
         }
@@ -131,24 +159,28 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
         setFiles((prev) =>
           prev.map((f) => {
             if (f.status === "parsing") {
-              const hasError = result.errors?.some((e: any) => 
-                f.name === e.error?.split(":")[0]?.replace("File ", "")
+              const hasError = result.errors?.some(
+                (e: any) =>
+                  f.name === e.error?.split(":")[0]?.replace("File ", "")
               );
-              
+
               // Extract data for successful files
-              const extractedData = hasError ? undefined : result.extractedData?.filter((d: any) => 
-                d.fileName === f.name
-              ).map((d: any) => ({
-                date: new Date(d.date).toLocaleDateString(),
-                amount: d.amount,
-                vendor: d.vendor,
-                category: d.category,
-              }));
-              
+              const extractedData = hasError
+                ? undefined
+                : result.extractedData
+                    ?.filter((d: any) => d.fileName === f.name)
+                    .map((d: any) => ({
+                      date: new Date(d.date).toLocaleDateString(),
+                      amount: d.amount,
+                      vendor: d.vendor,
+                      category: d.category,
+                    }));
+
               return {
                 ...f,
                 status: hasError ? "error" : "success",
-                transactions: extractedData?.length || (hasError ? undefined : 1),
+                transactions:
+                  extractedData?.length || (hasError ? undefined : 1),
                 extractedData,
               };
             }
@@ -158,7 +190,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
 
         if (result.processed > 0) {
           toast.success(result.message);
-          
+
           // Refresh the page to see updated transactions
           setTimeout(() => {
             window.location.reload();
@@ -208,9 +240,13 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "parsing":
-        return <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />;
+        return (
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        );
       case "success":
-        return <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />;
+        return (
+          <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+        );
       case "error":
         return <XCircle className="w-4 h-4 text-red-600 dark:text-red-400" />;
       default:
@@ -228,7 +264,10 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
         );
       case "parsing":
         return (
-          <Badge variant="secondary" className="bg-muted text-muted-foreground rounded-lg">
+          <Badge
+            variant="secondary"
+            className="bg-muted text-muted-foreground rounded-lg"
+          >
             Processing
           </Badge>
         );
@@ -253,7 +292,9 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
     <Dialog open={open} onOpenChange={handleClose} modal={true}>
       <DialogContent className="max-w-[95vw] sm:max-w-2xl rounded-lg">
         <DialogHeader className="pb-4 sm:pb-6">
-          <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">Upload PDF Receipts</DialogTitle>
+          <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">
+            Upload PDF Receipts
+          </DialogTitle>
           <DialogDescription className="text-sm sm:text-base text-muted-foreground mt-2">
             Select multiple PDF files to process
           </DialogDescription>
@@ -264,8 +305,12 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
           <div className="bg-muted/50 p-3 sm:p-4 rounded-lg border border-muted">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-foreground">New to this?</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">Download an example PDF receipt to see the expected format</p>
+                <p className="text-xs sm:text-sm font-medium text-foreground">
+                  New to this?
+                </p>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Download an example PDF receipt to see the expected format
+                </p>
               </div>
               <Button
                 variant="outline"
@@ -274,83 +319,101 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                 onClick={() => {
                   // Create a proper PDF receipt with clear data structure
                   const doc = new jsPDF();
-                  
+
                   // Header
                   doc.setFontSize(24);
-                  doc.text('RECEIPT', 105, 20, { align: 'center' });
-                  
+                  doc.text("RECEIPT", 105, 20, { align: "center" });
+
                   // Company info (VENDOR)
                   doc.setFontSize(16);
-                  doc.text('Tech Solutions Inc.', 105, 35, { align: 'center' });
+                  doc.text("Tech Solutions Inc.", 105, 35, { align: "center" });
                   doc.setFontSize(10);
-                  doc.text('123 Innovation Drive', 105, 42, { align: 'center' });
-                  doc.text('San Francisco, CA 94103', 105, 48, { align: 'center' });
-                  doc.text('Phone: (415) 555-0123', 105, 54, { align: 'center' });
-                  
+                  doc.text("123 Innovation Drive", 105, 42, {
+                    align: "center",
+                  });
+                  doc.text("San Francisco, CA 94103", 105, 48, {
+                    align: "center",
+                  });
+                  doc.text("Phone: (415) 555-0123", 105, 54, {
+                    align: "center",
+                  });
+
                   // Line separator
                   doc.line(20, 60, 190, 60);
-                  
+
                   // Receipt details with clear DATE
                   doc.setFontSize(12);
-                  doc.text('Receipt #: TSI-2024-0115', 20, 70);
-                  doc.text('Date: 2024-01-15', 20, 78);
-                  doc.text('Time: 10:45 AM', 20, 86);
-                  
+                  doc.text("Receipt #: TSI-2024-0115", 20, 70);
+                  doc.text("Date: 2024-01-15", 20, 78);
+                  doc.text("Time: 10:45 AM", 20, 86);
+
                   // Line separator
                   doc.line(20, 92, 190, 92);
-                  
+
                   // Items (SOFTWARE category)
                   doc.setFontSize(12);
-                  doc.text('ITEMS PURCHASED:', 20, 102);
+                  doc.text("ITEMS PURCHASED:", 20, 102);
                   doc.setFontSize(10);
-                  
+
                   // Item 1 - Software
-                  doc.text('Software License (Annual)', 20, 112);
-                  doc.text('- Professional Edition', 30, 120);
-                  doc.text('- 1 User License', 30, 128);
-                  doc.text('$299.99', 170, 120, { align: 'right' });
-                  
+                  doc.text("Software License (Annual)", 20, 112);
+                  doc.text("- Professional Edition", 30, 120);
+                  doc.text("- 1 User License", 30, 128);
+                  doc.text("$299.99", 170, 120, { align: "right" });
+
                   // Item 2 - Support
-                  doc.text('Premium Support Package', 20, 140);
-                  doc.text('- Priority Email Support', 30, 148);
-                  doc.text('- 24/7 Access', 30, 156);
-                  doc.text('$49.99', 170, 148, { align: 'right' });
-                  
+                  doc.text("Premium Support Package", 20, 140);
+                  doc.text("- Priority Email Support", 30, 148);
+                  doc.text("- 24/7 Access", 30, 156);
+                  doc.text("$49.99", 170, 148, { align: "right" });
+
                   // Line separator
                   doc.line(20, 164, 190, 164);
-                  
+
                   // Totals with clear AMOUNT
                   doc.setFontSize(10);
-                  doc.text('Subtotal:', 130, 174);
-                  doc.text('$349.98', 170, 174, { align: 'right' });
-                  
-                  doc.text('Sales Tax (8.5%):', 130, 182);
-                  doc.text('$29.75', 170, 182, { align: 'right' });
-                  
+                  doc.text("Subtotal:", 130, 174);
+                  doc.text("$349.98", 170, 174, { align: "right" });
+
+                  doc.text("Sales Tax (8.5%):", 130, 182);
+                  doc.text("$29.75", 170, 182, { align: "right" });
+
                   doc.setFontSize(12);
-                  doc.setFont('helvetica', 'bold');
-                  doc.text('Total:', 130, 192);
-                  doc.text('$379.73', 170, 192, { align: 'right' });
-                  
+                  doc.setFont("helvetica", "bold");
+                  doc.text("Total:", 130, 192);
+                  doc.text("$379.73", 170, 192, { align: "right" });
+
                   // Payment info
-                  doc.setFont('helvetica', 'normal');
+                  doc.setFont("helvetica", "normal");
                   doc.setFontSize(10);
-                  doc.text('Payment Method: Credit Card ****1234', 20, 207);
-                  doc.text('Transaction ID: TXN-20240115-1045', 20, 215);
-                  
-                  // Footer
+                  doc.text("Payment Method: Credit Card ****1234", 20, 207);
+                  doc.text("Transaction ID: TXN-20240115-1045", 20, 215);
+
+                  // Footeri
                   doc.line(20, 222, 190, 222);
                   doc.setFontSize(10);
-                  doc.text('Thank you for your purchase!', 105, 232, { align: 'center' });
-                  doc.text('Please keep this receipt for your records', 105, 240, { align: 'center' });
-                  
+                  doc.text("Thank you for your purchase!", 105, 232, {
+                    align: "center",
+                  });
+                  doc.text(
+                    "Please keep this receipt for your records",
+                    105,
+                    240,
+                    { align: "center" }
+                  );
+
                   // Metadata comment for parsing
                   doc.setFontSize(8);
                   doc.setTextColor(150);
-                  doc.text('Parser Data: Date=2024-01-15, Amount=379.73, Vendor=Tech Solutions Inc., Category=Software', 105, 255, { align: 'center' });
-                  
+                  doc.text(
+                    "Parser Data: Date=2024-01-15, Amount=379.73, Vendor=Tech Solutions Inc., Category=Software",
+                    105,
+                    255,
+                    { align: "center" }
+                  );
+
                   // Save the PDF
-                  doc.save('example-receipt.pdf');
+                  doc.save("example-receipt.pdf");
                   toast.success("Example PDF receipt downloaded");
                 }}
               >
@@ -367,7 +430,9 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
               <p className="text-base sm:text-lg font-medium text-foreground mb-2">
                 Drop PDF files here
               </p>
-              <p className="text-xs sm:text-sm text-muted-foreground">or click to browse</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                or click to browse
+              </p>
             </div>
             <input
               ref={fileInputRef}
@@ -424,35 +489,49 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                         {getStatusBadge(file.status)}
                       </div>
                     </div>
-                    
+
                     {/* Show extracted data for successful files */}
-                    {file.status === "success" && file.extractedData && file.extractedData.length > 0 && (
-                      <div className="ml-2 sm:ml-4 mr-2 sm:mr-4 mb-2">
-                        <p className="text-xs font-medium text-muted-foreground mb-2">Extracted Data:</p>
-                        <div className="border border-border rounded-lg overflow-hidden">
-                          <Table>
-                            <TableHeader>
-                              <TableRow className="h-8">
-                                <TableHead className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4">Date</TableHead>
-                                <TableHead className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4">Vendor</TableHead>
-                                <TableHead className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4 text-right">Amount</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {file.extractedData.map((data, idx) => (
-                                <TableRow key={idx} className="h-6 sm:h-8">
-                                  <TableCell className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4">{data.date}</TableCell>
-                                  <TableCell className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4">{data.vendor}</TableCell>
-                                  <TableCell className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4 text-right font-medium">
-                                    ${data.amount.toFixed(2)}
-                                  </TableCell>
+                    {file.status === "success" &&
+                      file.extractedData &&
+                      file.extractedData.length > 0 && (
+                        <div className="ml-2 sm:ml-4 mr-2 sm:mr-4 mb-2">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">
+                            Extracted Data:
+                          </p>
+                          <div className="border border-border rounded-lg overflow-hidden">
+                            <Table>
+                              <TableHeader>
+                                <TableRow className="h-8">
+                                  <TableHead className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4">
+                                    Date
+                                  </TableHead>
+                                  <TableHead className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4">
+                                    Vendor
+                                  </TableHead>
+                                  <TableHead className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4 text-right">
+                                    Amount
+                                  </TableHead>
                                 </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
+                              </TableHeader>
+                              <TableBody>
+                                {file.extractedData.map((data, idx) => (
+                                  <TableRow key={idx} className="h-6 sm:h-8">
+                                    <TableCell className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4">
+                                      {data.date}
+                                    </TableCell>
+                                    <TableCell className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4">
+                                      {data.vendor}
+                                    </TableCell>
+                                    <TableCell className="text-xs h-6 sm:h-8 py-1 px-2 sm:px-4 text-right font-medium">
+                                      ${data.amount.toFixed(2)}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </div>
                 ))}
               </div>
@@ -481,7 +560,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                 disabled={isProcessing}
                 className="text-xs sm:text-sm order-2 sm:order-1 rounded-lg"
               >
-                {files.some(f => f.status === "success") ? "Done" : "Cancel"}
+                {files.some((f) => f.status === "success") ? "Done" : "Cancel"}
               </Button>
               <Button
                 onClick={processFiles}

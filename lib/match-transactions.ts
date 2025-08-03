@@ -2,9 +2,9 @@ import { prisma } from "@/lib/db";
 
 interface BankTransactionInput {
   id: string;
-  date: Date;
-  amount: number;
-  description: string;
+  date: Date | null;
+  amount: number | null;
+  description: string | null;
 }
 
 interface LedgerEntryInput {
@@ -81,29 +81,35 @@ export async function matchTransactionsWithAI(
       let matchingCriteria = 0;
       const reasons: string[] = [];
       
-      // Check amount match (within $0.01 tolerance)
-      const amountDiff = calculateAmountDifference(bankTx.amount, ledgerEntry.amount);
-      const amountMatches = amountDiff <= 0.01;
-      if (amountMatches) {
-        matchingCriteria++;
-        reasons.push(`Amount matches exactly ($${bankTx.amount.toFixed(2)})`);
+      // Check amount match (within $0.01 tolerance) - skip if bank amount is null
+      if (bankTx.amount !== null) {
+        const amountDiff = calculateAmountDifference(bankTx.amount, ledgerEntry.amount);
+        const amountMatches = amountDiff <= 0.01;
+        if (amountMatches) {
+          matchingCriteria++;
+          reasons.push(`Amount matches exactly ($${bankTx.amount.toFixed(2)})`);
+        }
       }
       
-      // Check date match (exact match only)
-      const bankDateStr = bankTx.date.toISOString().split('T')[0];
-      const ledgerDateStr = ledgerEntry.date.toISOString().split('T')[0];
-      const dateMatches = bankDateStr === ledgerDateStr;
-      if (dateMatches) {
-        matchingCriteria++;
-        reasons.push(`Dates match exactly (${bankDateStr})`);
+      // Check date match (exact match only) - skip if bank date is null
+      if (bankTx.date !== null) {
+        const bankDateStr = bankTx.date.toISOString().split('T')[0];
+        const ledgerDateStr = ledgerEntry.date.toISOString().split('T')[0];
+        const dateMatches = bankDateStr === ledgerDateStr;
+        if (dateMatches) {
+          matchingCriteria++;
+          reasons.push(`Dates match exactly (${bankDateStr})`);
+        }
       }
       
-      // Check description/vendor similarity
-      const textSimilarity = calculateTextSimilarity(bankTx.description, ledgerEntry.vendor);
-      const descriptionMatches = textSimilarity >= 30;
-      if (descriptionMatches) {
-        matchingCriteria++;
-        reasons.push(`Text similarity: ${textSimilarity.toFixed(0)}%`);
+      // Check description/vendor similarity - skip if bank description is null
+      if (bankTx.description !== null) {
+        const textSimilarity = calculateTextSimilarity(bankTx.description, ledgerEntry.vendor);
+        const descriptionMatches = textSimilarity >= 30;
+        if (descriptionMatches) {
+          matchingCriteria++;
+          reasons.push(`Text similarity: ${textSimilarity.toFixed(0)}%`);
+        }
       }
       
       // Calculate match score based on number of matching criteria

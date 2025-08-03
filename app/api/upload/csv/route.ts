@@ -439,56 +439,78 @@ export async function POST(request: NextRequest) {
     const skippedSimilar: any[] = [];
 
     for (const transaction of validBankData) {
-      // Skip if critical data is N/A
-      if (transaction.date === "N/A") {
-        console.error(`Missing date for transaction: ${transaction.description}`);
-        continue;
+      // Handle missing data by converting to null
+      let transactionDate: Date | null = null;
+      let transactionAmount: Decimal | null = null;
+      
+      // Process date
+      if (transaction.date !== "N/A") {
+        transactionDate = new Date(transaction.date);
+        // Only skip if date is provided but invalid
+        if (isNaN(transactionDate.getTime())) {
+          console.error(`Invalid date format for transaction: ${transaction.description}`);
+          continue;
+        }
       }
       
-      if (transaction.amount === 0 && transaction.missingFields?.includes('amount')) {
-        console.error(`Missing amount for transaction: ${transaction.description}`);
-        continue;
+      // Process amount
+      if (transaction.amount !== 0 || !transaction.missingFields?.includes('amount')) {
+        transactionAmount = new Decimal(transaction.amount);
       }
-
-      const transactionDate = new Date(transaction.date);
-      const transactionAmount = new Decimal(transaction.amount);
-
-      // Skip if date is invalid
-      if (isNaN(transactionDate.getTime())) {
-        console.error(`Invalid date for transaction: ${transaction.description}`);
-        continue;
-      }
+      
+      // Process description (use null if N/A)
+      const transactionDescription = transaction.description === "N/A" ? null : transaction.description;
 
       // Strict duplicate checking - check for similar transactions
+      const duplicateCheckConditions: any[] = [{ userEmail }];
+      
+      // Add date condition if date exists
+      if (transactionDate) {
+        duplicateCheckConditions.push({
+          date: {
+            gte: new Date(transactionDate.getTime() - 24 * 60 * 60 * 1000), // 1 day before
+            lte: new Date(transactionDate.getTime() + 24 * 60 * 60 * 1000), // 1 day after
+          },
+        });
+      } else {
+        duplicateCheckConditions.push({ date: null });
+      }
+      
+      // Add amount condition if amount exists
+      if (transactionAmount) {
+        duplicateCheckConditions.push({ amount: transactionAmount });
+      } else {
+        duplicateCheckConditions.push({ amount: null });
+      }
+      
+      // Add description condition if description exists
+      if (transactionDescription) {
+        duplicateCheckConditions.push({
+          OR: [
+            { description: transactionDescription },
+            { description: { contains: transactionDescription.split(' ')[0] } }, // Check first word
+            { description: { contains: transactionDescription.slice(-10) } }, // Check last 10 chars
+          ],
+        });
+      } else {
+        duplicateCheckConditions.push({ description: null });
+      }
+      
       const existingTransaction = await prisma.bank.findFirst({
         where: {
-          userEmail,
-          AND: [
-            {
-              date: {
-                gte: new Date(transactionDate.getTime() - 24 * 60 * 60 * 1000), // 1 day before
-                lte: new Date(transactionDate.getTime() + 24 * 60 * 60 * 1000), // 1 day after
-              },
-            },
-            {
-              amount: transactionAmount,
-            },
-            {
-              OR: [
-                { description: transaction.description },
-                { description: { contains: transaction.description.split(' ')[0] } }, // Check first word
-                { description: { contains: transaction.description.slice(-10) } }, // Check last 10 chars
-              ],
-            },
-          ],
+          AND: duplicateCheckConditions,
         },
       });
 
       if (existingTransaction) {
         const exactMatch = 
-          existingTransaction.date.toISOString().split('T')[0] === transactionDate.toISOString().split('T')[0] &&
-          existingTransaction.description === transaction.description &&
-          existingTransaction.amount.equals(transactionAmount);
+          (existingTransaction.date === transactionDate || 
+           (existingTransaction.date && transactionDate && 
+            existingTransaction.date.toISOString().split('T')[0] === transactionDate.toISOString().split('T')[0])) &&
+          existingTransaction.description === transactionDescription &&
+          (existingTransaction.amount === transactionAmount ||
+           (existingTransaction.amount && transactionAmount && 
+            existingTransaction.amount.equals(transactionAmount)));
 
         if (exactMatch) {
           duplicates.push({
@@ -502,9 +524,9 @@ export async function POST(request: NextRequest) {
             existingId: existingTransaction.id,
             reason: "Similar transaction detected",
             existing: {
-              date: existingTransaction.date.toISOString().split('T')[0],
-              description: existingTransaction.description,
-              amount: Number(existingTransaction.amount)
+              date: existingTransaction.date?.toISOString().split('T')[0] || "N/A",
+              description: existingTransaction.description || "N/A",
+              amount: existingTransaction.amount ? Number(existingTransaction.amount) : 0
             }
           });
         }
@@ -513,7 +535,7 @@ export async function POST(request: NextRequest) {
           data: {
             userEmail,
             date: transactionDate,
-            description: transaction.description,
+            description: transactionDescription,
             amount: transactionAmount,
           },
         });
@@ -550,11 +572,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Count skipped transactions with missing data
+    const skippedMissingData = validBankData.length - createdTransactions.length - duplicates.length - skippedSimilar.length;
+    
     return NextResponse.json({
       success: true,
       message:
-        duplicates.length > 0 || skippedSimilar.length > 0
-          ? `Processed ${createdTransactions.length} new transactions (${duplicates.length} exact duplicates and ${skippedSimilar.length} similar transactions skipped)`
+        duplicates.length > 0 || skippedSimilar.length > 0 || skippedMissingData > 0
+          ? `Processed ${createdTransactions.length} new transactions (${duplicates.length} duplicates, ${skippedSimilar.length} similar, ${skippedMissingData} incomplete skipped)`
           : `Successfully processed ${createdTransactions.length} transactions`,
       stats: {
         total: bankData.length,
@@ -563,6 +588,7 @@ export async function POST(request: NextRequest) {
         created: createdTransactions.length,
         duplicates: duplicates.length,
         similar: skippedSimilar.length,
+        skippedMissingData: skippedMissingData,
       },
       warnings: skippedSimilar.length > 0 ? {
         message: "Some transactions were skipped because they appear to be similar to existing ones",

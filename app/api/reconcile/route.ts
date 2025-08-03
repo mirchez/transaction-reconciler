@@ -66,7 +66,12 @@ export async function POST(request: NextRequest) {
     const usedBankIds = new Set();
 
     // Sort by date to prioritize matching closer dates first
-    const sortedBankEntries = [...bankEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const sortedBankEntries = [...bankEntries].sort((a, b) => {
+      if (!a.date && !b.date) return 0;
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    });
     const sortedLedgerEntries = [...ledgerEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     for (const bank of sortedBankEntries) {
@@ -76,6 +81,9 @@ export async function POST(request: NextRequest) {
       for (const ledger of sortedLedgerEntries) {
         // Skip if this ledger entry was already matched
         if (usedLedgerIds.has(ledger.id)) continue;
+        
+        // Skip if bank entry has null values
+        if (!bank.amount || !bank.date || !bank.description) continue;
         
         // Check if amounts match
         const bankAmount = Number(bank.amount);
@@ -119,7 +127,8 @@ export async function POST(request: NextRequest) {
                 }
                 
                 for (const b of sortedBankEntries) {
-                  if (Number(b.amount) === bankAmount && 
+                  if (b.amount && b.date && b.description &&
+                      Number(b.amount) === bankAmount && 
                       new Date(b.date).toISOString().split('T')[0] === bankDate &&
                       b.description.toLowerCase() === bankDesc) {
                     usedBankIds.add(b.id);
@@ -152,8 +161,8 @@ export async function POST(request: NextRequest) {
           // Prepare data for AI matching
           const bankTransactionsForAI = unmatchedBankEntries.map(b => ({
             id: b.id,
-            date: new Date(b.date),
-            amount: Number(b.amount),
+            date: b.date ? new Date(b.date) : null,
+            amount: b.amount ? Number(b.amount) : null,
             description: b.description
           }));
 
@@ -205,15 +214,20 @@ export async function POST(request: NextRequest) {
     for (const match of allMatches) {
       const { bank, ledger, matchScore } = match;
       
+      // Handle null values when creating match record
+      const bankDateStr = bank.date ? new Date(bank.date).toLocaleDateString() : "N/A";
+      const bankDescStr = bank.description || "N/A";
+      const bankAmountStr = bank.amount ? bank.amount.toString() : "N/A";
+      
       await prisma.matched.create({
         data: {
           userEmail: email,
           ledgerId: ledger.id,
           bankId: bank.id,
-          bankTransaction: `From: ${bank.description} $${bank.amount} on ${new Date(bank.date).toLocaleDateString()}`,
+          bankTransaction: `From: ${bankDescStr} $${bankAmountStr} on ${bankDateStr}`,
           description: ledger.description,
-          amount: bank.amount,
-          date: ledger.date,
+          amount: ledger.amount, // Use ledger amount since it's never null
+          date: ledger.date, // Use ledger date since it's never null
           matchScore: matchScore
         }
       });

@@ -71,9 +71,9 @@ export async function GET(request: NextRequest) {
       const matchData = matchMap.get(`bank-${transaction.id}`);
       transactions.push({
         id: transaction.id,
-        date: transaction.date.toISOString().split('T')[0],
-        amount: Number(transaction.amount),
-        description: transaction.description,
+        date: transaction.date ? transaction.date.toISOString().split('T')[0] : null,
+        amount: transaction.amount ? Number(transaction.amount) : null,
+        description: transaction.description || null,
         source: "Bank" as const,
         status: matchData ? "matched" as const : "bank-only" as const,
         bankTransactionId: transaction.id,
@@ -98,8 +98,14 @@ export async function GET(request: NextRequest) {
       });
     });
     
-    // Sort by date (newest first)
-    transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Sort by date (newest first), handling null dates
+    transactions.sort((a, b) => {
+      // Handle null dates - push them to the end
+      if (!a.date && !b.date) return 0;
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
     
     return NextResponse.json({
       transactions,

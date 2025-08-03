@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       id: bt.id,
       date: bt.date,
       description: bt.description,
-      amount: Number(bt.amount),
+      amount: bt.amount ? Number(bt.amount) : null,
     }));
 
     const ledgerData = ledgerEntries.map((le) => ({
@@ -104,17 +104,19 @@ export async function POST(request: NextRequest) {
         }
 
         // Create the match record
+        const bankDateStr = bankTransaction.date ? bankTransaction.date.toLocaleDateString() : "N/A";
+        const bankDescStr = bankTransaction.description || "N/A";
+        const bankAmountStr = bankTransaction.amount ? bankTransaction.amount.toString() : "N/A";
+        
         await prisma.matched.create({
           data: {
             userEmail: email,
             ledgerId: match.ledgerEntryId,
             bankId: match.bankTransactionId,
-            bankTransaction: `${bankTransaction.date.toLocaleDateString()}: ${
-              bankTransaction.description
-            } - $${bankTransaction.amount}`,
+            bankTransaction: `${bankDateStr}: ${bankDescStr} - $${bankAmountStr}`,
             description: ledgerEntry.description,
-            amount: bankTransaction.amount,
-            date: bankTransaction.date,
+            amount: ledgerEntry.amount, // Use ledger amount since it's never null
+            date: ledgerEntry.date, // Use ledger date since it's never null
             matchScore: match.matchScore,
           },
         });
