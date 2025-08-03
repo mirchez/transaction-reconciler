@@ -234,19 +234,17 @@ export async function POST(request: Request) {
                     pdfText = "";
                   }
 
-                  // Always provide context, even if PDF parsing failed
+                  // If PDF parsing failed, skip this PDF
                   if (!pdfText || pdfText.trim().length === 0) {
                     console.log(
-                      `   ℹ️  Using email context for ${pdfAttachment.filename}`
+                      `   ⚠️  PDF content could not be extracted: ${pdfAttachment.filename}`
                     );
-                    pdfText = `
-Email Subject: ${emailData.subject}
-From: ${emailData.from}
-Attachment: ${pdfAttachment.filename}
-Date: ${emailData.date}
-
-Based on the email context and filename, this appears to be a financial document or receipt.
-The PDF content could not be extracted directly, but the context suggests it's a transaction record.`;
+                    failedPdfs.push({
+                      filename: pdfAttachment.filename,
+                      reason: "PDF parsing failed",
+                      message: "Could not extract text from PDF",
+                    });
+                    continue;
                   }
 
                   // Add email context to help AI understand better
@@ -430,116 +428,15 @@ Be lenient - if it seems like a transaction based on context, extract the data.`
                   );
                   console.log(`      Error: ${processingError.message}`);
 
-                  // Try one more time with just basic info from email context
-                  try {
-                    console.log(
-                      `   🔄 Attempting recovery with email context only...`
-                    );
-                    const fallbackText = `
-Receipt from: ${emailData.from}
-Subject: ${emailData.subject}
-Date: ${emailData.date}
-Filename: ${pdfAttachment.filename}
-
-This is a receipt/transaction document that could not be parsed directly.
-Please extract transaction information based on the context provided.`;
-
-                    const fallbackData = await extractLedgerDataWithOpenAI(
-                      fallbackText
-                    );
-
-                    if (
-                      fallbackData.isLedgerEntry &&
-                      fallbackData.amount &&
-                      fallbackData.amount > 0
-                    ) {
-                      // Use fallback data
-                      const entryDate = fallbackData.date
-                        ? new Date(fallbackData.date)
-                        : new Date(emailData.date);
-                      const entryAmount = new Decimal(fallbackData.amount);
-                      const entryDescription =
-                        fallbackData.description ||
-                        emailData.from.split("<")[0].trim() ||
-                        "Unknown vendor";
-
-                      // Check for duplicates
-                      const existingEntry = await prisma.ledger.findFirst({
-                        where: {
-                          userEmail: email,
-                          AND: [
-                            {
-                              date: {
-                                gte: new Date(
-                                  entryDate.getTime() - 24 * 60 * 60 * 1000
-                                ),
-                                lte: new Date(
-                                  entryDate.getTime() + 24 * 60 * 60 * 1000
-                                ),
-                              },
-                            },
-                            {
-                              amount: entryAmount,
-                            },
-                          ],
-                        },
-                      });
-
-                      if (!existingEntry) {
-                        const ledgerEntry = await prisma.ledger.create({
-                          data: {
-                            userEmail: email,
-                            date: entryDate,
-                            description: entryDescription,
-                            amount: entryAmount,
-                          },
-                        });
-
-                        processedPdfs.push({
-                          filename: pdfAttachment.filename,
-                          messageId: message.id,
-                          result: {
-                            id: ledgerEntry.id,
-                            date: ledgerEntry.date.toISOString(),
-                            description: ledgerEntry.description,
-                            amount: Number(ledgerEntry.amount),
-                          },
-                        });
-                        console.log(
-                          `   ✅ Recovered and processed: ${pdfAttachment.filename}`
-                        );
-
-                        if (
-                          !successfullyProcessedMessageIds.includes(message.id)
-                        ) {
-                          successfullyProcessedMessageIds.push(message.id);
-                        }
-                      } else {
-                        console.log(`   ⚠️ Duplicate found during recovery`);
-                        failedPdfs.push({
-                          filename: pdfAttachment.filename,
-                          reason: "Duplicate entry",
-                          message: "Transaction already exists",
-                        });
-                      }
-                    } else {
-                      failedPdfs.push({
-                        filename: pdfAttachment.filename,
-                        reason: "Processing error",
-                        message:
-                          "Could not extract transaction data even with context",
-                      });
-                    }
-                  } catch (fallbackError: any) {
-                    console.log(
-                      `   ❌ Recovery failed: ${fallbackError.message}`
-                    );
-                    failedPdfs.push({
-                      filename: pdfAttachment.filename,
-                      reason: "Processing error",
-                      message: processingError.message,
-                    });
-                  }
+                  // Don't try fallback recovery - just log the error
+                  console.log(
+                    `   ❌ PDF processing failed, not attempting recovery`
+                  );
+                  failedPdfs.push({
+                    filename: pdfAttachment.filename,
+                    reason: "Processing error",
+                    message: processingError.message,
+                  });
                 }
               }
             } catch (error: any) {

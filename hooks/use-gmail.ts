@@ -106,6 +106,11 @@ export function useGmailCheck(email: string) {
 
       if (data.emailsFound === 0) {
         toast.info("No recent emails with PDFs found");
+      } else if (data.emailsFound > 0 && data.processed === 0 && data.emailsWithPdfs === 0) {
+        toast.info("No new PDFs found in recent emails");
+      } else if (data.emailsFound > 0 && data.processed === 0 && data.emailsWithPdfs > 0) {
+        // All PDFs were either duplicates or not receipts
+        // Don't show this message as we'll show specific messages below
       } else if (data.emailsFound > 0) {
         toast.info(
           `Checked ${data.emailsFound} recent email${
@@ -127,26 +132,66 @@ export function useGmailCheck(email: string) {
         queryClient.invalidateQueries({ queryKey: ["bank"] });
       }
 
-      // Mostrar información sobre PDFs fallidos
+      // Show information about failed PDFs - consolidate duplicate messages
       if (data.failedPdfs && data.failedPdfs.length > 0) {
-        data.failedPdfs.forEach((pdf) => {
-          if (pdf.reason === "Not a receipt") {
-            toast.warning(`Not a receipt!`);
-          } else if (pdf.reason === "Invalid receipt") {
-            toast.error(`${pdf.filename}: ${pdf.message}`);
-          } else {
-            toast.error(`${pdf.filename}: ${pdf.message}`);
-          }
-        });
+        // Group failed PDFs by reason
+        const failedByReason = data.failedPdfs.reduce((acc, pdf) => {
+          const key = pdf.reason === "Duplicate entry" ? "duplicates" : pdf.reason;
+          if (!acc[key]) acc[key] = [];
+          acc[key].push(pdf);
+          return acc;
+        }, {} as Record<string, typeof data.failedPdfs>);
+
+        // Show consolidated messages
+        if (failedByReason["duplicates"] && failedByReason["duplicates"].length > 0) {
+          const count = failedByReason["duplicates"].length;
+          toast.warning(
+            `${count} duplicate receipt${count > 1 ? "s" : ""} found. Not loaded to avoid duplicates.`
+          );
+        }
+        
+        if (failedByReason["Not a receipt"] && failedByReason["Not a receipt"].length > 0) {
+          const count = failedByReason["Not a receipt"].length;
+          toast.warning(
+            `${count} PDF${count > 1 ? "s were" : " was"} not a receipt`
+          );
+        }
+        
+        if (failedByReason["Invalid receipt"] && failedByReason["Invalid receipt"].length > 0) {
+          const count = failedByReason["Invalid receipt"].length;
+          toast.error(
+            `${count} invalid receipt${count > 1 ? "s" : ""} found`
+          );
+        }
+        
+        if (failedByReason["Processing error"] && failedByReason["Processing error"].length > 0) {
+          const count = failedByReason["Processing error"].length;
+          toast.error(
+            `${count} PDF${count > 1 ? "s" : ""} could not be processed`
+          );
+        }
+        
+        if (failedByReason["PDF parsing failed"] && failedByReason["PDF parsing failed"].length > 0) {
+          const count = failedByReason["PDF parsing failed"].length;
+          toast.error(
+            `${count} PDF${count > 1 ? "s" : ""} could not be read`
+          );
+        }
       }
 
-      // Mostrar mensaje personalizado si viene del servidor
+      // Show custom message from server if no other messages were shown
       if (
         data.message &&
         !data.processed &&
         (!data.failedPdfs || data.failedPdfs.length === 0)
       ) {
-        toast.info(data.message);
+        // Override generic message for "no new PDFs" case
+        if (data.message === "No recent emails found with PDFs" || 
+            data.message === "All recent emails have already been processed") {
+          toast.info("No new PDFs found");
+        } else {
+          toast.info(data.message);
+        }
       }
     },
     onError: (error: Error) => {

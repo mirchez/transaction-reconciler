@@ -87,11 +87,7 @@ SPECIAL CASES:
    - Use email date as transaction date
    - Extract company name from email sender or subject
    - Look for amount patterns in any available text
-4. For X/Twitter receipts specifically:
-   - Invoice number format: T1GMCAV6-0005
-   - Company shows as "X, Corp." or just "X"
-   - Look for "X Premium" subscription
-   - Standard amount is often $5.00 for basic premium
+
 
 EXAMPLES OF VALID EXTRACTIONS:
 - "Invoice" header with "$5.00 USD due July 24, 2025" → {date: "2025-07-24", description: "X", amount: 5.00}
@@ -110,25 +106,28 @@ Respond with JSON:
   "confidence": 0.95
 }`;
 
-export async function extractLedgerDataWithOpenAI(pdfText: string, filename?: string): Promise<LedgerExtraction> {
+export async function extractLedgerDataWithOpenAI(
+  pdfText: string,
+  filename?: string
+): Promise<LedgerExtraction> {
   // Try simple AI extraction first
   try {
     console.log("🤖 Using simple AI extraction");
     const simpleResult = await simpleExtractWithAI(pdfText);
-    
+
     if (simpleResult.isLedgerEntry) {
       console.log("✅ Simple extraction succeeded:", {
         amount: simpleResult.amount,
         description: simpleResult.description,
-        confidence: simpleResult.confidence
+        confidence: simpleResult.confidence,
       });
-      
+
       return {
         isLedgerEntry: true,
-        date: simpleResult.date || new Date().toISOString().split('T')[0],
+        date: simpleResult.date || new Date().toISOString().split("T")[0],
         description: simpleResult.description || "Unknown",
         amount: simpleResult.amount || 0,
-        confidence: simpleResult.confidence
+        confidence: simpleResult.confidence,
       };
     }
   } catch (error) {
@@ -143,18 +142,21 @@ export async function extractLedgerDataWithOpenAI(pdfText: string, filename?: st
     }
 
     console.log("🤖 Analyzing document with OpenAI...");
-    
+
     // Truncate very long PDFs to avoid token limits
     const maxLength = 4000;
-    const textToAnalyze = pdfText.length > maxLength 
-      ? pdfText.substring(0, maxLength) + "\n... (truncated)"
-      : pdfText;
+    const textToAnalyze =
+      pdfText.length > maxLength
+        ? pdfText.substring(0, maxLength) + "\n... (truncated)"
+        : pdfText;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: `Please analyze this document and extract the transaction information. 
+        {
+          role: "user",
+          content: `Please analyze this document and extract the transaction information. 
 
 CRITICAL RULE FOR AMOUNT:
 - If you see the word "amount" ANYWHERE in the document, use the number next to it
@@ -168,11 +170,12 @@ Remember to:
 4. Identify the transaction date (prefer "paid on" dates over "due" dates)
 
 Document content:
-${textToAnalyze}` }
+${textToAnalyze}`,
+        },
       ],
       temperature: 0.1,
       max_tokens: 1000,
-      response_format: { type: "json_object" }
+      response_format: { type: "json_object" },
     });
 
     const responseText = completion.choices[0]?.message?.content;
@@ -185,36 +188,40 @@ ${textToAnalyze}` }
       isLedgerEntry: parsedData.isLedgerEntry,
       description: parsedData.description,
       amount: parsedData.amount,
-      confidence: parsedData.confidence
+      confidence: parsedData.confidence,
     });
-    
+
     // Validate against schema
     const validatedData = LedgerExtractionSchema.parse(parsedData);
-    
+
     // Override isLedgerEntry if we have the required data
     const hasAmount = validatedData.amount && validatedData.amount > 0;
-    const hasDescription = validatedData.description && validatedData.description.trim() !== "";
-    
+    const hasDescription =
+      validatedData.description && validatedData.description.trim() !== "";
+
     // If we have amount and description, it's valid for ledger
     if (hasAmount && hasDescription) {
       console.log("✅ Document has required ledger data, marking as valid");
       return {
         ...validatedData,
-        isLedgerEntry: true,  // Override to true since we have the data we need
-        confidence: Math.max(validatedData.confidence, 0.8)
+        isLedgerEntry: true, // Override to true since we have the data we need
+        confidence: Math.max(validatedData.confidence, 0.8),
       };
     }
-    
+
     // If marked as ledger entry but missing data, invalidate
     if (validatedData.isLedgerEntry && (!hasAmount || !hasDescription)) {
-      console.log("⚠️ Document marked as ledger but missing required fields:", { hasAmount, hasDescription });
+      console.log("⚠️ Document marked as ledger but missing required fields:", {
+        hasAmount,
+        hasDescription,
+      });
       return {
         ...validatedData,
         isLedgerEntry: false,
-        confidence: 0.3
+        confidence: 0.3,
       };
     }
-    
+
     return validatedData;
   } catch (error) {
     console.error("❌ OpenAI parsing error:", error);
@@ -229,18 +236,20 @@ function fallbackLedgerParsing(text: string): LedgerExtraction {
     /receipt|invoice|bill|statement/i,
     /total|amount|payment|paid|charge/i,
     /order|purchase|transaction/i,
-    /\$\s*[\d,]+\.?\d*/,  // Any dollar amount
+    /\$\s*[\d,]+\.?\d*/, // Any dollar amount
     /subtotal|tax|grand\s*total/i,
     /thank\s*you\s*for\s*your\s*(purchase|order|payment)/i,
-    /confirmation|confirmed/i
+    /confirmation|confirmed/i,
   ];
-  
-  const isFinancialDoc = financialPatterns.some(pattern => pattern.test(text));
-  
+
+  const isFinancialDoc = financialPatterns.some((pattern) =>
+    pattern.test(text)
+  );
+
   if (!isFinancialDoc) {
     return {
       isLedgerEntry: false,
-      confidence: 0.9
+      confidence: 0.9,
     };
   }
 
@@ -259,23 +268,23 @@ function fallbackLedgerParsing(text: string): LedgerExtraction {
     // Look for decimal numbers that could be prices
     /([\d,]+\.\d{2})(?:\s|$)/,
     // Last resort - any number with 2 decimal places
-    /(?:^|\s)([\d,]+\.\d{2})(?:\s|$)/
+    /(?:^|\s)([\d,]+\.\d{2})(?:\s|$)/,
   ];
-  
+
   let amountMatch: RegExpMatchArray | null = null;
   for (const pattern of amountPatterns) {
     const matches = Array.from(text.matchAll(pattern));
     if (matches.length > 0) {
       // Get the largest amount (likely the total)
-      const amounts = matches.map(m => parseFloat(m[1].replace(/,/g, '')));
+      const amounts = matches.map((m) => parseFloat(m[1].replace(/,/g, "")));
       const maxAmount = Math.max(...amounts);
       if (maxAmount > 0) {
-        amountMatch = ['', maxAmount.toString()] as RegExpMatchArray;
+        amountMatch = ["", maxAmount.toString()] as RegExpMatchArray;
         break;
       }
     }
   }
-  const amount = amountMatch ? parseFloat(amountMatch[1].replace(/,/g, '')) : 0;
+  const amount = amountMatch ? parseFloat(amountMatch[1].replace(/,/g, "")) : 0;
 
   // Extract date - look for various date formats
   const datePatterns = [
@@ -284,24 +293,24 @@ function fallbackLedgerParsing(text: string): LedgerExtraction {
     /(?:date|issued|posted|processed)[\s:]*([A-Za-z]+\s+\d{1,2},?\s+\d{4})/i,
     // Standard date formats
     /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/,
-    /(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})/,  // ISO format
+    /(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})/, // ISO format
     // Month name formats
     /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}/i,
     /(\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})/i,
     // Compact formats
-    /(\d{1,2}\/\d{1,2}\/\d{2})/,  // MM/DD/YY
+    /(\d{1,2}\/\d{1,2}\/\d{2})/, // MM/DD/YY
     // Time stamps that include dates
-    /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\s+\d{1,2}:\d{2}/
+    /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\s+\d{1,2}:\d{2}/,
   ];
-  
-  let dateStr = new Date().toISOString().split('T')[0];
+
+  let dateStr = new Date().toISOString().split("T")[0];
   for (const pattern of datePatterns) {
     const match = text.match(pattern);
     if (match) {
       try {
         const parsed = new Date(match[1]);
         if (!isNaN(parsed.getTime())) {
-          dateStr = parsed.toISOString().split('T')[0];
+          dateStr = parsed.toISOString().split("T")[0];
           break;
         }
       } catch {}
@@ -309,18 +318,23 @@ function fallbackLedgerParsing(text: string): LedgerExtraction {
   }
 
   // Extract vendor/company name intelligently
-  const lines = text.split('\n').filter(line => line.trim());
-  
+  const lines = text.split("\n").filter((line) => line.trim());
+
   // Strategy 1: Look for company name in the first few lines (usually at the top)
   let vendor = "";
   for (const line of lines.slice(0, 10)) {
     const cleanLine = line.trim();
     // Skip common non-vendor lines
-    if (cleanLine.length > 2 && 
-        !cleanLine.match(/^\d/) && 
-        !cleanLine.match(/^(date|receipt|invoice|order\s*#|transaction|reference|confirmation)/i) &&
-        !cleanLine.match(/^(subtotal|tax|total|amount|payment|thank\s*you)/i) &&
-        cleanLine.length < 50) {  // Company names are usually not super long
+    if (
+      cleanLine.length > 2 &&
+      !cleanLine.match(/^\d/) &&
+      !cleanLine.match(
+        /^(date|receipt|invoice|order\s*#|transaction|reference|confirmation)/i
+      ) &&
+      !cleanLine.match(/^(subtotal|tax|total|amount|payment|thank\s*you)/i) &&
+      cleanLine.length < 50
+    ) {
+      // Company names are usually not super long
       // Check if it looks like a company name
       if (cleanLine.match(/^[A-Z][A-Za-z\s&,.'()-]*$/)) {
         vendor = cleanLine;
@@ -328,15 +342,15 @@ function fallbackLedgerParsing(text: string): LedgerExtraction {
       }
     }
   }
-  
+
   // Strategy 2: Look for explicit vendor indicators
   if (!vendor) {
     const vendorPatterns = [
       /(?:from|merchant|vendor|store|retailer|sold\s*by|billed\s*to)[\s:]+([A-Za-z][A-Za-z\s&,.'()-]+?)(?:\n|$|\s{2,})/i,
       /(?:^|\n)([A-Z][A-Za-z\s&,.'()-]+?)\s*\n.*(?:receipt|invoice|statement)/i,
-      /payment\s*to[\s:]+([A-Za-z][A-Za-z\s&,.'()-]+?)(?:\n|$)/i
+      /payment\s*to[\s:]+([A-Za-z][A-Za-z\s&,.'()-]+?)(?:\n|$)/i,
     ];
-    
+
     for (const pattern of vendorPatterns) {
       const match = text.match(pattern);
       if (match && match[1].trim().length > 2) {
@@ -345,26 +359,28 @@ function fallbackLedgerParsing(text: string): LedgerExtraction {
       }
     }
   }
-  
+
   // Strategy 3: Look for common business name patterns
   if (!vendor) {
     // Look for patterns like "ABC Inc", "XYZ LLC", "Store #123"
-    const businessMatch = text.match(/([A-Z][A-Za-z\s&,.'()-]+(?:Inc|LLC|Ltd|Corp|Co|Store|Market|Shop|Restaurant|Cafe|Hotel|Services|Center|Clinic|Pharmacy))/i);
+    const businessMatch = text.match(
+      /([A-Z][A-Za-z\s&,.'()-]+(?:Inc|LLC|Ltd|Corp|Co|Store|Market|Shop|Restaurant|Cafe|Hotel|Services|Center|Clinic|Pharmacy))/i
+    );
     if (businessMatch) {
       vendor = businessMatch[1].trim();
     }
   }
-  
+
   // If still no vendor, use category as description
   if (!vendor || vendor.length < 2) {
     const categories = {
-      "Restaurant": /restaurant|food|dining|cafe|coffee|meal/i,
-      "Transport": /uber|lyft|taxi|gas|fuel|parking/i,
-      "Office": /office|supplies|staples|paper/i,
-      "Tech": /software|hardware|computer|subscription/i,
-      "Hotel": /hotel|lodging|accommodation/i,
-      "Healthcare": /pharmacy|medical|doctor|hospital/i,
-      "Utilities": /electric|gas|water|internet|phone/i,
+      Restaurant: /restaurant|food|dining|cafe|coffee|meal/i,
+      Transport: /uber|lyft|taxi|gas|fuel|parking/i,
+      Office: /office|supplies|staples|paper/i,
+      Tech: /software|hardware|computer|subscription/i,
+      Hotel: /hotel|lodging|accommodation/i,
+      Healthcare: /pharmacy|medical|doctor|hospital/i,
+      Utilities: /electric|gas|water|internet|phone/i,
     };
 
     for (const [cat, regex] of Object.entries(categories)) {
@@ -374,21 +390,21 @@ function fallbackLedgerParsing(text: string): LedgerExtraction {
       }
     }
   }
-  
+
   if (!vendor) {
     vendor = "Unknown";
   }
-  
+
   // Clean up vendor name - keep it short (2-3 words max)
-  const words = vendor.split(/\s+/).filter(w => w.length > 0);
-  const description = words.slice(0, 2).join(' ');
+  const words = vendor.split(/\s+/).filter((w) => w.length > 0);
+  const description = words.slice(0, 2).join(" ");
 
   return {
     isLedgerEntry: amount > 0 && description !== "Unknown",
     date: dateStr,
     description: description,
     amount: amount,
-    confidence: 0.7
+    confidence: 0.7,
   };
 }
 
@@ -398,12 +414,14 @@ export async function parseReceiptWithOpenAI(pdfText: string): Promise<any> {
   if (!result.isLedgerEntry) {
     throw new Error("Not a valid receipt or ledger entry");
   }
-  
+
   return {
-    date: result.date ? new Date(result.date).toISOString() : new Date().toISOString(),
+    date: result.date
+      ? new Date(result.date).toISOString()
+      : new Date().toISOString(),
     amount: result.amount || 0,
     description: result.description || "Unknown",
-    confidence: result.confidence
+    confidence: result.confidence,
   };
 }
 
