@@ -306,7 +306,7 @@ export function UploadCsvModal({
         // Invalidate queries to refresh data smoothly
         await queryClient.invalidateQueries({ queryKey: ["transactions"] });
         await queryClient.invalidateQueries({ queryKey: ["gmail-status"] });
-        onOpenChange(false); // Close the modal
+        handleOpenChange(false); // Close the modal
       } else {
         toast.error(result.message || "Failed to process CSV");
         if (result.errors && result.errors.length > 0) {
@@ -324,19 +324,30 @@ export function UploadCsvModal({
     }
   };
 
+  const resetModalState = () => {
+    setCsvData([]);
+    setRawCsvData([]);
+    setCsvHeaders([]);
+    setFileName("");
+    setSelectedFile(null);
+    setParseError(null);
+    setSessionId(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open && !isProcessing && !isParsing) {
+      // Modal is being closed, reset state
+      resetModalState();
+    }
+    onOpenChange(open);
+  };
+
   const handleClose = () => {
     if (!isProcessing && !isParsing) {
-      setCsvData([]);
-      setRawCsvData([]);
-      setCsvHeaders([]);
-      setFileName("");
-      setSelectedFile(null);
-      setParseError(null);
-      setSessionId(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-      onOpenChange(false);
+      handleOpenChange(false);
     }
   };
 
@@ -356,7 +367,7 @@ export function UploadCsvModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose} modal={true}>
+    <Dialog open={open} onOpenChange={handleOpenChange} modal={true}>
       <DialogContent className="max-w-[95vw] sm:max-w-[700px] bg-white dark:bg-popover border-border rounded-none overflow-hidden">
         <DialogHeader className="pb-4 sm:pb-6">
           <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">
