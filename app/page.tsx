@@ -212,7 +212,9 @@ export default function HomePage() {
       if (data.success) {
         if (data.stats.newMatches > 0) {
           toast.success("Reconciliation completed", {
-            description: `Found ${data.stats.newMatches} new match${data.stats.newMatches > 1 ? 'es' : ''}`,
+            description: `Found ${data.stats.newMatches} new match${
+              data.stats.newMatches > 1 ? "es" : ""
+            }`,
           });
         } else {
           toast.info("Reconciliation completed", {
@@ -281,9 +283,12 @@ export default function HomePage() {
 
     setResettingLedger(true);
     try {
-      const response = await fetch(`/api/ledger?email=${encodeURIComponent(gmailStatus.email)}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/ledger?email=${encodeURIComponent(gmailStatus.email)}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -293,7 +298,7 @@ export default function HomePage() {
       // Invalidate all queries to refresh the UI
       await queryClient.invalidateQueries({ queryKey: ["transactions"] });
       await queryClient.invalidateQueries({ queryKey: ["gmail-status"] });
-      
+
       // Reset reconciliation view if needed
       if (allBankEntries.length === 0) {
         setShowReconciled(false);
@@ -305,7 +310,8 @@ export default function HomePage() {
     } catch (error) {
       console.error("Error resetting ledger data:", error);
       toast.error("Failed to reset ledger data", {
-        description: error instanceof Error ? error.message : "Please try again",
+        description:
+          error instanceof Error ? error.message : "Please try again",
       });
     } finally {
       setResettingLedger(false);
@@ -321,9 +327,12 @@ export default function HomePage() {
 
     setResettingBank(true);
     try {
-      const response = await fetch(`/api/bank?email=${encodeURIComponent(gmailStatus.email)}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/bank?email=${encodeURIComponent(gmailStatus.email)}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -332,10 +341,10 @@ export default function HomePage() {
 
       // Invalidate all queries to refresh the UI
       await queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      
+
       // Reset local state
       setCsvFileInfo(null);
-      
+
       // Reset reconciliation view if needed
       if (allLedgerEntries.length === 0) {
         setShowReconciled(false);
@@ -347,7 +356,8 @@ export default function HomePage() {
     } catch (error) {
       console.error("Error resetting bank data:", error);
       toast.error("Failed to reset bank data", {
-        description: error instanceof Error ? error.message : "Please try again",
+        description:
+          error instanceof Error ? error.message : "Please try again",
       });
     } finally {
       setResettingBank(false);
@@ -436,7 +446,9 @@ export default function HomePage() {
                               disabled={!gmailStatus?.connected}
                             >
                               <FileUp className="w-4 h-4 mr-2" />
-                              <span className="hidden sm:inline">Upload bank CSV</span>
+                              <span className="hidden sm:inline">
+                                Upload bank CSV
+                              </span>
                               <span className="sm:hidden">Upload CSV</span>
                             </Button>
                           </div>
@@ -524,7 +536,9 @@ export default function HomePage() {
                               ) : (
                                 <>
                                   <FileText className="w-4 h-4 mr-2" />
-                                  <span className="hidden sm:inline">Send Test Email</span>
+                                  <span className="hidden sm:inline">
+                                    Send Test Email
+                                  </span>
                                   <span className="sm:hidden">Test Email</span>
                                 </>
                               )}
@@ -608,12 +622,12 @@ export default function HomePage() {
                       <Card className="bg-card border shadow-sm">
                         <CardContent className="p-4 sm:p-6">
                           <div className="mb-4">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                              <div>
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1">
                                 <h3 className="text-base sm:text-lg font-semibold text-foreground">
                                   Ledger Transactions
                                 </h3>
-                                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                                <p className="text-xs sm:text-sm text-muted-foreground mt-1 hidden sm:block">
                                   All receipts and invoices from your emails
                                 </p>
                               </div>
@@ -624,9 +638,14 @@ export default function HomePage() {
                                 disabled={allLedgerEntries.length === 0}
                               >
                                 <Trash2 className="w-4 h-4" />
-                                <span className="ml-1 hidden sm:inline">Reset Ledger</span>
+                                <span className="ml-1 hidden sm:inline">
+                                  Reset Ledger
+                                </span>
                               </Button>
                             </div>
+                            <p className="text-xs text-muted-foreground mt-2 sm:hidden">
+                              All receipts and invoices from your emails
+                            </p>
                           </div>
                           <div className="border border-border rounded-lg overflow-hidden bg-card">
                             {/* Data source info */}
@@ -685,7 +704,10 @@ export default function HomePage() {
                                           {formatDate(transaction.date)}
                                         </TableCell>
                                         <TableCell className="px-4 py-3">
-                                          <div className="max-w-[300px] truncate" title={transaction.description}>
+                                          <div
+                                            className="max-w-[300px] truncate"
+                                            title={transaction.description}
+                                          >
                                             {transaction.description}
                                           </div>
                                         </TableCell>
@@ -706,12 +728,12 @@ export default function HomePage() {
                       <Card className="bg-card border shadow-sm">
                         <CardContent className="p-4 sm:p-6">
                           <div className="mb-4">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                              <div>
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1">
                                 <h3 className="text-base sm:text-lg font-semibold text-foreground">
                                   Bank Transactions
                                 </h3>
-                                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                                <p className="text-xs sm:text-sm text-muted-foreground mt-1 hidden sm:block">
                                   All transactions from your bank statement
                                 </p>
                               </div>
@@ -722,9 +744,14 @@ export default function HomePage() {
                                 disabled={allBankEntries.length === 0}
                               >
                                 <Trash2 className="w-4 h-4" />
-                                <span className="ml-1 hidden sm:inline">Reset CSV</span>
+                                <span className="ml-1 hidden sm:inline">
+                                  Reset CSV
+                                </span>
                               </Button>
                             </div>
+                            <p className="text-xs text-muted-foreground mt-2 sm:hidden">
+                              All transactions from your bank statement
+                            </p>
                           </div>
                           <div className="border border-border rounded-lg overflow-hidden bg-card">
                             {/* Data source info */}
@@ -790,7 +817,10 @@ export default function HomePage() {
                                           {formatDate(transaction.date)}
                                         </TableCell>
                                         <TableCell className="px-4 py-3">
-                                          <div className="max-w-[300px] truncate" title={transaction.description}>
+                                          <div
+                                            className="max-w-[300px] truncate"
+                                            title={transaction.description}
+                                          >
                                             {transaction.description}
                                           </div>
                                         </TableCell>
@@ -984,7 +1014,7 @@ export default function HomePage() {
                                             {formatDate(transaction.date)}
                                           </TableCell>
                                           <TableCell className="px-4 py-3">
-                                            <TruncatedText 
+                                            <TruncatedText
                                               text={transaction.description}
                                               maxLength={40}
                                               mobileMaxLength={20}
@@ -992,15 +1022,17 @@ export default function HomePage() {
                                             />
                                           </TableCell>
                                           <TableCell className="text-muted-foreground px-4 py-3">
-                                            <TruncatedText 
-                                              text={transaction.bankDescription
-                                                ? transaction.bankDescription
-                                                    .replace(/^From: /, "")
-                                                    .replace(
-                                                      / \$[\d,.-]+ on [\d-]+$/,
-                                                      ""
-                                                    )
-                                                : "N/A"}
+                                            <TruncatedText
+                                              text={
+                                                transaction.bankDescription
+                                                  ? transaction.bankDescription
+                                                      .replace(/^From: /, "")
+                                                      .replace(
+                                                        / \$[\d,.-]+ on [\d-]+$/,
+                                                        ""
+                                                      )
+                                                  : "N/A"
+                                              }
                                               maxLength={40}
                                               mobileMaxLength={18}
                                               className="text-muted-foreground"
@@ -1025,17 +1057,26 @@ export default function HomePage() {
                                                 <Tooltip>
                                                   <TooltipTrigger>
                                                     <Badge
-                                                      variant={transaction.matchType === "ai" ? "secondary" : "default"}
+                                                      variant={
+                                                        transaction.matchType ===
+                                                        "ai"
+                                                          ? "secondary"
+                                                          : "default"
+                                                      }
                                                       className="rounded-lg text-xs"
                                                     >
-                                                      {transaction.matchType === "ai" ? "AI" : "Logic"}
+                                                      {transaction.matchType ===
+                                                      "ai"
+                                                        ? "AI"
+                                                        : "Logic"}
                                                     </Badge>
                                                   </TooltipTrigger>
                                                   <TooltipContent>
                                                     <p className="text-xs">
-                                                      {transaction.matchReason || 
-                                                        (transaction.matchType === "ai" 
-                                                          ? "Matched using AI analysis" 
+                                                      {transaction.matchReason ||
+                                                        (transaction.matchType ===
+                                                        "ai"
+                                                          ? "Matched using AI analysis"
                                                           : "Matched using exact rules")}
                                                     </p>
                                                   </TooltipContent>
@@ -1133,7 +1174,7 @@ export default function HomePage() {
                                             {formatDate(transaction.date)}
                                           </TableCell>
                                           <TableCell className="px-4 py-3">
-                                            <TruncatedText 
+                                            <TruncatedText
                                               text={transaction.description}
                                               maxLength={45}
                                               mobileMaxLength={22}
@@ -1159,7 +1200,7 @@ export default function HomePage() {
                                                 Ledger Only
                                               </Badge>
                                             ) : (
-                                              <Badge className="rounded-lg bg-accent/20 text-accent-foreground border-accent/30 dark:bg-accent/20 dark:text-accent-foreground dark:border-accent/30">
+                                              <Badge className="rounded-lg bg-secondary text-primary/80 border-primary/30 dark:bg-primary/30 dark:text-primary dark:border-primary/40">
                                                 <TrendingUp className="w-3 h-3 mr-1" />
                                                 Bank Only
                                               </Badge>
@@ -1221,7 +1262,10 @@ export default function HomePage() {
             onOpenChange={setGmailModalOpen}
           />
           {/* Ledger Reset Dialog */}
-          <AlertDialog open={ledgerResetDialogOpen} onOpenChange={setLedgerResetDialogOpen}>
+          <AlertDialog
+            open={ledgerResetDialogOpen}
+            onOpenChange={setLedgerResetDialogOpen}
+          >
             <AlertDialogContent className="rounded-none">
               <AlertDialogHeader>
                 <AlertDialogTitle>Reset Ledger Data?</AlertDialogTitle>
@@ -1240,7 +1284,10 @@ export default function HomePage() {
                 </p>
               </div>
               <AlertDialogFooter>
-                <AlertDialogCancel className="rounded-none" disabled={resettingLedger}>
+                <AlertDialogCancel
+                  className="rounded-none"
+                  disabled={resettingLedger}
+                >
                   Cancel
                 </AlertDialogCancel>
                 <AlertDialogAction
@@ -1265,7 +1312,10 @@ export default function HomePage() {
           </AlertDialog>
 
           {/* Bank Reset Dialog */}
-          <AlertDialog open={bankResetDialogOpen} onOpenChange={setBankResetDialogOpen}>
+          <AlertDialog
+            open={bankResetDialogOpen}
+            onOpenChange={setBankResetDialogOpen}
+          >
             <AlertDialogContent className="rounded-none">
               <AlertDialogHeader>
                 <AlertDialogTitle>Reset Bank/CSV Data?</AlertDialogTitle>
@@ -1283,7 +1333,10 @@ export default function HomePage() {
                 </p>
               </div>
               <AlertDialogFooter>
-                <AlertDialogCancel className="rounded-none" disabled={resettingBank}>
+                <AlertDialogCancel
+                  className="rounded-none"
+                  disabled={resettingBank}
+                >
                   Cancel
                 </AlertDialogCancel>
                 <AlertDialogAction
