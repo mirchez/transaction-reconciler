@@ -4,6 +4,16 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -29,6 +39,7 @@ import {
   Download,
   FileUp,
   MailCheck,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { UploadCsvModal } from "@/components/upload-csv-modal";
@@ -64,6 +75,8 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false);
   const [showReconciled, setShowReconciled] = useState(false);
   const [reconciling, setReconciling] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const { data: gmailStatus } = useGmailStatus();
   const { data: transactionsData, isLoading: loading } = useTransactions();
   const transactions = transactionsData?.transactions || [];
@@ -255,6 +268,45 @@ export default function HomePage() {
       });
     } finally {
       setSendingTestEmail(false);
+    }
+  };
+
+  const handleReset = async () => {
+    if (!gmailStatus?.email) {
+      toast.error("No email connected");
+      return;
+    }
+
+    setResetting(true);
+    try {
+      const response = await fetch(`/api/ledger?email=${encodeURIComponent(gmailStatus.email)}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to reset data");
+      }
+
+      // Invalidate all queries to refresh the UI
+      await queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      await queryClient.invalidateQueries({ queryKey: ["gmail-status"] });
+      
+      // Reset local state
+      setCsvFileInfo(null);
+      setShowReconciled(false);
+
+      toast.success("All data cleared successfully", {
+        description: "You can now start fresh with new uploads",
+      });
+    } catch (error) {
+      console.error("Error resetting data:", error);
+      toast.error("Failed to reset data", {
+        description: error instanceof Error ? error.message : "Please try again",
+      });
+    } finally {
+      setResetting(false);
+      setResetDialogOpen(false);
     }
   };
 
@@ -520,6 +572,15 @@ export default function HomePage() {
                                   All receipts and invoices from your emails
                                 </p>
                               </div>
+                              <Button
+                                size="sm"
+                                className="rounded-none bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 text-red-600 dark:text-red-500 hover:bg-red-500/20 dark:hover:bg-red-500/30"
+                                onClick={() => setResetDialogOpen(true)}
+                                disabled={allLedgerEntries.length === 0}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                <span className="ml-1 hidden sm:inline">Reset</span>
+                              </Button>
                             </div>
                           </div>
                           <div className="border border-border rounded-none overflow-hidden bg-card">
@@ -1101,6 +1162,46 @@ export default function HomePage() {
             open={gmailModalOpen}
             onOpenChange={setGmailModalOpen}
           />
+          <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+            <AlertDialogContent className="rounded-none">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete all:
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="my-4">
+                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                  <li>Ledger transactions from emails</li>
+                  <li>Bank transactions from CSV files</li>
+                  <li>Matched transaction records</li>
+                  <li>Processed email history</li>
+                </ul>
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="rounded-none" disabled={resetting}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  className="rounded-none bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 text-red-600 dark:text-red-500 hover:bg-red-500/20 dark:hover:bg-red-500/30"
+                  onClick={handleReset}
+                  disabled={resetting}
+                >
+                  {resetting ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete All Data
+                    </>
+                  )}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </>
       )}
     </div>

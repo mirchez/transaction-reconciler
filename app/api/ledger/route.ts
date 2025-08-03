@@ -33,3 +33,50 @@ export async function POST(req: Request) {
 
   return NextResponse.json(entry, { status: 201 });
 }
+
+export async function DELETE(req: Request) {
+  try {
+    // Get user email from query params
+    const { searchParams } = new URL(req.url);
+    const userEmail = searchParams.get("email");
+
+    if (!userEmail) {
+      return NextResponse.json(
+        { error: "Email parameter is required" },
+        { status: 400 }
+      );
+    }
+
+    // Delete all related data in the correct order
+    // First delete matched entries (they reference both ledger and bank)
+    await prisma.matched.deleteMany({
+      where: { userEmail }
+    });
+
+    // Then delete ledger entries
+    await prisma.ledger.deleteMany({
+      where: { userEmail }
+    });
+
+    // Also delete bank transactions for complete reset
+    await prisma.bank.deleteMany({
+      where: { userEmail }
+    });
+
+    // Delete processed emails to reset email tracking
+    await prisma.processedEmail.deleteMany({
+      where: { userEmail }
+    });
+
+    return NextResponse.json(
+      { success: true, message: "All data deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting data:", error);
+    return NextResponse.json(
+      { error: "Failed to delete data" },
+      { status: 500 }
+    );
+  }
+}
