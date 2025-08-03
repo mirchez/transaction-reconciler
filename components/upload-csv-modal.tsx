@@ -357,7 +357,7 @@ export function UploadCsvModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose} modal={true}>
-      <DialogContent className="max-w-[95vw] sm:max-w-[700px] bg-white dark:bg-popover border-border rounded-none">
+      <DialogContent className="max-w-[95vw] sm:max-w-[700px] bg-white dark:bg-popover border-border rounded-none overflow-hidden">
         <DialogHeader className="pb-4 sm:pb-6">
           <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">
             Upload Bank Statement
@@ -367,7 +367,7 @@ export function UploadCsvModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-4 sm:space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto overflow-x-hidden pr-2">
           {/* Example Download Section */}
           <div className="bg-muted/50 p-3 sm:p-4 rounded-none border border-border">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
@@ -462,42 +462,77 @@ export function UploadCsvModal({
                     Showing {rawCsvData.length} of many rows with {csvHeaders.length} columns
                   </p>
                 </div>
-                <div className="border border-border rounded-none overflow-hidden bg-card">
-                  <div className="w-full overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/30 border-b border-border">
-                          {csvHeaders.map((header, index) => (
-                            <TableHead 
-                              key={index} 
-                              className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-foreground whitespace-nowrap min-w-[120px]"
-                            >
-                              {header}
-                            </TableHead>
-                          ))}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {rawCsvData.map((row, rowIndex) => (
-                          <TableRow
-                            key={rowIndex}
-                            className="border-b border-border hover:bg-muted/20"
-                          >
-                            {csvHeaders.map((header, colIndex) => (
-                              <TableCell 
-                                key={colIndex}
-                                className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-foreground whitespace-nowrap"
-                                title={row[header] || ''}
+                <div className="w-full max-w-full">
+                  <div className="border border-border rounded-none bg-card relative overflow-hidden">
+                    {/* Gradiente izquierdo */}
+                    <div 
+                      className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-card via-card/80 to-transparent z-10 pointer-events-none opacity-0 transition-opacity duration-200" 
+                      id="scroll-shadow-left" 
+                    />
+                    
+                    {/* Gradiente derecho con indicador */}
+                    <div 
+                      className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-card via-card/80 to-transparent z-10 pointer-events-none flex items-center justify-end pr-3 transition-opacity duration-200" 
+                      id="scroll-shadow-right"
+                    >
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground bg-card/95 px-2 py-1 rounded-none border border-border shadow-sm">
+                        <span>Scroll</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className="w-full overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-border scrollbar-track-muted/20"
+                      style={{ maxHeight: '400px' }}
+                      onScroll={(e) => {
+                        const target = e.target as HTMLDivElement;
+                        const shadowLeft = document.getElementById('scroll-shadow-left');
+                        const shadowRight = document.getElementById('scroll-shadow-right');
+                        
+                        if (shadowLeft) {
+                          shadowLeft.style.opacity = target.scrollLeft > 10 ? '1' : '0';
+                        }
+                        
+                        if (shadowRight) {
+                          const isAtEnd = target.scrollLeft >= target.scrollWidth - target.clientWidth - 10;
+                          shadowRight.style.opacity = isAtEnd ? '0' : '1';
+                        }
+                      }}
+                    >
+                      <table className="w-full min-w-max text-sm">
+                        <thead>
+                          <tr className="bg-muted/30 border-b border-border">
+                            {csvHeaders.map((header, index) => (
+                              <th 
+                                key={index} 
+                                className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-foreground text-left whitespace-nowrap"
                               >
-                                <div className="max-w-[200px] truncate">
-                                  {row[header] || ''}
-                                </div>
-                              </TableCell>
+                                {header}
+                              </th>
                             ))}
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rawCsvData.map((row, rowIndex) => (
+                            <tr
+                              key={rowIndex}
+                              className="border-b border-border hover:bg-muted/20 transition-colors"
+                            >
+                              {csvHeaders.map((header, colIndex) => (
+                                <td 
+                                  key={colIndex}
+                                  className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-foreground whitespace-nowrap"
+                                >
+                                  {row[header] || '-'}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>
