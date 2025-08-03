@@ -4924,9 +4924,7 @@ export namespace Prisma {
     description: string | null
     amount: Decimal | null
     date: Date | null
-    matchType: string | null
     matchScore: number | null
-    matchReason: string | null
     createdAt: Date | null
   }
 
@@ -4939,9 +4937,7 @@ export namespace Prisma {
     description: string | null
     amount: Decimal | null
     date: Date | null
-    matchType: string | null
     matchScore: number | null
-    matchReason: string | null
     createdAt: Date | null
   }
 
@@ -4954,9 +4950,7 @@ export namespace Prisma {
     description: number
     amount: number
     date: number
-    matchType: number
     matchScore: number
-    matchReason: number
     createdAt: number
     _all: number
   }
@@ -4981,9 +4975,7 @@ export namespace Prisma {
     description?: true
     amount?: true
     date?: true
-    matchType?: true
     matchScore?: true
-    matchReason?: true
     createdAt?: true
   }
 
@@ -4996,9 +4988,7 @@ export namespace Prisma {
     description?: true
     amount?: true
     date?: true
-    matchType?: true
     matchScore?: true
-    matchReason?: true
     createdAt?: true
   }
 
@@ -5011,9 +5001,7 @@ export namespace Prisma {
     description?: true
     amount?: true
     date?: true
-    matchType?: true
     matchScore?: true
-    matchReason?: true
     createdAt?: true
     _all?: true
   }
@@ -5113,9 +5101,7 @@ export namespace Prisma {
     description: string
     amount: Decimal
     date: Date
-    matchType: string
     matchScore: number
-    matchReason: string | null
     createdAt: Date
     _count: MatchedCountAggregateOutputType | null
     _avg: MatchedAvgAggregateOutputType | null
@@ -5147,9 +5133,7 @@ export namespace Prisma {
     description?: boolean
     amount?: boolean
     date?: boolean
-    matchType?: boolean
     matchScore?: boolean
-    matchReason?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     ledger?: boolean | LedgerDefaultArgs<ExtArgs>
@@ -5165,9 +5149,7 @@ export namespace Prisma {
     description?: boolean
     amount?: boolean
     date?: boolean
-    matchType?: boolean
     matchScore?: boolean
-    matchReason?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     ledger?: boolean | LedgerDefaultArgs<ExtArgs>
@@ -5183,9 +5165,7 @@ export namespace Prisma {
     description?: boolean
     amount?: boolean
     date?: boolean
-    matchType?: boolean
     matchScore?: boolean
-    matchReason?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     ledger?: boolean | LedgerDefaultArgs<ExtArgs>
@@ -5201,13 +5181,11 @@ export namespace Prisma {
     description?: boolean
     amount?: boolean
     date?: boolean
-    matchType?: boolean
     matchScore?: boolean
-    matchReason?: boolean
     createdAt?: boolean
   }
 
-  export type MatchedOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userEmail" | "ledgerId" | "bankId" | "bankTransaction" | "description" | "amount" | "date" | "matchType" | "matchScore" | "matchReason" | "createdAt", ExtArgs["result"]["matched"]>
+  export type MatchedOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userEmail" | "ledgerId" | "bankId" | "bankTransaction" | "description" | "amount" | "date" | "matchScore" | "createdAt", ExtArgs["result"]["matched"]>
   export type MatchedInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     ledger?: boolean | LedgerDefaultArgs<ExtArgs>
@@ -5240,9 +5218,7 @@ export namespace Prisma {
       description: string
       amount: Prisma.Decimal
       date: Date
-      matchType: string
       matchScore: number
-      matchReason: string | null
       createdAt: Date
     }, ExtArgs["result"]["matched"]>
     composites: {}
@@ -5678,9 +5654,7 @@ export namespace Prisma {
     readonly description: FieldRef<"Matched", 'String'>
     readonly amount: FieldRef<"Matched", 'Decimal'>
     readonly date: FieldRef<"Matched", 'DateTime'>
-    readonly matchType: FieldRef<"Matched", 'String'>
     readonly matchScore: FieldRef<"Matched", 'Int'>
-    readonly matchReason: FieldRef<"Matched", 'String'>
     readonly createdAt: FieldRef<"Matched", 'DateTime'>
   }
     
@@ -8333,9 +8307,7 @@ export namespace Prisma {
     description: 'description',
     amount: 'amount',
     date: 'date',
-    matchType: 'matchType',
     matchScore: 'matchScore',
-    matchReason: 'matchReason',
     createdAt: 'createdAt'
   };
 
@@ -8684,9 +8656,7 @@ export namespace Prisma {
     description?: StringFilter<"Matched"> | string
     amount?: DecimalFilter<"Matched"> | Decimal | DecimalJsLike | number | string
     date?: DateTimeFilter<"Matched"> | Date | string
-    matchType?: StringFilter<"Matched"> | string
     matchScore?: IntFilter<"Matched"> | number
-    matchReason?: StringNullableFilter<"Matched"> | string | null
     createdAt?: DateTimeFilter<"Matched"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     ledger?: XOR<LedgerScalarRelationFilter, LedgerWhereInput>
@@ -8702,9 +8672,7 @@ export namespace Prisma {
     description?: SortOrder
     amount?: SortOrder
     date?: SortOrder
-    matchType?: SortOrder
     matchScore?: SortOrder
-    matchReason?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     user?: UserOrderByWithRelationInput
     ledger?: LedgerOrderByWithRelationInput
@@ -8724,9 +8692,7 @@ export namespace Prisma {
     description?: StringFilter<"Matched"> | string
     amount?: DecimalFilter<"Matched"> | Decimal | DecimalJsLike | number | string
     date?: DateTimeFilter<"Matched"> | Date | string
-    matchType?: StringFilter<"Matched"> | string
     matchScore?: IntFilter<"Matched"> | number
-    matchReason?: StringNullableFilter<"Matched"> | string | null
     createdAt?: DateTimeFilter<"Matched"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     ledger?: XOR<LedgerScalarRelationFilter, LedgerWhereInput>
@@ -8742,9 +8708,7 @@ export namespace Prisma {
     description?: SortOrder
     amount?: SortOrder
     date?: SortOrder
-    matchType?: SortOrder
     matchScore?: SortOrder
-    matchReason?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: MatchedCountOrderByAggregateInput
     _avg?: MatchedAvgOrderByAggregateInput
@@ -8765,9 +8729,7 @@ export namespace Prisma {
     description?: StringWithAggregatesFilter<"Matched"> | string
     amount?: DecimalWithAggregatesFilter<"Matched"> | Decimal | DecimalJsLike | number | string
     date?: DateTimeWithAggregatesFilter<"Matched"> | Date | string
-    matchType?: StringWithAggregatesFilter<"Matched"> | string
     matchScore?: IntWithAggregatesFilter<"Matched"> | number
-    matchReason?: StringNullableWithAggregatesFilter<"Matched"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Matched"> | Date | string
   }
 
@@ -9132,9 +9094,7 @@ export namespace Prisma {
     description: string
     amount: Decimal | DecimalJsLike | number | string
     date: Date | string
-    matchType?: string
     matchScore?: number
-    matchReason?: string | null
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutMatchedInput
     ledger: LedgerCreateNestedOneWithoutMatchedInput
@@ -9150,9 +9110,7 @@ export namespace Prisma {
     description: string
     amount: Decimal | DecimalJsLike | number | string
     date: Date | string
-    matchType?: string
     matchScore?: number
-    matchReason?: string | null
     createdAt?: Date | string
   }
 
@@ -9162,9 +9120,7 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     date?: DateTimeFieldUpdateOperationsInput | Date | string
-    matchType?: StringFieldUpdateOperationsInput | string
     matchScore?: IntFieldUpdateOperationsInput | number
-    matchReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutMatchedNestedInput
     ledger?: LedgerUpdateOneRequiredWithoutMatchedNestedInput
@@ -9180,9 +9136,7 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     date?: DateTimeFieldUpdateOperationsInput | Date | string
-    matchType?: StringFieldUpdateOperationsInput | string
     matchScore?: IntFieldUpdateOperationsInput | number
-    matchReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -9195,9 +9149,7 @@ export namespace Prisma {
     description: string
     amount: Decimal | DecimalJsLike | number | string
     date: Date | string
-    matchType?: string
     matchScore?: number
-    matchReason?: string | null
     createdAt?: Date | string
   }
 
@@ -9207,9 +9159,7 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     date?: DateTimeFieldUpdateOperationsInput | Date | string
-    matchType?: StringFieldUpdateOperationsInput | string
     matchScore?: IntFieldUpdateOperationsInput | number
-    matchReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -9222,9 +9172,7 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     date?: DateTimeFieldUpdateOperationsInput | Date | string
-    matchType?: StringFieldUpdateOperationsInput | string
     matchScore?: IntFieldUpdateOperationsInput | number
-    matchReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -9626,21 +9574,6 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
-  export type StringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
   export type LedgerScalarRelationFilter = {
     is?: LedgerWhereInput
     isNot?: LedgerWhereInput
@@ -9649,11 +9582,6 @@ export namespace Prisma {
   export type BankScalarRelationFilter = {
     is?: BankWhereInput
     isNot?: BankWhereInput
-  }
-
-  export type SortOrderInput = {
-    sort: SortOrder
-    nulls?: NullsOrder
   }
 
   export type MatchedLedgerIdBankIdCompoundUniqueInput = {
@@ -9670,9 +9598,7 @@ export namespace Prisma {
     description?: SortOrder
     amount?: SortOrder
     date?: SortOrder
-    matchType?: SortOrder
     matchScore?: SortOrder
-    matchReason?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -9690,9 +9616,7 @@ export namespace Prisma {
     description?: SortOrder
     amount?: SortOrder
     date?: SortOrder
-    matchType?: SortOrder
     matchScore?: SortOrder
-    matchReason?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -9705,9 +9629,7 @@ export namespace Prisma {
     description?: SortOrder
     amount?: SortOrder
     date?: SortOrder
-    matchType?: SortOrder
     matchScore?: SortOrder
-    matchReason?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -9732,7 +9654,7 @@ export namespace Prisma {
     _max?: NestedIntFilter<$PrismaModel>
   }
 
-  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
+  export type StringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
     notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -9744,10 +9666,7 @@ export namespace Prisma {
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     mode?: QueryMode
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
   export type DateTimeNullableFilter<$PrismaModel = never> = {
@@ -9759,6 +9678,11 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type SortOrderInput = {
+    sort: SortOrder
+    nulls?: NullsOrder
   }
 
   export type GoogleAuthCountOrderByAggregateInput = {
@@ -9798,6 +9722,24 @@ export namespace Prisma {
     tokenType?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -10174,10 +10116,6 @@ export namespace Prisma {
     divide?: number
   }
 
-  export type NullableStringFieldUpdateOperationsInput = {
-    set?: string | null
-  }
-
   export type UserUpdateOneRequiredWithoutMatchedNestedInput = {
     create?: XOR<UserCreateWithoutMatchedInput, UserUncheckedCreateWithoutMatchedInput>
     connectOrCreate?: UserCreateOrConnectWithoutMatchedInput
@@ -10200,6 +10138,10 @@ export namespace Prisma {
     upsert?: BankUpsertWithoutMatchedInput
     connect?: BankWhereUniqueInput
     update?: XOR<XOR<BankUpdateToOneWithWhereWithoutMatchedInput, BankUpdateWithoutMatchedInput>, BankUncheckedUpdateWithoutMatchedInput>
+  }
+
+  export type NullableStringFieldUpdateOperationsInput = {
+    set?: string | null
   }
 
   export type NullableDateTimeFieldUpdateOperationsInput = {
@@ -10314,20 +10256,6 @@ export namespace Prisma {
     _max?: NestedDecimalFilter<$PrismaModel>
   }
 
-  export type NestedStringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -10353,6 +10281,31 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type NestedStringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -10381,17 +10334,6 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
-  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
   export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -10474,9 +10416,7 @@ export namespace Prisma {
     description: string
     amount: Decimal | DecimalJsLike | number | string
     date: Date | string
-    matchType?: string
     matchScore?: number
-    matchReason?: string | null
     createdAt?: Date | string
     ledger: LedgerCreateNestedOneWithoutMatchedInput
     bank: BankCreateNestedOneWithoutMatchedInput
@@ -10490,9 +10430,7 @@ export namespace Prisma {
     description: string
     amount: Decimal | DecimalJsLike | number | string
     date: Date | string
-    matchType?: string
     matchScore?: number
-    matchReason?: string | null
     createdAt?: Date | string
   }
 
@@ -10620,9 +10558,7 @@ export namespace Prisma {
     description?: StringFilter<"Matched"> | string
     amount?: DecimalFilter<"Matched"> | Decimal | DecimalJsLike | number | string
     date?: DateTimeFilter<"Matched"> | Date | string
-    matchType?: StringFilter<"Matched"> | string
     matchScore?: IntFilter<"Matched"> | number
-    matchReason?: StringNullableFilter<"Matched"> | string | null
     createdAt?: DateTimeFilter<"Matched"> | Date | string
   }
 
@@ -10686,9 +10622,7 @@ export namespace Prisma {
     description: string
     amount: Decimal | DecimalJsLike | number | string
     date: Date | string
-    matchType?: string
     matchScore?: number
-    matchReason?: string | null
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutMatchedInput
     bank: BankCreateNestedOneWithoutMatchedInput
@@ -10702,9 +10636,7 @@ export namespace Prisma {
     description: string
     amount: Decimal | DecimalJsLike | number | string
     date: Date | string
-    matchType?: string
     matchScore?: number
-    matchReason?: string | null
     createdAt?: Date | string
   }
 
@@ -10796,9 +10728,7 @@ export namespace Prisma {
     description: string
     amount: Decimal | DecimalJsLike | number | string
     date: Date | string
-    matchType?: string
     matchScore?: number
-    matchReason?: string | null
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutMatchedInput
     ledger: LedgerCreateNestedOneWithoutMatchedInput
@@ -10812,9 +10742,7 @@ export namespace Prisma {
     description: string
     amount: Decimal | DecimalJsLike | number | string
     date: Date | string
-    matchType?: string
     matchScore?: number
-    matchReason?: string | null
     createdAt?: Date | string
   }
 
@@ -11125,9 +11053,7 @@ export namespace Prisma {
     description: string
     amount: Decimal | DecimalJsLike | number | string
     date: Date | string
-    matchType?: string
     matchScore?: number
-    matchReason?: string | null
     createdAt?: Date | string
   }
 
@@ -11204,9 +11130,7 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     date?: DateTimeFieldUpdateOperationsInput | Date | string
-    matchType?: StringFieldUpdateOperationsInput | string
     matchScore?: IntFieldUpdateOperationsInput | number
-    matchReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     ledger?: LedgerUpdateOneRequiredWithoutMatchedNestedInput
     bank?: BankUpdateOneRequiredWithoutMatchedNestedInput
@@ -11220,9 +11144,7 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     date?: DateTimeFieldUpdateOperationsInput | Date | string
-    matchType?: StringFieldUpdateOperationsInput | string
     matchScore?: IntFieldUpdateOperationsInput | number
-    matchReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -11234,9 +11156,7 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     date?: DateTimeFieldUpdateOperationsInput | Date | string
-    matchType?: StringFieldUpdateOperationsInput | string
     matchScore?: IntFieldUpdateOperationsInput | number
-    matchReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -11275,9 +11195,7 @@ export namespace Prisma {
     description: string
     amount: Decimal | DecimalJsLike | number | string
     date: Date | string
-    matchType?: string
     matchScore?: number
-    matchReason?: string | null
     createdAt?: Date | string
   }
 
@@ -11287,9 +11205,7 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     date?: DateTimeFieldUpdateOperationsInput | Date | string
-    matchType?: StringFieldUpdateOperationsInput | string
     matchScore?: IntFieldUpdateOperationsInput | number
-    matchReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutMatchedNestedInput
     bank?: BankUpdateOneRequiredWithoutMatchedNestedInput
@@ -11303,9 +11219,7 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     date?: DateTimeFieldUpdateOperationsInput | Date | string
-    matchType?: StringFieldUpdateOperationsInput | string
     matchScore?: IntFieldUpdateOperationsInput | number
-    matchReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -11317,9 +11231,7 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     date?: DateTimeFieldUpdateOperationsInput | Date | string
-    matchType?: StringFieldUpdateOperationsInput | string
     matchScore?: IntFieldUpdateOperationsInput | number
-    matchReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -11331,9 +11243,7 @@ export namespace Prisma {
     description: string
     amount: Decimal | DecimalJsLike | number | string
     date: Date | string
-    matchType?: string
     matchScore?: number
-    matchReason?: string | null
     createdAt?: Date | string
   }
 
@@ -11343,9 +11253,7 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     date?: DateTimeFieldUpdateOperationsInput | Date | string
-    matchType?: StringFieldUpdateOperationsInput | string
     matchScore?: IntFieldUpdateOperationsInput | number
-    matchReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutMatchedNestedInput
     ledger?: LedgerUpdateOneRequiredWithoutMatchedNestedInput
@@ -11359,9 +11267,7 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     date?: DateTimeFieldUpdateOperationsInput | Date | string
-    matchType?: StringFieldUpdateOperationsInput | string
     matchScore?: IntFieldUpdateOperationsInput | number
-    matchReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -11373,9 +11279,7 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     date?: DateTimeFieldUpdateOperationsInput | Date | string
-    matchType?: StringFieldUpdateOperationsInput | string
     matchScore?: IntFieldUpdateOperationsInput | number
-    matchReason?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

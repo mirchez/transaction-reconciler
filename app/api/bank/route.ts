@@ -17,6 +17,17 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const body = await req.json();
+  
+  // Get user email from request body or headers
+  const userEmail = body.userEmail || req.headers.get('x-user-email');
+  
+  if (!userEmail) {
+    return NextResponse.json(
+      { error: "User email is required" },
+      { status: 400 }
+    );
+  }
+  
   const result = BankSchema.safeParse(body);
 
   if (!result.success) {
@@ -29,7 +40,7 @@ export async function POST(req: Request) {
   const tx = await prisma.bank.create({
     data: {
       ...result.data,
-      userEmail: "demo-user@example.com", // TODO: Get from session
+      userEmail: userEmail,
     },
   });
 
