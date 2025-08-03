@@ -17,17 +17,17 @@ const ReceiptExtractionSchema = z.object({
     invoiceNumber: z.string().nullable().optional(),
     paymentMethod: z.string().nullable().optional(),
     currency: z.string().nullable().optional(),
-  }).default({}),
+  }).default(() => ({})),
   metadata: z.object({
     documentType: z.string().default('unknown'),
     confidence: z.number().min(0).max(1).default(0.5),
     extractionMethod: z.string().default('unknown'),
-  }).default({}),
+  }).default(() => ({ documentType: 'unknown', confidence: 0.5, extractionMethod: 'unknown' })),
   rawExtraction: z.object({
     amounts: z.array(z.number()).default([]),
     dates: z.array(z.string()).default([]),
     possibleVendors: z.array(z.string()).default([]),
-  }).default({})
+  }).default(() => ({ amounts: [], dates: [], possibleVendors: [] }))
 });
 
 export type ReceiptExtraction = z.infer<typeof ReceiptExtractionSchema>;

@@ -126,10 +126,10 @@ export class ReceiptParsingStrategy {
           amount: result.amount,
           date: result.date || new Date().toISOString().split('T')[0],
           description: result.description,
-          vendor: result.metadata?.vendor,
-          invoiceNumber: result.metadata?.invoiceNumber,
+          vendor: result.metadata?.vendor || undefined,
+          invoiceNumber: result.metadata?.invoiceNumber || undefined,
           currency: result.metadata?.currency || 'USD',
-          documentType: result.metadata?.documentType,
+          documentType: result.metadata?.documentType || undefined,
         },
         confidence: result.confidence,
         method: 'ai-gpt4',
@@ -162,14 +162,18 @@ export class ReceiptParsingStrategy {
           date: result.extractedData.date || new Date().toISOString().split('T')[0],
           description: result.extractedData.description || result.extractedData.vendor,
           vendor: result.extractedData.vendor,
-          invoiceNumber: result.extractedData.invoiceNumber,
+          invoiceNumber: result.extractedData.invoiceNumber || undefined,
           currency: result.extractedData.currency || 'USD',
         },
         confidence: result.metadata.confidence,
         method: 'pattern',
         attempts: 1,
         errors: [],
-        rawExtractions: result.rawExtraction,
+        rawExtractions: {
+          amounts: result.rawExtraction.amounts,
+          dates: result.rawExtraction.dates,
+          vendors: result.rawExtraction.possibleVendors,
+        },
       };
     }
 
@@ -179,7 +183,11 @@ export class ReceiptParsingStrategy {
       method: 'pattern',
       attempts: 1,
       errors: ['Pattern matching could not extract required fields'],
-      rawExtractions: result.rawExtraction,
+      rawExtractions: {
+        amounts: result.rawExtraction.amounts,
+        dates: result.rawExtraction.dates,
+        vendors: result.rawExtraction.possibleVendors,
+      },
     };
   }
 
@@ -348,7 +356,7 @@ export class ReceiptParsingStrategy {
       cleaned.length < 50 &&
       !cleaned.match(/^\d/) &&
       !cleaned.match(/^(date|receipt|invoice|total|amount|tax|subtotal|order|transaction)/i) &&
-      cleaned.match(/^[A-Z]/)
+      !!cleaned.match(/^[A-Z]/)
     );
   }
 

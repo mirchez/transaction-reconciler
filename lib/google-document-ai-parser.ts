@@ -84,7 +84,7 @@ export class GoogleDocumentAIParser {
       console.log('🔍 Found entities:', document.entities?.length || 0);
 
       // Extract structured data
-      const entities = document.entities || [];
+      const entities = (document.entities || []) as DocumentEntity[];
       const parsedData = this.extractReceiptData(entities, document.text || '');
 
       // Log extracted data

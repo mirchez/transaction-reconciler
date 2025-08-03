@@ -54,7 +54,7 @@ export async function parsePDF(buffer: Buffer): Promise<PDFParseResult> {
       
       // If no raw text but we have structured data, create a summary
       if (!text && (result.vendor || result.amount)) {
-        const parts = [];
+        const parts: string[] = [];
         if (result.vendor) parts.push(`Vendor: ${result.vendor}`);
         if (result.amount) parts.push(`Amount: ${result.currency || '$'}${result.amount}`);
         if (result.date) parts.push(`Date: ${result.date}`);

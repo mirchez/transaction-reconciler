@@ -1044,9 +1044,11 @@ export default function HomePage() {
                                               <Badge
                                                 variant="outline"
                                                 className={`rounded-lg font-semibold min-w-[65px] justify-center text-sm ${
-                                                  !transaction.matchScore || transaction.matchScore >= 95
+                                                  !transaction.matchScore ||
+                                                  transaction.matchScore >= 95
                                                     ? "bg-green-500/10 text-green-700 border-green-500/30 dark:bg-green-500/20 dark:text-green-400 dark:border-green-500/40"
-                                                    : transaction.matchScore >= 80
+                                                    : transaction.matchScore >=
+                                                      80
                                                     ? "bg-blue-500/10 text-blue-700 border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/40"
                                                     : "bg-orange-500/10 text-orange-700 border-orange-500/30 dark:bg-orange-500/20 dark:text-orange-400 dark:border-orange-500/40"
                                                 }`}
@@ -1258,7 +1260,7 @@ export default function HomePage() {
                     <li>Any matched transaction records</li>
                   </ul>
                   <p className="text-xs text-muted-foreground mt-3 p-2 bg-muted/30 rounded-lg border border-border/50">
-                    <strong>Note:</strong> Bank/CSV data will be preserved.
+                    <strong>Note:</strong> This will delete all ledger data.
                   </p>
                 </div>
               </div>
@@ -1313,7 +1315,7 @@ export default function HomePage() {
                     <li>Any matched transaction records</li>
                   </ul>
                   <p className="text-xs text-muted-foreground mt-3 p-2 bg-muted/30 rounded-lg border border-border/50">
-                    <strong>Note:</strong> Ledger data and email history will be preserved.
+                    <strong>Note:</strong> This will delete all CSV data.
                   </p>
                 </div>
               </div>
