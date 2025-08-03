@@ -128,6 +128,7 @@ export async function POST(request: NextRequest) {
         hasDate,
         data: extractedData
       });
+      
       return NextResponse.json(
         { 
           error: "Receipt is missing required information",

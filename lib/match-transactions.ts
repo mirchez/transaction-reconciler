@@ -1,9 +1,4 @@
-import OpenAI from "openai";
 import { prisma } from "@/lib/db";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 interface BankTransactionInput {
   id: string;
@@ -25,6 +20,43 @@ interface MatchResult {
   ledgerEntryId: string;
   matchScore: number;
   matchReason: string;
+  matchLevel: 'full' | 'partial' | 'ambiguous';
+}
+
+function normalizeText(text: string): string {
+  return text.toLowerCase().trim().replace(/[^a-z0-9\s]/g, '');
+}
+
+function calculateDateDifference(date1: Date, date2: Date): number {
+  return Math.abs((date1.getTime() - date2.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function calculateAmountDifference(amount1: number, amount2: number): number {
+  return Math.abs(amount1 - amount2);
+}
+
+function calculateTextSimilarity(text1: string, text2: string): number {
+  const normalized1 = normalizeText(text1);
+  const normalized2 = normalizeText(text2);
+  
+  const words1 = normalized1.split(/\s+/);
+  const words2 = normalized2.split(/\s+/);
+  
+  let matchingWords = 0;
+  
+  for (const word1 of words1) {
+    if (word1.length > 2) {
+      for (const word2 of words2) {
+        if (word2.length > 2 && (word1.includes(word2) || word2.includes(word1))) {
+          matchingWords++;
+          break;
+        }
+      }
+    }
+  }
+  
+  const totalWords = Math.max(words1.length, words2.length);
+  return totalWords > 0 ? (matchingWords / totalWords) * 100 : 0;
 }
 
 export async function matchTransactionsWithAI(
@@ -35,119 +67,89 @@ export async function matchTransactionsWithAI(
     return [];
   }
 
-  console.log(`Starting AI matching: ${bankTransactions.length} bank transactions, ${ledgerEntries.length} ledger entries`);
+  console.log(`Starting rule-based matching: ${bankTransactions.length} bank transactions, ${ledgerEntries.length} ledger entries`);
 
-  const systemPrompt = `You are a highly precise financial transaction matching expert. Given bank transactions and ledger entries, identify matches based on STRICT criteria:
+  const matches: MatchResult[] = [];
+  const usedLedgerIds = new Set<string>();
 
-1. Amount: MUST match exactly or within $0.01 (one cent tolerance only for rounding)
-2. Date: MUST be within 2 days maximum (bank processing delays)
-3. Description/vendor: Must have strong similarity or clear connection
-4. Be VERY conservative - only match when you're highly confident
-
-IMPORTANT RULES:
-- Amount differences > $0.01 should NOT be matched
-- Date differences > 2 days should NOT be matched
-- If amounts don't match exactly (within $0.01), reject the match
-- Only suggest matches with confidence >= 85%
-- Provide specific reasons for each match
-
-For each match, provide a confidence score (0-100) and a detailed reason.`;
-
-  const userPrompt = `Match these bank transactions with ledger entries using STRICT PRECISION:
-
-Bank Transactions:
-${bankTransactions.map((t, i) => 
-  `${i+1}. [ID: ${t.id}] Date: ${t.date.toISOString().split('T')[0]}, Amount: $${t.amount.toFixed(2)}, Description: "${t.description}"`
-).join('\n')}
-
-Ledger Entries:
-${ledgerEntries.map((e, i) => 
-  `${i+1}. [ID: ${e.id}] Date: ${e.date.toISOString().split('T')[0]}, Amount: $${e.amount.toFixed(2)}, Vendor: "${e.vendor}", Category: "${e.category || 'N/A'}"`
-).join('\n')}
-
-CRITICAL MATCHING RULES:
-1. Amounts must match EXACTLY (max $0.01 difference for rounding)
-2. Dates must be within 2 days maximum
-3. Only high-confidence matches (85%+ score)
-4. Verify each match meets ALL criteria before including
-
-Return a JSON object with a "matches" array in this format:
-{
-  "matches": [
-    {
-      "bankTransactionId": "bank_id",
-      "ledgerEntryId": "ledger_id",
-      "matchScore": 95,
-      "matchReason": "Amount matches exactly ($X.XX), dates 1 day apart (bank: YYYY-MM-DD, ledger: YYYY-MM-DD), vendor 'ABC' found in bank description"
-    }
-  ]
-}`;
-
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
-      ],
-      temperature: 0.1,
-      response_format: { type: "json_object" }
-    });
-
-    const content = response.choices[0].message.content;
-    if (!content) {
-      console.error("No content from OpenAI");
-      return [];
-    }
-
-    const result = JSON.parse(content);
-    const matches = result.matches || result.array || result || [];
+  for (const bankTx of bankTransactions) {
+    let bestMatch: MatchResult | null = null;
     
-    console.log(`AI suggested ${matches.length} potential matches`);
+    for (const ledgerEntry of ledgerEntries) {
+      if (usedLedgerIds.has(ledgerEntry.id)) continue;
+      
+      let matchingCriteria = 0;
+      const reasons: string[] = [];
+      
+      // Check amount match (within $0.01 tolerance)
+      const amountDiff = calculateAmountDifference(bankTx.amount, ledgerEntry.amount);
+      const amountMatches = amountDiff <= 0.01;
+      if (amountMatches) {
+        matchingCriteria++;
+        reasons.push(`Amount matches exactly ($${bankTx.amount.toFixed(2)})`);
+      }
+      
+      // Check date match (exact match only)
+      const bankDateStr = bankTx.date.toISOString().split('T')[0];
+      const ledgerDateStr = ledgerEntry.date.toISOString().split('T')[0];
+      const dateMatches = bankDateStr === ledgerDateStr;
+      if (dateMatches) {
+        matchingCriteria++;
+        reasons.push(`Dates match exactly (${bankDateStr})`);
+      }
+      
+      // Check description/vendor similarity
+      const textSimilarity = calculateTextSimilarity(bankTx.description, ledgerEntry.vendor);
+      const descriptionMatches = textSimilarity >= 30;
+      if (descriptionMatches) {
+        matchingCriteria++;
+        reasons.push(`Text similarity: ${textSimilarity.toFixed(0)}%`);
+      }
+      
+      // Calculate match score based on number of matching criteria
+      let matchScore = 0;
+      let matchLevel: 'full' | 'partial' | 'ambiguous' = 'ambiguous';
+      
+      if (matchingCriteria === 3) {
+        matchScore = 100;
+        matchLevel = 'full';
+      } else if (matchingCriteria === 2) {
+        matchScore = 66;
+        matchLevel = 'partial';
+      } else if (matchingCriteria === 1) {
+        matchScore = 33;
+        matchLevel = 'ambiguous';
+      }
+      
+      // Only consider matches with at least one criterion met
+      if (matchScore > 0) {
+        const matchReason = reasons.length > 0 
+          ? reasons.join(', ')
+          : `${matchingCriteria}/3 criteria matched`;
+          
+        const currentMatch: MatchResult = {
+          bankTransactionId: bankTx.id,
+          ledgerEntryId: ledgerEntry.id,
+          matchScore,
+          matchReason,
+          matchLevel
+        };
+        
+        // Keep track of the best match for this bank transaction
+        if (!bestMatch || currentMatch.matchScore > bestMatch.matchScore) {
+          bestMatch = currentMatch;
+        }
+      }
+    }
     
-    // Validate and filter matches with strict criteria
-    const validatedMatches = matches
-      .filter((match: any) => {
-        if (!match.bankTransactionId || !match.ledgerEntryId || match.matchScore < 85) {
-          return false;
-        }
-
-        const bankTx = bankTransactions.find(t => t.id === match.bankTransactionId);
-        const ledgerEntry = ledgerEntries.find(e => e.id === match.ledgerEntryId);
-
-        if (!bankTx || !ledgerEntry) {
-          return false;
-        }
-
-        // Strict amount validation (max $0.01 difference)
-        const amountDiff = Math.abs(bankTx.amount - ledgerEntry.amount);
-        if (amountDiff > 0.01) {
-          console.log(`Rejecting match: Amount difference too large ($${amountDiff.toFixed(2)})`);
-          return false;
-        }
-
-        // Strict date validation (max 2 days difference)
-        const daysDiff = Math.abs(
-          (bankTx.date.getTime() - ledgerEntry.date.getTime()) / (1000 * 60 * 60 * 24)
-        );
-        if (daysDiff > 2) {
-          console.log(`Rejecting match: Date difference too large (${daysDiff.toFixed(1)} days)`);
-          return false;
-        }
-
-        return true;
-      })
-      .map((match: any) => ({
-        bankTransactionId: match.bankTransactionId,
-        ledgerEntryId: match.ledgerEntryId,
-        matchScore: Math.min(100, Math.max(0, match.matchScore)),
-        matchReason: match.matchReason || "AI-detected match"
-      }));
-
-    console.log(`After validation: ${validatedMatches.length} matches passed strict criteria`);
-    return validatedMatches;
-  } catch (error) {
-    console.error("Error matching transactions with AI:", error);
-    return [];
+    // Add the best match if found
+    if (bestMatch) {
+      matches.push(bestMatch);
+      usedLedgerIds.add(bestMatch.ledgerEntryId);
+    }
   }
+  
+  console.log(`Found ${matches.length} matches: ${matches.filter(m => m.matchLevel === 'full').length} full, ${matches.filter(m => m.matchLevel === 'partial').length} partial, ${matches.filter(m => m.matchLevel === 'ambiguous').length} ambiguous`);
+  
+  return matches;
 }

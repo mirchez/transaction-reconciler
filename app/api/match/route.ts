@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
             description: ledgerEntry.description,
             amount: bankTransaction.amount,
             date: bankTransaction.date,
-            // matchScore field doesn't exist in schema
+            matchScore: match.matchScore,
           },
         });
 

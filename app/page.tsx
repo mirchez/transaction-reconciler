@@ -149,6 +149,17 @@ export default function HomePage() {
   const bankOnlyTransactions = transactions.filter(
     (t) => t.status === "bank-only"
   );
+  
+  // Match level breakdown
+  const fullMatches = matchedTransactions.filter(
+    (t) => !t.matchScore || t.matchScore === 100
+  );
+  const partialMatches = matchedTransactions.filter(
+    (t) => t.matchScore === 66
+  );
+  const ambiguousMatches = matchedTransactions.filter(
+    (t) => t.matchScore === 33
+  );
 
   // Auto-show reconciliation results if there are matched transactions
   useEffect(() => {
@@ -890,7 +901,7 @@ export default function HomePage() {
                           </div>
 
                           {/* Summary Stats */}
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-8">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-8">
                             <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-lg">
                               <div className="text-2xl font-bold text-foreground">
                                 {allBankEntries.length}
@@ -909,15 +920,23 @@ export default function HomePage() {
                             </div>
                             <div className="text-center p-4 bg-green-500/10 dark:bg-green-500/20 border border-green-500/30 dark:border-green-500/40 rounded-lg">
                               <div className="text-2xl font-bold text-green-600 dark:text-green-500">
-                                {matchedTransactions.length}
+                                {fullMatches.length}
                               </div>
                               <div className="text-xs text-muted-foreground mt-1">
-                                Matched
+                                Full Match
+                              </div>
+                            </div>
+                            <div className="text-center p-4 bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/30 dark:border-blue-500/40 rounded-lg">
+                              <div className="text-2xl font-bold text-blue-600 dark:text-blue-500">
+                                {partialMatches.length}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Partial Match
                               </div>
                             </div>
                             <div className="text-center p-4 bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/30 dark:border-orange-500/40 rounded-lg">
                               <div className="text-2xl font-bold text-orange-600 dark:text-orange-500">
-                                0
+                                {ambiguousMatches.length}
                               </div>
                               <div className="text-xs text-muted-foreground mt-1">
                                 Ambiguous
@@ -1043,21 +1062,24 @@ export default function HomePage() {
                                             <div className="flex justify-center">
                                               <Badge
                                                 variant="outline"
-                                                className={`rounded-lg font-semibold min-w-[65px] justify-center text-sm ${
+                                                className={`rounded-lg font-semibold min-w-[85px] justify-center text-sm ${
                                                   !transaction.matchScore ||
-                                                  transaction.matchScore >= 95
+                                                  transaction.matchScore === 100
                                                     ? "bg-green-500/10 text-green-700 border-green-500/30 dark:bg-green-500/20 dark:text-green-400 dark:border-green-500/40"
-                                                    : transaction.matchScore >=
-                                                      80
+                                                    : transaction.matchScore === 66
                                                     ? "bg-blue-500/10 text-blue-700 border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/40"
-                                                    : "bg-orange-500/10 text-orange-700 border-orange-500/30 dark:bg-orange-500/20 dark:text-orange-400 dark:border-orange-500/40"
+                                                    : transaction.matchScore === 33
+                                                    ? "bg-orange-500/10 text-orange-700 border-orange-500/30 dark:bg-orange-500/20 dark:text-orange-400 dark:border-orange-500/40"
+                                                    : "bg-gray-500/10 text-gray-700 border-gray-500/30 dark:bg-gray-500/20 dark:text-gray-400 dark:border-gray-500/40"
                                                 }`}
                                               >
-                                                {transaction.matchScore
-                                                  ? `${Math.round(
-                                                      transaction.matchScore
-                                                    )}%`
-                                                  : "100%"}
+                                                {!transaction.matchScore || transaction.matchScore === 100
+                                                  ? "Full Match"
+                                                  : transaction.matchScore === 66
+                                                  ? "Partial"
+                                                  : transaction.matchScore === 33
+                                                  ? "Ambiguous"
+                                                  : `${Math.round(transaction.matchScore)}%`}
                                               </Badge>
                                             </div>
                                           </TableCell>

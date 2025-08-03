@@ -16,28 +16,34 @@ async function enhanceDescriptionsWithAI(transactions: {
   date: string;
   description: string;
   amount: number;
+  missingFields?: string[];
 }[]): Promise<{
   date: string;
   description: string;
   amount: number;
+  missingFields?: string[];
 }[]> {
   try {
-    const descriptions = transactions.map(t => t.description);
+    // Only enhance descriptions that are not N/A
+    const descriptionsToEnhance = transactions.map(t => 
+      t.description === "N/A" ? "N/A" : t.description
+    );
     
     const enhancementPrompt = `You are an expert at converting bank transaction codes and abbreviations into clear, descriptive transaction descriptions. 
 
 Transform these bank transaction descriptions to be more detailed and user-friendly (minimum 5 words each):
 
-Input descriptions: ${JSON.stringify(descriptions)}
+Input descriptions: ${JSON.stringify(descriptionsToEnhance)}
 
 Rules for enhancement:
+- If a description is "N/A", keep it as "N/A" without modification
 - Convert abbreviations to full words: "AMZ" → "Amazon", "WMT" → "Walmart", "SBUX" → "Starbucks"
 - Add context when possible: "ATM" → "ATM Cash Withdrawal", "DEP" → "Direct Deposit Payment"
 - Keep merchant names recognizable: "STARBUCKS #1234" → "Starbucks Coffee Purchase Location 1234"
 - Make payment types clear: "ACH" → "ACH Electronic Transfer", "WIRE" → "Wire Transfer Payment"
 - For unclear codes, add "Transaction" or "Payment" to meet minimum word count
 - Maintain the essential information while making it more readable
-- Each description must be at least 5 words long
+- Each description must be at least 5 words long (except for "N/A" values)
 
 Examples:
 - "AMZ PMNT" → "Amazon Payment Transaction"
@@ -65,7 +71,7 @@ Return a JSON object with a "descriptions" array containing enhanced description
     });
 
     const response = JSON.parse(completion.choices[0]?.message?.content || "{}");
-    const enhancedDescriptions = response.descriptions || descriptions;
+    const enhancedDescriptions = response.descriptions || descriptionsToEnhance;
 
     // Apply enhanced descriptions to transactions
     return transactions.map((transaction, index) => ({
@@ -82,9 +88,10 @@ Return a JSON object with a "descriptions" array containing enhanced description
 
 async function extractBankDataWithAI(csvData: CSVRow[]): Promise<
   {
-    date: string;
-    description: string;
-    amount: number;
+    date: string; // Can be ISO date string or "N/A"
+    description: string; // Can be enhanced description or "N/A"
+    amount: number; // 0 if N/A
+    missingFields?: string[];
   }[]
 > {
   if (!process.env.OPENAI_API_KEY || csvData.length === 0) {
@@ -100,7 +107,12 @@ async function extractBankDataWithAI(csvData: CSVRow[]): Promise<
 2. Transaction description
 3. Transaction amount (could be debit/credit or single amount column)
 
-IMPORTANT: When processing descriptions, enhance them to be more detailed and descriptive (minimum 5 words).
+IMPORTANT RULES:
+1. If you cannot identify a specific column for date, description, or amount, use "N/A" as the column name
+2. At least ONE field must be identifiable (cannot have all three as N/A)
+3. When processing descriptions, enhance them to be more detailed and descriptive (minimum 5 words)
+4. For rows where specific values are missing or empty, return "N/A" for that field
+
 Transform short codes or abbreviations into meaningful descriptions:
 - "AMZ PMNT" → "Amazon Payment Transaction"
 - "STARBUCKS #1234" → "Starbucks Coffee Purchase Location 1234"
@@ -114,9 +126,9 @@ Sample data: ${JSON.stringify(sampleRows, null, 2)}
 
 Return a JSON object with this format:
 {
-  "dateColumn": "column_name",
-  "descriptionColumn": "column_name", 
-  "amountColumn": "column_name",
+  "dateColumn": "column_name" or "N/A",
+  "descriptionColumn": "column_name" or "N/A", 
+  "amountColumn": "column_name" or "N/A",
   "isDebitCreditSeparate": true/false,
   "debitColumn": "column_name" (if separate),
   "creditColumn": "column_name" (if separate),
@@ -141,22 +153,57 @@ Return a JSON object with this format:
 
     const transactions = csvData.map((row) => {
       let amount = 0;
-      if (mapping.isDebitCreditSeparate) {
+      let dateStr = "";
+      let description = "";
+      const missingFields: string[] = [];
+
+      // Handle amount
+      if (mapping.amountColumn === "N/A") {
+        amount = 0;
+        missingFields.push('amount');
+      } else if (mapping.isDebitCreditSeparate) {
         const debit = parseFloat(row[mapping.debitColumn] || "0");
         const credit = parseFloat(row[mapping.creditColumn] || "0");
         amount = debit || -credit; // Debits positive, credits negative
       } else {
         amount = parseFloat(row[mapping.amountColumn] || "0");
+        if (amount === 0 || isNaN(amount)) {
+          missingFields.push('amount');
+        }
       }
 
-      // Parse date using the helper function
-      const dateStr = row[mapping.dateColumn] || "";
-      const parsedDate = dateStr ? parseDate(dateStr) : new Date().toISOString();
+      // Handle date
+      if (mapping.dateColumn === "N/A") {
+        dateStr = "N/A";
+        missingFields.push('date');
+      } else {
+        dateStr = row[mapping.dateColumn] || "";
+        if (!dateStr || dateStr.trim() === '') {
+          dateStr = "N/A";
+          missingFields.push('date');
+        }
+      }
+
+      // Handle description
+      if (mapping.descriptionColumn === "N/A") {
+        description = "N/A";
+        missingFields.push('description');
+      } else {
+        description = row[mapping.descriptionColumn] || "";
+        if (!description || description.trim() === '') {
+          description = "N/A";
+          missingFields.push('description');
+        }
+      }
+
+      // Parse date if not N/A
+      const parsedDate = (dateStr !== "N/A" && dateStr) ? parseDate(dateStr) : "N/A";
 
       return {
         date: parsedDate,
-        description: row[mapping.descriptionColumn] || "Unknown transaction",
-        amount: Math.abs(amount), // Store as positive
+        description: description,
+        amount: amount,
+        missingFields: missingFields.length > 0 ? missingFields : undefined
       };
     });
 
@@ -176,6 +223,7 @@ function extractBankDataFallback(csvData: CSVRow[]): {
   date: string;
   description: string;
   amount: number;
+  missingFields: string[];
 }[] {
   return csvData.map((row) => {
     // Common column name patterns
@@ -203,6 +251,7 @@ function extractBankDataFallback(csvData: CSVRow[]): {
     let date = "";
     let description = "";
     let amount = 0;
+    const missingFields: string[] = [];
 
     // Find columns case-insensitively
     for (const [key, value] of Object.entries(row)) {
@@ -220,16 +269,28 @@ function extractBankDataFallback(csvData: CSVRow[]): {
       }
     }
 
-    // Parse date with multiple format support
-    let parsedDate = new Date().toISOString();
-    if (date) {
+    // Check for missing fields
+    if (!date || date.trim() === '') {
+      missingFields.push('date');
+    }
+    if (!description || description.trim() === '') {
+      missingFields.push('description');
+    }
+    if (amount === 0) {
+      missingFields.push('amount');
+    }
+
+    // Parse date with multiple format support or use N/A
+    let parsedDate = "N/A";
+    if (date && date.trim() !== '') {
       parsedDate = parseDate(date);
     }
 
     return {
       date: parsedDate,
-      description: description || "Unknown transaction",
+      description: description || "N/A",
       amount: amount,
+      missingFields: missingFields
     };
   });
 }
@@ -340,13 +401,55 @@ export async function POST(request: NextRequest) {
 
     // Extract bank data using AI
     const bankData = await extractBankDataWithAI(parseResult.data);
+    
+    // Validate data quality
+    let invalidRows = 0;
+    const validBankData = bankData.filter(transaction => {
+      const missingCount = transaction.missingFields?.length || 0;
+      
+      // Reject if more than 2 fields are missing
+      if (missingCount > 2) {
+        console.warn(`Too many missing fields (${missingCount}): ${transaction.missingFields?.join(', ')}`);
+        invalidRows++;
+        return false;
+      }
+      
+      return true;
+    });
+    
+    // If too many invalid rows, reject the entire CSV
+    if (invalidRows > bankData.length * 0.5) {
+      return NextResponse.json(
+        {
+          error: "CSV needs to provide more info",
+          message: "Too many transactions are missing required fields or have insufficient description details",
+          stats: {
+            total: bankData.length,
+            invalid: invalidRows,
+            percentage: Math.round((invalidRows / bankData.length) * 100)
+          }
+        },
+        { status: 400 }
+      );
+    }
 
     // Check for duplicates and save bank transactions
     const createdTransactions: any[] = [];
     const duplicates: any[] = [];
     const skippedSimilar: any[] = [];
 
-    for (const transaction of bankData) {
+    for (const transaction of validBankData) {
+      // Skip if critical data is N/A
+      if (transaction.date === "N/A") {
+        console.error(`Missing date for transaction: ${transaction.description}`);
+        continue;
+      }
+      
+      if (transaction.amount === 0 && transaction.missingFields?.includes('amount')) {
+        console.error(`Missing amount for transaction: ${transaction.description}`);
+        continue;
+      }
+
       const transactionDate = new Date(transaction.date);
       const transactionAmount = new Decimal(transaction.amount);
 
@@ -455,6 +558,8 @@ export async function POST(request: NextRequest) {
           : `Successfully processed ${createdTransactions.length} transactions`,
       stats: {
         total: bankData.length,
+        valid: validBankData.length,
+        invalid: invalidRows,
         created: createdTransactions.length,
         duplicates: duplicates.length,
         similar: skippedSimilar.length,
