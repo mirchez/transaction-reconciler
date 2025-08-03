@@ -53,7 +53,7 @@ export function GmailMonitorModal({
           {!gmailStatus?.connected ? (
             <div className="bg-muted/50 rounded-lg p-4 sm:p-8 border border-border">
               <div className="flex flex-col items-center text-center space-y-4 sm:space-y-6">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-muted flex items-center justify-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-muted flex items-center justify-center">
                   <Mail className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground" />
                 </div>
                 <div className="space-y-2 sm:space-y-3">
@@ -68,7 +68,7 @@ export function GmailMonitorModal({
                 <Button
                   onClick={handleGoogleConnect}
                   size="lg"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 text-sm sm:text-base w-full sm:w-auto"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 text-sm sm:text-base w-full sm:w-auto rounded-lg"
                 >
                   Connect Gmail Account
                 </Button>

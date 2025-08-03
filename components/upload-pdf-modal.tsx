@@ -222,25 +222,25 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
     switch (status) {
       case "pending":
         return (
-          <Badge variant="outline" className="text-muted-foreground">
+          <Badge variant="outline" className="text-muted-foreground rounded-lg">
             Ready
           </Badge>
         );
       case "parsing":
         return (
-          <Badge variant="secondary" className="bg-muted text-muted-foreground">
+          <Badge variant="secondary" className="bg-muted text-muted-foreground rounded-lg">
             Processing
           </Badge>
         );
       case "success":
         return (
-          <Badge className="bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800">
+          <Badge className="bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 rounded-lg">
             Complete
           </Badge>
         );
       case "error":
         return (
-          <Badge variant="destructive">
+          <Badge variant="destructive" className="rounded-lg">
             Failed
           </Badge>
         );
@@ -251,7 +251,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose} modal={true}>
-      <DialogContent className="max-w-[95vw] sm:max-w-2xl">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl rounded-lg">
         <DialogHeader className="pb-4 sm:pb-6">
           <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">Upload PDF Receipts</DialogTitle>
           <DialogDescription className="text-sm sm:text-base text-muted-foreground mt-2">
@@ -270,7 +270,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto rounded-lg"
                 onClick={() => {
                   // Create a proper PDF receipt with clear data structure
                   const doc = new jsPDF();
@@ -383,7 +383,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
               <Button
                 variant="outline"
                 asChild
-                className="text-xs sm:text-sm px-3 sm:px-4"
+                className="text-xs sm:text-sm px-3 sm:px-4 rounded-lg"
               >
                 <span>
                   <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
@@ -468,7 +468,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                   size="sm"
                   onClick={clearFiles}
                   disabled={isProcessing}
-                  className="text-xs sm:text-sm"
+                  className="text-xs sm:text-sm rounded-lg"
                 >
                   Clear all
                 </Button>
@@ -479,7 +479,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                 variant="outline"
                 onClick={handleClose}
                 disabled={isProcessing}
-                className="text-xs sm:text-sm order-2 sm:order-1"
+                className="text-xs sm:text-sm order-2 sm:order-1 rounded-lg"
               >
                 {files.some(f => f.status === "success") ? "Done" : "Cancel"}
               </Button>
@@ -490,7 +490,7 @@ export function UploadPdfModal({ open, onOpenChange }: UploadPdfModalProps) {
                   files.length === 0 ||
                   !files.some((f) => f.status === "pending")
                 }
-                className="text-xs sm:text-sm order-1 sm:order-2"
+                className="text-xs sm:text-sm order-1 sm:order-2 rounded-lg"
               >
                 {isProcessing ? (
                   <>

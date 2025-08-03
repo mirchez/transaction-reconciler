@@ -5,15 +5,13 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -441,7 +439,7 @@ export default function HomePage() {
                           <div className="w-full sm:w-auto">
                             <Button
                               size="default"
-                              className="rounded-none w-full sm:w-auto"
+                              className="rounded-lg w-full sm:w-auto"
                               onClick={() => setCsvModalOpen(true)}
                               disabled={!gmailStatus?.connected}
                             >
@@ -478,7 +476,7 @@ export default function HomePage() {
                           <Button
                             size="default"
                             variant="outline"
-                            className="rounded-none w-full sm:w-auto"
+                            className="rounded-lg w-full sm:w-auto"
                             onClick={() => setGmailModalOpen(true)}
                           >
                             {gmailStatus?.connected ? (
@@ -524,7 +522,7 @@ export default function HomePage() {
                             <Button
                               size="default"
                               variant="outline"
-                              className="rounded-none w-full sm:w-auto"
+                              className="rounded-lg w-full sm:w-auto"
                               onClick={handleSendTestEmail}
                               disabled={sendingTestEmail}
                             >
@@ -604,7 +602,7 @@ export default function HomePage() {
                         {!gmailStatus?.connected && (
                           <Button
                             onClick={() => setGmailModalOpen(true)}
-                            className="rounded-none mt-4"
+                            className="rounded-lg mt-4"
                             size="default"
                           >
                             <Mail className="w-4 h-4 mr-2" />
@@ -633,7 +631,7 @@ export default function HomePage() {
                               </div>
                               <Button
                                 size="sm"
-                                className="rounded-none bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 text-red-600 dark:text-red-500 hover:bg-red-500/20 dark:hover:bg-red-500/30"
+                                className="rounded-lg bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 text-red-600 dark:text-red-500 hover:bg-red-500/20 dark:hover:bg-red-500/30"
                                 onClick={() => setLedgerResetDialogOpen(true)}
                                 disabled={allLedgerEntries.length === 0}
                               >
@@ -739,7 +737,7 @@ export default function HomePage() {
                               </div>
                               <Button
                                 size="sm"
-                                className="rounded-none bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 text-red-600 dark:text-red-500 hover:bg-red-500/20 dark:hover:bg-red-500/30"
+                                className="rounded-lg bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 text-red-600 dark:text-red-500 hover:bg-red-500/20 dark:hover:bg-red-500/30"
                                 onClick={() => setBankResetDialogOpen(true)}
                                 disabled={allBankEntries.length === 0}
                               >
@@ -1262,36 +1260,42 @@ export default function HomePage() {
             onOpenChange={setGmailModalOpen}
           />
           {/* Ledger Reset Dialog */}
-          <AlertDialog
+          <Dialog
             open={ledgerResetDialogOpen}
             onOpenChange={setLedgerResetDialogOpen}
           >
-            <AlertDialogContent className="rounded-none">
-              <AlertDialogHeader>
-                <AlertDialogTitle>Reset Ledger Data?</AlertDialogTitle>
-                <AlertDialogDescription>
+            <DialogContent className="max-w-[95vw] sm:max-w-[500px] bg-white dark:bg-popover border-border rounded-lg">
+              <DialogHeader className="pb-4 sm:pb-6">
+                <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">
+                  Reset Ledger Data?
+                </DialogTitle>
+                <DialogDescription className="text-sm sm:text-base text-muted-foreground mt-2">
                   This action cannot be undone. This will permanently delete:
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <div className="my-4">
-                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                  <li>All ledger transactions from emails</li>
-                  <li>Processed email history</li>
-                  <li>Any matched transaction records</li>
-                </ul>
-                <p className="text-xs text-muted-foreground mt-3">
-                  Note: Bank/CSV data will be preserved.
-                </p>
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="bg-muted/50 p-3 sm:p-4 rounded-lg border border-border">
+                  <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                    <li>All ledger transactions from emails</li>
+                    <li>Processed email history</li>
+                    <li>Any matched transaction records</li>
+                  </ul>
+                  <p className="text-xs text-muted-foreground mt-3 p-2 bg-muted/30 rounded-lg border border-border/50">
+                    <strong>Note:</strong> Bank/CSV data will be preserved.
+                  </p>
+                </div>
               </div>
-              <AlertDialogFooter>
-                <AlertDialogCancel
-                  className="rounded-none"
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  className="rounded-lg border-gray-300 dark:border-gray-700 text-sm order-2 sm:order-1 w-full sm:w-auto"
+                  onClick={() => setLedgerResetDialogOpen(false)}
                   disabled={resettingLedger}
                 >
                   Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  className="rounded-none bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 text-red-600 dark:text-red-500 hover:bg-red-500/20 dark:hover:bg-red-500/30"
+                </Button>
+                <Button
+                  className="rounded-lg bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 text-red-600 dark:text-red-500 hover:bg-red-500/20 dark:hover:bg-red-500/30 text-sm order-1 sm:order-2 w-full sm:w-auto"
                   onClick={handleLedgerReset}
                   disabled={resettingLedger}
                 >
@@ -1306,41 +1310,47 @@ export default function HomePage() {
                       Delete Ledger Data
                     </>
                   )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Bank Reset Dialog */}
-          <AlertDialog
+          <Dialog
             open={bankResetDialogOpen}
             onOpenChange={setBankResetDialogOpen}
           >
-            <AlertDialogContent className="rounded-none">
-              <AlertDialogHeader>
-                <AlertDialogTitle>Reset Bank/CSV Data?</AlertDialogTitle>
-                <AlertDialogDescription>
+            <DialogContent className="max-w-[95vw] sm:max-w-[500px] bg-white dark:bg-popover border-border rounded-lg">
+              <DialogHeader className="pb-4 sm:pb-6">
+                <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">
+                  Reset Bank/CSV Data?
+                </DialogTitle>
+                <DialogDescription className="text-sm sm:text-base text-muted-foreground mt-2">
                   This action cannot be undone. This will permanently delete:
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <div className="my-4">
-                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                  <li>All bank transactions from CSV files</li>
-                  <li>Any matched transaction records</li>
-                </ul>
-                <p className="text-xs text-muted-foreground mt-3">
-                  Note: Ledger data and email history will be preserved.
-                </p>
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="bg-muted/50 p-3 sm:p-4 rounded-lg border border-border">
+                  <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                    <li>All bank transactions from CSV files</li>
+                    <li>Any matched transaction records</li>
+                  </ul>
+                  <p className="text-xs text-muted-foreground mt-3 p-2 bg-muted/30 rounded-lg border border-border/50">
+                    <strong>Note:</strong> Ledger data and email history will be preserved.
+                  </p>
+                </div>
               </div>
-              <AlertDialogFooter>
-                <AlertDialogCancel
-                  className="rounded-none"
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  className="rounded-lg border-gray-300 dark:border-gray-700 text-sm order-2 sm:order-1 w-full sm:w-auto"
+                  onClick={() => setBankResetDialogOpen(false)}
                   disabled={resettingBank}
                 >
                   Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  className="rounded-none bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 text-red-600 dark:text-red-500 hover:bg-red-500/20 dark:hover:bg-red-500/30"
+                </Button>
+                <Button
+                  className="rounded-lg bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 text-red-600 dark:text-red-500 hover:bg-red-500/20 dark:hover:bg-red-500/30 text-sm order-1 sm:order-2 w-full sm:w-auto"
                   onClick={handleBankReset}
                   disabled={resettingBank}
                 >
@@ -1355,10 +1365,10 @@ export default function HomePage() {
                       Delete CSV Data
                     </>
                   )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </div>
