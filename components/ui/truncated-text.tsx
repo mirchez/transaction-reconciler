@@ -67,7 +67,7 @@ export function TruncatedText({
       <TooltipTrigger asChild>
         {content}
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-xs sm:max-w-sm break-words rounded-none">
+      <TooltipContent side="top" className="max-w-xs sm:max-w-sm break-words rounded-lg">
         <p className="text-sm">{text}</p>
       </TooltipContent>
     </Tooltip>

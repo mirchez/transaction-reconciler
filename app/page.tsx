@@ -367,7 +367,7 @@ export default function HomePage() {
             {/* Upload Data Card */}
             <section className="p-6">
               <div className="max-w-7xl mx-auto">
-                <Card className="rounded-none bg-card border shadow-sm">
+                <Card className="rounded-lg bg-card border shadow-sm">
                   <CardContent className="p-6">
                     <div className="space-y-1 mb-6">
                       <h2 className="text-xl font-semibold text-foreground">
@@ -386,7 +386,7 @@ export default function HomePage() {
                           <div className="w-full sm:w-auto">
                             <Button
                               size="default"
-                              className="rounded-none w-full sm:w-auto"
+                              className="rounded-lg w-full sm:w-auto"
                               onClick={() => setCsvModalOpen(true)}
                               disabled={!gmailStatus?.connected}
                             >
@@ -421,7 +421,7 @@ export default function HomePage() {
                           <Button
                             size="default"
                             variant="outline"
-                            className="rounded-none w-full sm:w-auto"
+                            className="rounded-lg w-full sm:w-auto"
                             onClick={() => setGmailModalOpen(true)}
                           >
                             {gmailStatus?.connected ? (
@@ -467,7 +467,7 @@ export default function HomePage() {
                             <Button
                               size="default"
                               variant="outline"
-                              className="rounded-none w-full sm:w-auto"
+                              className="rounded-lg w-full sm:w-auto"
                               onClick={handleSendTestEmail}
                               disabled={sendingTestEmail}
                             >
@@ -522,10 +522,10 @@ export default function HomePage() {
                     </CardContent>
                   </Card>
                 ) : transactions.length === 0 ? (
-                  <Card className="rounded-none bg-card border shadow-sm">
+                  <Card className="rounded-lg bg-card border shadow-sm">
                     <CardContent className="p-6 sm:p-12 text-center">
                       <div className="max-w-md mx-auto space-y-4">
-                        <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-muted rounded-none flex items-center justify-center">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-muted rounded-lg flex items-center justify-center">
                           {gmailStatus?.connected ? (
                             <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
                           ) : (
@@ -545,7 +545,7 @@ export default function HomePage() {
                         {!gmailStatus?.connected && (
                           <Button
                             onClick={() => setGmailModalOpen(true)}
-                            className="rounded-none mt-4"
+                            className="rounded-lg mt-4"
                             size="default"
                           >
                             <Mail className="w-4 h-4 mr-2" />
@@ -574,7 +574,7 @@ export default function HomePage() {
                               </div>
                               <Button
                                 size="sm"
-                                className="rounded-none bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 text-red-600 dark:text-red-500 hover:bg-red-500/20 dark:hover:bg-red-500/30"
+                                className="rounded-lg bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 text-red-600 dark:text-red-500 hover:bg-red-500/20 dark:hover:bg-red-500/30"
                                 onClick={() => setResetDialogOpen(true)}
                                 disabled={allLedgerEntries.length === 0}
                               >
@@ -583,7 +583,7 @@ export default function HomePage() {
                               </Button>
                             </div>
                           </div>
-                          <div className="border border-border rounded-none overflow-hidden bg-card">
+                          <div className="border border-border rounded-lg overflow-hidden bg-card">
                             {/* Data source info */}
                             <div className="px-2 sm:px-4 py-2 sm:py-3 bg-muted/50 border-b border-border">
                               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
@@ -605,7 +605,7 @@ export default function HomePage() {
                                 </span>
                               </div>
                             </div>
-                            <div className="w-full max-w-full overflow-x-auto max-h-[300px] overflow-y-auto border border-border rounded-none">
+                            <div className="w-full max-w-full overflow-x-auto max-h-[300px] overflow-y-auto border border-border rounded-lg">
                               <Table className="w-full table-auto">
                                 <TableHeader>
                                   <TableRow className="border-b border-border">
@@ -668,7 +668,7 @@ export default function HomePage() {
                               All transactions from your bank statement
                             </p>
                           </div>
-                          <div className="border border-border rounded-none overflow-hidden bg-card">
+                          <div className="border border-border rounded-lg overflow-hidden bg-card">
                             {/* Data source info */}
                             <div className="px-2 sm:px-4 py-2 sm:py-3 bg-muted/50 border-b border-border">
                               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
@@ -697,7 +697,7 @@ export default function HomePage() {
                                 </span>
                               </div>
                             </div>
-                            <div className="w-full max-w-full overflow-x-auto max-h-[300px] overflow-y-auto border border-border rounded-none">
+                            <div className="w-full max-w-full overflow-x-auto max-h-[300px] overflow-y-auto border border-border rounded-lg">
                               <Table className="w-full table-auto">
                                 <TableHeader>
                                   <TableRow className="border-b border-border">
@@ -752,7 +752,7 @@ export default function HomePage() {
 
                     {/* Run Reconciliation Card */}
                     {transactions.length > 0 && (
-                      <Card className="rounded-none bg-card border shadow-sm mt-8">
+                      <Card className="rounded-lg bg-card border shadow-sm mt-8">
                         <CardContent className="p-4 sm:p-6">
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div>
@@ -792,7 +792,7 @@ export default function HomePage() {
 
                     {/* Reconciliation Summary - Show when there are matched transactions */}
                     {showReconciled && (
-                      <Card className="rounded-none bg-card border shadow-sm mt-8">
+                      <Card className="rounded-lg bg-card border shadow-sm mt-8">
                         <CardContent className="p-4 sm:p-6">
                           <div className="mb-4 sm:mb-6">
                             <h2 className="text-lg sm:text-xl font-semibold text-foreground">
@@ -805,7 +805,7 @@ export default function HomePage() {
 
                           {/* Summary Stats */}
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-8">
-                            <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-none">
+                            <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-lg">
                               <div className="text-2xl font-bold text-foreground">
                                 {allBankEntries.length}
                               </div>
@@ -813,7 +813,7 @@ export default function HomePage() {
                                 Bank Transactions
                               </div>
                             </div>
-                            <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-none">
+                            <div className="text-center p-4 bg-muted/50 dark:bg-muted border border-border rounded-lg">
                               <div className="text-2xl font-bold text-foreground">
                                 {allLedgerEntries.length}
                               </div>
@@ -821,7 +821,7 @@ export default function HomePage() {
                                 Ledger Transactions
                               </div>
                             </div>
-                            <div className="text-center p-4 bg-green-500/10 dark:bg-green-500/20 border border-green-500/30 dark:border-green-500/40 rounded-none">
+                            <div className="text-center p-4 bg-green-500/10 dark:bg-green-500/20 border border-green-500/30 dark:border-green-500/40 rounded-lg">
                               <div className="text-2xl font-bold text-green-600 dark:text-green-500">
                                 {matchedTransactions.length}
                               </div>
@@ -829,7 +829,7 @@ export default function HomePage() {
                                 Matched
                               </div>
                             </div>
-                            <div className="text-center p-4 bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/30 dark:border-orange-500/40 rounded-none">
+                            <div className="text-center p-4 bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/30 dark:border-orange-500/40 rounded-lg">
                               <div className="text-2xl font-bold text-orange-600 dark:text-orange-500">
                                 0
                               </div>
@@ -837,7 +837,7 @@ export default function HomePage() {
                                 Ambiguous
                               </div>
                             </div>
-                            <div className="text-center p-4 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 rounded-none">
+                            <div className="text-center p-4 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 rounded-lg">
                               <div className="text-2xl font-bold text-red-600 dark:text-red-500">
                                 {bankOnlyTransactions.length}
                               </div>
@@ -845,7 +845,7 @@ export default function HomePage() {
                                 Unmatched Bank
                               </div>
                             </div>
-                            <div className="text-center p-4 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 rounded-none">
+                            <div className="text-center p-4 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 rounded-lg">
                               <div className="text-2xl font-bold text-red-600 dark:text-red-500">
                                 {ledgerOnlyTransactions.length}
                               </div>
@@ -884,7 +884,7 @@ export default function HomePage() {
                                 </span>
                               </Button>
                             </div>
-                            <div className="border border-border rounded-none overflow-hidden bg-card">
+                            <div className="border border-border rounded-lg overflow-hidden bg-card">
                               <div className="w-full max-w-full overflow-x-auto overflow-y-hidden">
                                 <Table className="w-full table-auto">
                                   <TableHeader>
@@ -955,7 +955,7 @@ export default function HomePage() {
                                             <div className="flex items-center gap-2">
                                               <Badge
                                                 variant="outline"
-                                                className="rounded-none"
+                                                className="rounded-lg"
                                               >
                                                 {transaction.matchScore
                                                   ? `${Math.round(
@@ -968,7 +968,7 @@ export default function HomePage() {
                                                   <TooltipTrigger>
                                                     <Badge
                                                       variant={transaction.matchType === "ai" ? "secondary" : "default"}
-                                                      className="rounded-none text-xs"
+                                                      className="rounded-lg text-xs"
                                                     >
                                                       {transaction.matchType === "ai" ? "AI" : "Logic"}
                                                     </Badge>
@@ -1029,7 +1029,7 @@ export default function HomePage() {
                                 </span>
                               </Button>
                             </div>
-                            <div className="border border-border rounded-none overflow-hidden bg-card">
+                            <div className="border border-border rounded-lg overflow-hidden bg-card">
                               <div className="w-full max-w-full overflow-x-auto overflow-y-hidden">
                                 <Table className="w-full table-auto">
                                   <TableHeader>
@@ -1085,7 +1085,7 @@ export default function HomePage() {
                                           <TableCell className="px-4 py-3">
                                             <Badge
                                               variant="outline"
-                                              className="rounded-none"
+                                              className="rounded-lg"
                                             >
                                               {transaction.source}
                                             </Badge>
@@ -1096,12 +1096,12 @@ export default function HomePage() {
                                           <TableCell className="px-4 py-3">
                                             {transaction.status ===
                                             "ledger-only" ? (
-                                              <Badge className="rounded-none bg-orange-500/10 text-orange-700 border-orange-200 dark:bg-orange-500/20 dark:text-orange-300 dark:border-orange-500/30">
+                                              <Badge className="rounded-lg bg-orange-500/10 text-orange-700 border-orange-200 dark:bg-orange-500/20 dark:text-orange-300 dark:border-orange-500/30">
                                                 <FileText className="w-3 h-3 mr-1" />
                                                 Ledger Only
                                               </Badge>
                                             ) : (
-                                              <Badge className="rounded-none bg-accent/20 text-accent-foreground border-accent/30 dark:bg-accent/20 dark:text-accent-foreground dark:border-accent/30">
+                                              <Badge className="rounded-lg bg-accent/20 text-accent-foreground border-accent/30 dark:bg-accent/20 dark:text-accent-foreground dark:border-accent/30">
                                                 <TrendingUp className="w-3 h-3 mr-1" />
                                                 Bank Only
                                               </Badge>
@@ -1163,7 +1163,7 @@ export default function HomePage() {
             onOpenChange={setGmailModalOpen}
           />
           <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
-            <AlertDialogContent className="rounded-none">
+            <AlertDialogContent className="rounded-lg">
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                 <AlertDialogDescription>
@@ -1179,11 +1179,11 @@ export default function HomePage() {
                 </ul>
               </div>
               <AlertDialogFooter>
-                <AlertDialogCancel className="rounded-none" disabled={resetting}>
+                <AlertDialogCancel className="rounded-lg" disabled={resetting}>
                   Cancel
                 </AlertDialogCancel>
                 <AlertDialogAction
-                  className="rounded-none bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 text-red-600 dark:text-red-500 hover:bg-red-500/20 dark:hover:bg-red-500/30"
+                  className="rounded-lg bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 text-red-600 dark:text-red-500 hover:bg-red-500/20 dark:hover:bg-red-500/30"
                   onClick={handleReset}
                   disabled={resetting}
                 >

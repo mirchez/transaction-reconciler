@@ -20,7 +20,7 @@
             <li>✅ Modified <code>upload-csv-modal.tsx</code> to preserve and display all columns</li>
             <li>✅ Updated CSV parsing to maintain raw data structure</li>
             <li>✅ Enhanced Process Statement button to send raw unprocessed data</li>
-            <li>✅ Applied sharp edges (rounded-none) throughout components</li>
+            <li>✅ Applied rounded edges (rounded-lg) throughout components</li>
         </ul>
     </div>
 
@@ -98,7 +98,7 @@ const [csvHeaders, setCsvHeaders] = useState&lt;string[]&gt;([]);
     <ul>
         <li><strong>Type Safety:</strong> Added <code>RawCSVRow</code> type using <code>z.record(z.string(), z.string())</code></li>
         <li><strong>Data Preservation:</strong> Raw data stored separately from processed data</li>
-        <li><strong>UI Components:</strong> Sharp edges applied throughout (rounded-none)</li>
+        <li><strong>UI Components:</strong> Rounded edges applied throughout (rounded-lg)</li>
         <li><strong>Responsive Design:</strong> Horizontal scroll, truncated content, mobile-first approach</li>
         <li><strong>Error Handling:</strong> Maintains existing validation and error reporting</li>
     </ul>

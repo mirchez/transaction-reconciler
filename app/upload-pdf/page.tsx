@@ -120,7 +120,7 @@ export default function PDFUploadPage() {
           {/* Upload Zone */}
           <Card className="bg-card border-muted mb-8">
             <CardContent className="p-8 sm:p-12">
-              <div className="border-2 border-dashed border-muted rounded-none p-8 sm:p-16 text-center hover:border-primary/50 transition-colors bg-background/50">
+              <div className="border-2 border-dashed border-muted rounded-lg p-8 sm:p-16 text-center hover:border-primary/50 transition-colors bg-background/50">
                 <div className="mb-6">
                   <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                   <p className="text-lg font-medium text-foreground mb-2">
@@ -162,7 +162,7 @@ export default function PDFUploadPage() {
                   {files.map((file) => (
                     <div
                       key={file.id}
-                      className="flex items-center justify-between p-4 bg-muted/50 rounded-none"
+                      className="flex items-center justify-between p-4 bg-muted/50 rounded-lg"
                     >
                       <div className="flex items-center gap-3">
                         {getStatusIcon(file.status)}

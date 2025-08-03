@@ -89,27 +89,28 @@ The entire UI should feel:
 
 ## Visual Style Guidelines
 
-### ⚡ SHARP EDGES ARE MANDATORY
+### ⚡ ROUNDED EDGES ARE STANDARD
 
-- **ALL cards must have sharp edges** - No rounded corners on cards whatsoever
-- **ALL buttons must have sharp edges** - Use `rounded-none` on every button
-- **ALL inputs must have sharp edges** - Text fields, selects, textareas all sharp
-- **ALL modals/dialogs must have sharp edges** - No rounded corners on popups
-- **ALL containers must have sharp edges** - Sections, divs, wrappers all sharp
+- **ALL cards must have rounded edges** - Use `rounded-lg` for consistent styling
+- **ALL buttons must have rounded edges** - Use `rounded-lg` on every button
+- **ALL inputs must have rounded edges** - Text fields, selects, textareas all rounded
+- **ALL modals/dialogs must have rounded edges** - Use `rounded-lg` on popups
+- **ALL containers must have rounded edges** - Sections, divs, wrappers all rounded
 
-### 🎯 Exceptions (use rounded ONLY in these cases):
+### 🎯 Special cases for different rounding:
 
-1. **Avatar images** - Can use `rounded-full` for profile pictures
-2. **Status badges/pills** - Small inline badges can use `rounded-sm` (0.125rem) 
+1. **Avatar images** - Use `rounded-full` for profile pictures
+2. **Status badges/pills** - Small inline badges can use `rounded-sm` (0.125rem)
 3. **Progress indicators** - Progress bars can have `rounded-sm` ends
-4. **Tooltips** - Small floating tooltips can have `rounded-sm`
+4. **Tooltips** - Small floating tooltips can use `rounded-sm`
 5. **Radio buttons/checkboxes** - Keep their natural rounded shape
+6. **Cards, buttons, inputs, modals** - Use `rounded-lg` as the standard
 
-### ❌ NEVER use:
-- `rounded-lg`, `rounded-md`, `rounded-xl`, `rounded-2xl` etc.
-- Any border radius on cards, panels, or major containers
-- Rounded corners on buttons (always `rounded-none`)
-- Default shadcn/ui rounded corners - always override with `rounded-none`
+### ❌ AVOID using:
+- `rounded-none` for cards, buttons, inputs, or modals
+- Excessive rounding like `rounded-xl`, `rounded-2xl` etc.
+- Inconsistent border radius - stick to `rounded-lg` as the standard
+- Sharp corners on major UI components - always use `rounded-lg`
 
 ---
 
@@ -250,10 +251,10 @@ The scope is limited, but we're aiming for **production-level quality** and arch
 - Always ensure light/dark theme compatibility
 - **Cards must always use `bg-card` (never transparent or bg-card/50)**
 - Card backgrounds should be clearly distinct from page backgrounds
-- **MANDATORY Sharp Edges**: ALL cards, buttons, inputs, modals MUST use `rounded-none`
-- **No Border Radius on Cards**: Cards should NEVER have rounded corners
-- **Override ALL defaults**: Replace every `rounded-*` class with `rounded-none`
-- **Exceptions are rare**: Only avatars, small badges, and specific micro-components can have minimal rounding
+- **MANDATORY Rounded Edges**: ALL cards, buttons, inputs, modals MUST use `rounded-lg`
+- **Consistent Border Radius**: Cards should use `rounded-lg` for modern styling
+- **Use Standard Rounding**: Apply `rounded-lg` consistently across components
+- **Limited Exceptions**: Only avatars (`rounded-full`), small badges (`rounded-sm`), and tooltips need different rounding
 
 ---
 
@@ -303,70 +304,71 @@ The scope is limited, but we're aiming for **production-level quality** and arch
 
 Let me know if you'd like to continue working under this structure or refine any pattern further.
 
-## 🔴 CRITICAL: Sharp Edge Implementation
+## 🔴 CRITICAL: Rounded Edge Implementation
 
-### Examples of CORRECT sharp implementation:
+### Examples of CORRECT rounded implementation:
 
 ```jsx
-// ✅ CORRECT - Cards with sharp edges
-<Card className="rounded-none bg-card border-muted">
-  <CardHeader className="rounded-none">
+// ✅ CORRECT - Cards with rounded edges
+<Card className="rounded-lg bg-card border-muted">
+  <CardHeader className="rounded-lg">
     <CardTitle>Transaction Details</CardTitle>
   </CardHeader>
 </Card>
 
-// ✅ CORRECT - Buttons with sharp edges
-<Button className="rounded-none" variant="default">
+// ✅ CORRECT - Buttons with rounded edges
+<Button className="rounded-lg" variant="default">
   Upload Files
 </Button>
 
-// ✅ CORRECT - Inputs with sharp edges
-<Input className="rounded-none" type="text" />
+// ✅ CORRECT - Inputs with rounded edges
+<Input className="rounded-lg" type="text" />
 
-// ✅ CORRECT - Dialogs with sharp edges
-<DialogContent className="rounded-none">
+// ✅ CORRECT - Dialogs with rounded edges
+<DialogContent className="rounded-lg">
   <DialogHeader>Upload Receipt</DialogHeader>
 </DialogContent>
 ```
 
-### Examples of INCORRECT rounded implementation:
+### Examples of INCORRECT implementation:
 
 ```jsx
-// ❌ WRONG - Never use rounded on cards
-<Card className="rounded-lg"> 
+// ❌ WRONG - Never use sharp corners on cards
+<Card className="rounded-none"> 
 
-// ❌ WRONG - Never use rounded on buttons
-<Button className="rounded-md">
+// ❌ WRONG - Never use sharp corners on buttons
+<Button className="rounded-none">
 
-// ❌ WRONG - Never use default shadcn rounded corners
-<Card> // This will have default rounded corners - ALWAYS override
+// ❌ WRONG - Inconsistent rounding - stick to rounded-lg
+<Card className="rounded-xl"> // Too much rounding
+<Button className="rounded-sm"> // Too little rounding for buttons
 ```
 
 ## Border Radius Configuration
 
-To implement sharp edges throughout the UI:
+To implement consistent rounded edges throughout the UI:
 
 1. **Update CSS Variable** in `app/globals.css`:
    ```css
-   --radius: 0rem; /* Sharp edges by default */
+   --radius: 0.5rem; /* Standard rounded edges (rounded-lg) */
    ```
 
 2. **Update Tailwind Config** in `tailwind.config.ts`:
    ```javascript
    borderRadius: {
-     lg: "0",         /* Sharp edges */
-     md: "0",         /* Sharp edges */
-     sm: "0.125rem",  /* Minimal rounding when needed */
+     lg: "0.5rem",    /* Standard rounding for components */
+     md: "0.375rem",  /* Medium rounding when needed */
+     sm: "0.125rem",  /* Minimal rounding for small elements */
    }
    ```
 
 3. **Component Implementation Rules**:
-   - **ALWAYS add `rounded-none`** to Card, Button, Input, Dialog, Select, Textarea components
-   - **Search and replace** all `rounded-lg`, `rounded-md` with `rounded-none`
-   - **Card components**: Must use `className="rounded-none"` without exception
-   - **Button components**: Must use `className="rounded-none"` on all variants
-   - **Form elements**: All inputs, selects, textareas must be sharp
-   - **Only allow rounding** on: avatars (`rounded-full`), small badges (`rounded-sm`), tooltips (`rounded-sm`)
+   - **ALWAYS add `rounded-lg`** to Card, Button, Input, Dialog, Select, Textarea components
+   - **Use consistent rounding** with `rounded-lg` as the standard
+   - **Card components**: Must use `className="rounded-lg"` for consistency
+   - **Button components**: Must use `className="rounded-lg"` on all variants
+   - **Form elements**: All inputs, selects, textareas should use `rounded-lg`
+   - **Special cases**: avatars (`rounded-full`), small badges (`rounded-sm`), tooltips (`rounded-sm`)
 
 ## Commands
 

@@ -368,7 +368,7 @@ export function UploadCsvModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange} modal={true}>
-      <DialogContent className="max-w-[95vw] sm:max-w-[700px] bg-white dark:bg-popover border-border rounded-none overflow-hidden">
+      <DialogContent className="max-w-[95vw] sm:max-w-[700px] bg-white dark:bg-popover border-border rounded-lg overflow-hidden">
         <DialogHeader className="pb-4 sm:pb-6">
           <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">
             Upload Bank Statement
@@ -380,7 +380,7 @@ export function UploadCsvModal({
 
         <div className="space-y-4 sm:space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto overflow-x-hidden pr-2">
           {/* Example Download Section */}
-          <div className="bg-muted/50 p-3 sm:p-4 rounded-none border border-border">
+          <div className="bg-muted/50 p-3 sm:p-4 rounded-lg border border-border">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
               <div>
                 <p className="text-xs sm:text-sm font-medium text-foreground">
@@ -394,7 +394,7 @@ export function UploadCsvModal({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full sm:w-auto rounded-none"
+                  className="w-full sm:w-auto rounded-lg"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   <span className="text-xs sm:text-sm">Example CSV</span>
@@ -405,7 +405,7 @@ export function UploadCsvModal({
 
           {/* Upload Zone */}
           <div
-            className={`border-2 border-dashed rounded-none p-3 sm:p-4 text-center transition-colors ${
+            className={`border-2 border-dashed rounded-lg p-3 sm:p-4 text-center transition-colors ${
               isDragging
                 ? "border-primary bg-accent/10"
                 : "border-border hover:border-muted-foreground bg-muted/30"
@@ -436,7 +436,7 @@ export function UploadCsvModal({
               <Button
                 variant="outline"
                 asChild
-                className="border-gray-300 dark:border-border text-xs sm:text-sm px-3 sm:px-4 rounded-none"
+                className="border-gray-300 dark:border-border text-xs sm:text-sm px-3 sm:px-4 rounded-lg"
               >
                 <span>
                   <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
@@ -448,7 +448,7 @@ export function UploadCsvModal({
 
           {/* Error Message */}
           {parseError && (
-            <div className="flex items-center gap-2 p-3 sm:p-4 bg-destructive/10 border border-destructive/30 rounded-none text-destructive-foreground">
+            <div className="flex items-center gap-2 p-3 sm:p-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive-foreground">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <p className="text-xs sm:text-sm">{parseError}</p>
             </div>
@@ -474,7 +474,7 @@ export function UploadCsvModal({
                   </p>
                 </div>
                 <div className="w-full max-w-full">
-                  <div className="border border-border rounded-none bg-card relative overflow-hidden">
+                  <div className="border border-border rounded-lg bg-card relative overflow-hidden">
                     {/* Gradiente izquierdo */}
                     <div 
                       className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-card via-card/80 to-transparent z-10 pointer-events-none opacity-0 transition-opacity duration-200" 
@@ -549,7 +549,7 @@ export function UploadCsvModal({
               variant="outline"
               onClick={handleClose}
               disabled={isProcessing || isParsing}
-              className="border-gray-300 dark:border-gray-700 text-xs sm:text-sm order-2 sm:order-1 rounded-none"
+              className="border-gray-300 dark:border-gray-700 text-xs sm:text-sm order-2 sm:order-1 rounded-lg"
             >
               Cancel
             </Button>
@@ -561,7 +561,7 @@ export function UploadCsvModal({
                 isParsing ||
                 !!parseError
               }
-              className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm order-1 sm:order-2 rounded-none"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm order-1 sm:order-2 rounded-lg"
             >
               {isProcessing ? (
                 <>
