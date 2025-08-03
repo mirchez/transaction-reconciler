@@ -71,8 +71,12 @@ Return a JSON object with this format:
         amount = parseFloat(row[mapping.amountColumn] || "0");
       }
 
+      // Parse date using the helper function
+      const dateStr = row[mapping.dateColumn] || "";
+      const parsedDate = dateStr ? parseDate(dateStr) : new Date().toISOString();
+
       return {
-        date: row[mapping.dateColumn] || new Date().toISOString(),
+        date: parsedDate,
         description: row[mapping.descriptionColumn] || "Unknown transaction",
         amount: Math.abs(amount), // Store as positive
       };
@@ -95,14 +99,20 @@ function extractBankDataFallback(csvData: CSVRow[]): {
       "transaction date",
       "posted date",
       "trans date",
+      "fecha",
+      "fecha transaccion",
     ];
-    const descColumns = ["description", "desc", "memo", "details", "merchant"];
+    const descColumns = ["description", "desc", "memo", "details", "merchant", "descripcion", "concepto"];
     const amountColumns = [
       "amount",
       "debit",
       "credit",
       "withdrawal",
       "deposit",
+      "monto",
+      "importe",
+      "cargo",
+      "abono",
     ];
 
     let date = "";
@@ -125,15 +135,10 @@ function extractBankDataFallback(csvData: CSVRow[]): {
       }
     }
 
-    // Parse date
+    // Parse date with multiple format support
     let parsedDate = new Date().toISOString();
     if (date) {
-      try {
-        const d = new Date(date);
-        if (!isNaN(d.getTime())) {
-          parsedDate = d.toISOString();
-        }
-      } catch {}
+      parsedDate = parseDate(date);
     }
 
     return {
@@ -142,6 +147,58 @@ function extractBankDataFallback(csvData: CSVRow[]): {
       amount: amount,
     };
   });
+}
+
+function parseDate(dateStr: string): string {
+  // Try multiple date formats
+  const formats = [
+    // ISO format
+    (s: string) => new Date(s),
+    // DD/MM/YYYY
+    (s: string) => {
+      const parts = s.split('/');
+      if (parts.length === 3) {
+        return new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`);
+      }
+      return null;
+    },
+    // MM/DD/YYYY
+    (s: string) => {
+      const parts = s.split('/');
+      if (parts.length === 3) {
+        return new Date(`${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`);
+      }
+      return null;
+    },
+    // DD-MM-YYYY
+    (s: string) => {
+      const parts = s.split('-');
+      if (parts.length === 3 && parts[0].length <= 2) {
+        return new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`);
+      }
+      return null;
+    },
+    // YYYY-MM-DD (already ISO)
+    (s: string) => {
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+        return new Date(s);
+      }
+      return null;
+    }
+  ];
+
+  for (const format of formats) {
+    try {
+      const date = format(dateStr);
+      if (date && !isNaN(date.getTime())) {
+        return date.toISOString();
+      }
+    } catch {}
+  }
+
+  // If all formats fail, return current date
+  console.warn(`Could not parse date: ${dateStr}, using current date`);
+  return new Date().toISOString();
 }
 
 
@@ -192,6 +249,12 @@ export async function POST(request: NextRequest) {
     for (const transaction of bankData) {
       const transactionDate = new Date(transaction.date);
       const transactionAmount = new Decimal(transaction.amount);
+
+      // Skip if date is invalid
+      if (isNaN(transactionDate.getTime())) {
+        console.error(`Invalid date for transaction: ${transaction.description}`);
+        continue;
+      }
 
       // Strict duplicate checking - check for similar transactions
       const existingTransaction = await prisma.bank.findFirst({
