@@ -470,18 +470,11 @@ export function UploadCsvModal({
                       id="scroll-shadow-left" 
                     />
                     
-                    {/* Gradiente derecho con indicador */}
+                    {/* Gradiente derecho */}
                     <div 
-                      className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-card via-card/80 to-transparent z-10 pointer-events-none flex items-center justify-end pr-3 transition-opacity duration-200" 
+                      className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-card via-card/80 to-transparent z-10 pointer-events-none transition-opacity duration-200" 
                       id="scroll-shadow-right"
-                    >
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground bg-card/95 px-2 py-1 rounded-none border border-border shadow-sm">
-                        <span>Scroll</span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
-                      </div>
-                    </div>
+                    />
                     
                     <div 
                       className="w-full overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-border scrollbar-track-muted/20"
