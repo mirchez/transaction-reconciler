@@ -3,6 +3,10 @@ import { prisma } from "@/lib/db";
 import { parsePDF } from "@/lib/pdf-parser";
 import { extractLedgerDataWithOpenAI } from "@/lib/openai-service";
 import { Decimal } from "@prisma/client/runtime/library";
+import { checkAllConfigurations } from "@/lib/check-config";
+
+// Check configuration on startup
+checkAllConfigurations();
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,10 +35,23 @@ export async function POST(request: NextRequest) {
       create: { email: userEmail },
     });
 
+    // Check pdf-poppler installation first
+    console.log('🔎 === PDF UPLOAD PROCESS START ===');
+    console.log('File name:', file.name);
+    console.log('File size:', file.size, 'bytes');
+    
     // Parse PDF
     const buffer = Buffer.from(await file.arrayBuffer());
+    console.log('Buffer created, size:', buffer.length);
+    
     const pdfData = await parsePDF(buffer);
     const pdfText = pdfData.text;
+    
+    console.log('📄 === PDF PARSE RESULT ===');
+    console.log('Text extracted:', pdfText ? 'YES' : 'NO');
+    console.log('Text length:', pdfText ? pdfText.length : 0);
+    console.log('Pages:', pdfData.numpages);
+    console.log('📄 === END PDF PARSE RESULT ===');
 
     if (!pdfText || pdfText.trim().length === 0) {
       return NextResponse.json(
@@ -48,7 +65,24 @@ export async function POST(request: NextRequest) {
     console.log(`📏 Text length: ${pdfText.length} characters`);
     
     // Extract ledger data using AI with filename context
-    const extractedData = await extractLedgerDataWithOpenAI(pdfText, file.name);
+    // First, check if we have Document AI data in metadata
+    let extractedData;
+    
+    if (pdfData.metadata?.vendor && pdfData.metadata?.amount) {
+      // Document AI already extracted structured data
+      console.log('✅ Using pre-extracted Document AI data');
+      extractedData = {
+        isLedgerEntry: true,
+        date: pdfData.metadata.date || new Date().toISOString().split('T')[0],
+        description: pdfData.metadata.vendor,
+        amount: pdfData.metadata.amount,
+        confidence: 0.95,
+      };
+    } else {
+      // Fallback to OpenAI extraction
+      console.log('🤖 Using OpenAI extraction on text');
+      extractedData = await extractLedgerDataWithOpenAI(pdfText, file.name);
+    }
 
     if (!extractedData.isLedgerEntry) {
       console.log("❌ Document is not a ledger entry:", file.name);

@@ -1,212 +1,231 @@
-import { PDFDocument } from 'pdf-lib';
+// Workaround for pdf-parse v1.1.1 bug where it tries to load test file in debug mode
+// The bug occurs because of isDebugMode = !module.parent check in pdf-parse/index.js
+let pdf: any;
+try {
+  // Import the actual pdf parsing function directly to avoid debug mode
+  pdf = require('pdf-parse/lib/pdf-parse.js');
+} catch (error) {
+  // Fallback to default import if direct import fails
+  pdf = require('pdf-parse');
+}
+import { getGoogleDocumentAIParser } from './google-document-ai-parser';
 
-// Robust PDF parser without external dependencies
-export async function parsePDF(buffer: Buffer): Promise<{ text: string; numpages: number }> {
-  try {
-    console.log('📄 Starting PDF parsing...');
-    console.log(`📊 PDF size: ${buffer.length} bytes`);
-    
-    // Load the PDF document
-    let pdfDoc: PDFDocument;
+// Interface for PDF parsing result
+interface PDFParseResult {
+  text: string;
+  numpages: number;
+  metadata?: {
+    title?: string;
+    subject?: string;
+    author?: string;
+    creator?: string;
+    producer?: string;
+    creationDate?: string;
+    modDate?: string;
+    // Additional fields from Document AI
+    vendor?: string;
+    amount?: number;
+    currency?: string;
+    date?: string;
+  };
+}
+
+/**
+ * Parse PDF using Google Document AI with pdf-parse as fallback
+ */
+export async function parsePDF(buffer: Buffer): Promise<PDFParseResult> {
+  console.log('📄 Starting PDF parsing...');
+  console.log(`📊 PDF size: ${buffer.length} bytes`);
+  
+  // Check if Google Document AI is configured AND billing is enabled
+  const hasDocumentAI = process.env.GOOGLE_PROJECT_ID && 
+                       process.env.GOOGLE_PROCESSOR_ID && 
+                       process.env.GOOGLE_APPLICATION_CREDENTIALS &&
+                       process.env.ENABLE_DOCUMENT_AI === 'true';
+  
+  if (hasDocumentAI) {
     try {
-      pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
-    } catch (loadError) {
-      console.error('❌ Failed to load PDF:', loadError);
-      // Return placeholder for AI to process
+      console.log('🤖 Using Google Document AI for parsing...');
+      const documentAIParser = getGoogleDocumentAIParser();
+      const result = await documentAIParser.parseReceipt(buffer);
+      
+      // Convert Document AI result to our format
+      let text = result.rawText || '';
+      
+      // If no raw text but we have structured data, create a summary
+      if (!text && (result.vendor || result.amount)) {
+        const parts = [];
+        if (result.vendor) parts.push(`Vendor: ${result.vendor}`);
+        if (result.amount) parts.push(`Amount: ${result.currency || '$'}${result.amount}`);
+        if (result.date) parts.push(`Date: ${result.date}`);
+        if (result.items && result.items.length > 0) {
+          parts.push(`Items: ${result.items.length}`);
+          result.items.forEach(item => {
+            parts.push(`  - ${item.description}${item.amount ? ` ($${item.amount})` : ''}`);
+          });
+        }
+        text = parts.join('\n');
+      }
+      
+      console.log('✅ Document AI parsing successful');
+      
       return {
-        text: 'PDF Document - Could not load content. This appears to be a corrupted or encrypted PDF file.',
-        numpages: 0
+        text: text || 'Receipt parsed successfully',
+        numpages: 1, // Document AI doesn't return page count
+        metadata: {
+          vendor: result.vendor,
+          amount: result.amount,
+          currency: result.currency,
+          date: result.date,
+          producer: 'Google Document AI',
+        }
       };
+      
+    } catch (error) {
+      console.error('⚠️ Document AI parsing failed, falling back to pdf-parse:', error);
+      // Fall through to pdf-parse
+    }
+  } else {
+    console.log('ℹ️ Google Document AI not configured, using pdf-parse');
+  }
+  
+  // Fallback to pdf-parse
+  return parsePDFWithPdfParse(buffer);
+}
+
+/**
+ * Parse PDF using pdf-parse library
+ */
+async function parsePDFWithPdfParse(buffer: Buffer): Promise<PDFParseResult> {
+  try {
+    console.log('📄 Parsing with pdf-parse...');
+    
+    // Parse PDF with pdf-parse
+    const data = await pdf(buffer);
+    
+    console.log('✅ PDF parsed successfully with pdf-parse');
+    console.log(`📝 === EXTRACTED TEXT ===`);
+    console.log(`Length: ${data.text.length} characters`);
+    console.log(`Pages: ${data.numpages}`);
+    console.log(`PDF Version: ${data.version}`);
+    console.log(`Preview (first 500 chars): ${data.text.substring(0, 500)}`);
+    console.log(`📝 === END EXTRACTED TEXT ===`);
+    
+    // Extract metadata if available
+    const metadata: any = {};
+    if (data.info) {
+      console.log('📋 === PDF METADATA ===');
+      console.log('Raw info:', data.info);
+      
+      if (data.info.Title) metadata.title = data.info.Title;
+      if (data.info.Subject) metadata.subject = data.info.Subject;
+      if (data.info.Author) metadata.author = data.info.Author;
+      if (data.info.Creator) metadata.creator = data.info.Creator;
+      if (data.info.Producer) metadata.producer = data.info.Producer;
+      if (data.info.CreationDate) metadata.creationDate = data.info.CreationDate;
+      if (data.info.ModDate) metadata.modDate = data.info.ModDate;
+      
+      console.log('Processed metadata:', metadata);
+      console.log('📋 === END METADATA ===');
     }
     
-    const pages = pdfDoc.getPages();
-    console.log(`📑 PDF has ${pages.length} page(s)`);
-    
-    // Extract text from the buffer
-    const fullText = await extractTextFromBuffer(buffer);
-    
-    if (fullText && fullText.trim().length > 0) {
-      console.log('✅ Successfully extracted text with custom parser');
-      return {
-        text: fullText,
-        numpages: pages.length
-      };
+    // If no text found, create placeholder
+    let text = data.text;
+    if (!text || text.trim().length === 0) {
+      console.log('⚠️ No text content extracted from PDF');
+      
+      const placeholderParts = ['PDF Document - No text content extracted'];
+      
+      if (metadata.title) {
+        placeholderParts.push(`Title: ${metadata.title}`);
+      }
+      if (metadata.author) {
+        placeholderParts.push(`Author: ${metadata.author}`);
+      }
+      if (metadata.creationDate) {
+        placeholderParts.push(`Date: ${metadata.creationDate}`);
+      }
+      
+      placeholderParts.push('This may be an image-based or encrypted PDF.');
+      
+      text = placeholderParts.join('\n');
     }
     
-    // If no text found with standard methods, try OCR-like extraction
-    console.log('⚠️ No text found with standard methods, attempting OCR-like extraction...');
-    
-    // For image-based PDFs or complex formats, we'll use context clues
-    // Since this is likely a receipt from a known vendor (like X/Twitter), 
-    // we can make educated guesses based on the filename and metadata
-    const filename = (buffer as any).filename || '';
-    const metadata = await extractMetadata(pdfDoc);
-    
-    // Generate a placeholder text that can be processed
-    let generatedText = '';
-    
-    // If we have a filename with receipt info, use it
-    if (filename.includes('receipt') || filename.includes('Receipt')) {
-      generatedText = `Receipt Document\n${filename}\n`;
-    }
-    
-    // Add any metadata we can find
-    if (metadata.title) generatedText += `Title: ${metadata.title}\n`;
-    if (metadata.subject) generatedText += `Subject: ${metadata.subject}\n`;
-    if (metadata.creator) generatedText += `From: ${metadata.creator}\n`;
-    if (metadata.creationDate) generatedText += `Date: ${metadata.creationDate}\n`;
-    
-    // If still no content, create a basic structure that indicates it's a receipt
-    if (generatedText.trim().length === 0) {
-      generatedText = `Digital Receipt\nPDF Document\nTransaction Record\n`;
-      console.log('📋 Generated placeholder text for processing');
-    }
-    
-    console.log('🔄 Returning generated text for AI processing');
     return {
-      text: generatedText || 'Digital Receipt - Image-based PDF',
-      numpages: pages.length
+      text,
+      numpages: data.numpages || 1,
+      metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
     };
+    
   } catch (error) {
     console.error('❌ PDF parsing error:', error);
     
-    // Fallback: try basic text extraction
-    try {
-      const fallbackText = await extractTextFromBuffer(buffer);
-      return {
-        text: fallbackText || 'Failed to extract text from PDF',
-        numpages: 1
-      };
-    } catch (fallbackError) {
-      console.error('❌ Fallback parsing also failed:', fallbackError);
-      return {
-        text: 'Failed to extract text from PDF',
-        numpages: 0
-      };
-    }
+    // If pdf-parse fails, try basic extraction
+    return fallbackParsing(buffer);
   }
 }
 
-// Extract text from PDF buffer with multiple strategies
-async function extractTextFromBuffer(buffer: Buffer): Promise<string> {
-  console.log('🔍 Attempting advanced text extraction...');
+/**
+ * Fallback parsing for when all methods fail
+ */
+function fallbackParsing(buffer: Buffer): PDFParseResult {
+  console.log('🔄 Attempting fallback parsing...');
   
-  // Strategy 1: Look for text streams
-  const str = buffer.toString('latin1');
-  let extractedText = '';
-  
-  // Look for text between BT and ET markers (PDF text objects)
-  const textMatches = str.match(/BT\s*(.*?)\s*ET/gs) || [];
-  console.log(`📋 Found ${textMatches.length} text blocks`);
-  
-  for (const match of textMatches) {
-    // Extract text from PDF commands - look for Tj and TJ operators
-    const tjMatches = match.match(/\(((?:[^()\\]|\\.)*)\)\s*Tj/g) || [];
-    const tjArrayMatches = match.match(/\[(.*?)\]\s*TJ/g) || [];
-    
-    // Process Tj commands
-    for (const tjMatch of tjMatches) {
-      const text = tjMatch.match(/\(((?:[^()\\]|\\.)*)\)/)?.[1] || '';
-      extractedText += decodeText(text) + ' ';
-    }
-    
-    // Process TJ commands (text arrays)
-    for (const tjArrayMatch of tjArrayMatches) {
-      const arrayContent = tjArrayMatch.match(/\[(.*?)\]/)?.[1] || '';
-      const textParts = arrayContent.match(/\(((?:[^()\\]|\\.)*)\)/g) || [];
-      for (const part of textParts) {
-        const text = part.slice(1, -1);
-        extractedText += decodeText(text);
-      }
-      extractedText += ' ';
-    }
-  }
-  
-  // Strategy 2: Look for text in streams
-  if (extractedText.trim().length === 0) {
-    console.log('🔄 Trying stream extraction...');
-    const streamMatches = str.match(/stream\s*(.*?)\s*endstream/gs) || [];
-    
-    for (const stream of streamMatches) {
-      // Look for text patterns in streams
-      const streamTjMatches = stream.match(/\(((?:[^()\\]|\\.)*)\)\s*Tj/g) || [];
-      for (const tjMatch of streamTjMatches) {
-        const text = tjMatch.match(/\(((?:[^()\\]|\\.)*)\)/)?.[1] || '';
-        extractedText += decodeText(text) + ' ';
-      }
-    }
-  }
-  
-  // Strategy 3: Look for Unicode text
-  if (extractedText.trim().length === 0) {
-    console.log('🔄 Trying Unicode extraction...');
-    // Look for hex-encoded text
-    const hexMatches = str.match(/<([0-9A-Fa-f]+)>\s*Tj/g) || [];
-    for (const hexMatch of hexMatches) {
-      const hex = hexMatch.match(/<([0-9A-Fa-f]+)>/)?.[1] || '';
-      if (hex.length % 4 === 0) {
-        // Convert hex to text
-        let text = '';
-        for (let i = 0; i < hex.length; i += 4) {
-          const charCode = parseInt(hex.substr(i, 4), 16);
-          if (charCode > 0) {
-            text += String.fromCharCode(charCode);
-          }
-        }
-        extractedText += text + ' ';
-      }
-    }
-  }
-  
-  // Clean up extracted text
-  extractedText = extractedText
-    .replace(/\s+/g, ' ')
-    .replace(/[^\x20-\x7E\n]/g, '') // Remove non-printable characters
-    .trim();
-  
-  console.log(`📝 Extracted ${extractedText.length} characters`);
-  if (extractedText.length > 100) {
-    console.log(`📄 Sample: ${extractedText.substring(0, 100)}...`);
-  }
-  
-  return extractedText;
-}
-
-// Decode PDF text strings
-function decodeText(text: string): string {
-  return text
-    .replace(/\\(\d{3})/g, (m, oct) => String.fromCharCode(parseInt(oct, 8)))
-    .replace(/\\n/g, '\n')
-    .replace(/\\r/g, '\r')
-    .replace(/\\t/g, '\t')
-    .replace(/\\b/g, '\b')
-    .replace(/\\f/g, '\f')
-    .replace(/\\\(/g, '(')
-    .replace(/\\\)/g, ')')
-    .replace(/\\\\/g, '\\');
-}
-
-// Extract metadata from PDF document
-async function extractMetadata(pdfDoc: PDFDocument): Promise<{
-  title?: string;
-  subject?: string;
-  creator?: string;
-  creationDate?: string;
-}> {
   try {
-    const title = pdfDoc.getTitle();
-    const subject = pdfDoc.getSubject();
-    const creator = pdfDoc.getCreator();
-    const creationDate = pdfDoc.getCreationDate();
+    // Convert buffer to string to search for basic info
+    const pdfString = buffer.toString('latin1');
     
-    return {
-      title: title || undefined,
-      subject: subject || undefined,
-      creator: creator || undefined,
-      creationDate: creationDate ? creationDate.toISOString().split('T')[0] : undefined
-    };
-  } catch (error) {
-    console.log('⚠️ Could not extract metadata:', error);
-    return {};
+    // Look for basic text patterns
+    const textMatches = pdfString.match(/BT\s*(.*?)\s*ET/gs) || [];
+    let text = '';
+    
+    for (const match of textMatches.slice(0, 10)) { // Limit to first 10 blocks
+      const cleaned = match
+        .replace(/BT|ET/g, '')
+        .replace(/\\/g, '')
+        .replace(/[^\x20-\x7E\n]/g, ' ')
+        .trim();
+      
+      if (cleaned.length > 10) {
+        text += cleaned + '\n';
+      }
+    }
+    
+    if (text.length > 0) {
+      console.log('✅ Fallback extracted some text');
+      return {
+        text: text.substring(0, 1000), // Limit fallback text
+        numpages: 1,
+        metadata: undefined
+      };
+    }
+  } catch (e) {
+    console.error('❌ Fallback parsing also failed:', e);
+  }
+  
+  return {
+    text: 'Failed to extract text from PDF. The file may be corrupted, encrypted, or in an unsupported format.',
+    numpages: 0,
+    metadata: undefined,
+  };
+}
+
+/**
+ * Alternative parsing method for specific PDF types
+ */
+export async function parsePDFWithOCR(buffer: Buffer): Promise<PDFParseResult> {
+  console.log('🔄 OCR parsing not implemented yet, falling back to standard parsing');
+  return parsePDF(buffer);
+}
+
+/**
+ * Utility function to check PDF validity
+ */
+export async function checkPDFValidity(buffer: Buffer): Promise<boolean> {
+  try {
+    const header = buffer.toString('ascii', 0, 5);
+    return header === '%PDF-';
+  } catch {
+    return false;
   }
 }

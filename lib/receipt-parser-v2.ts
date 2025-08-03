@@ -8,26 +8,26 @@ const openai = new OpenAI({
 
 // Enhanced schema with more fields for better extraction
 const ReceiptExtractionSchema = z.object({
-  isFinancialDocument: z.boolean(),
+  isFinancialDocument: z.boolean().default(false),
   extractedData: z.object({
-    amount: z.number().optional(),
-    date: z.string().optional(),
-    vendor: z.string().optional(),
-    description: z.string().optional(),
-    invoiceNumber: z.string().optional(),
-    paymentMethod: z.string().optional(),
-    currency: z.string().optional(),
-  }),
+    amount: z.number().nullable().optional(),
+    date: z.string().nullable().optional(),
+    vendor: z.string().nullable().optional(),
+    description: z.string().nullable().optional(),
+    invoiceNumber: z.string().nullable().optional(),
+    paymentMethod: z.string().nullable().optional(),
+    currency: z.string().nullable().optional(),
+  }).default({}),
   metadata: z.object({
-    documentType: z.string(),
-    confidence: z.number().min(0).max(1),
-    extractionMethod: z.string(),
-  }),
+    documentType: z.string().default('unknown'),
+    confidence: z.number().min(0).max(1).default(0.5),
+    extractionMethod: z.string().default('unknown'),
+  }).default({}),
   rawExtraction: z.object({
-    amounts: z.array(z.number()),
-    dates: z.array(z.string()),
-    possibleVendors: z.array(z.string()),
-  })
+    amounts: z.array(z.number()).default([]),
+    dates: z.array(z.string()).default([]),
+    possibleVendors: z.array(z.string()).default([]),
+  }).default({})
 });
 
 export type ReceiptExtraction = z.infer<typeof ReceiptExtractionSchema>;
@@ -163,8 +163,20 @@ export async function parseReceiptV2(pdfText: string, filename?: string): Promis
     const parsedData = JSON.parse(responseText);
     console.log("✅ OpenAI analysis complete");
     
+    // Ensure the data has the expected structure
+    const dataWithDefaults = {
+      isFinancialDocument: parsedData.isFinancialDocument ?? false,
+      extractedData: parsedData.extractedData || {},
+      metadata: parsedData.metadata || {},
+      rawExtraction: parsedData.rawExtraction || {
+        amounts: [],
+        dates: [],
+        possibleVendors: []
+      }
+    };
+    
     // Validate against schema
-    const validatedData = ReceiptExtractionSchema.parse(parsedData);
+    const validatedData = ReceiptExtractionSchema.parse(dataWithDefaults);
     
     // Post-process to ensure we have the best values
     return postProcessExtraction(validatedData);

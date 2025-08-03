@@ -81,3 +81,5 @@ test-*.txt
 # Example files for production
 public/example-*.txt
 public/example-*.csv
+
+/credentials/

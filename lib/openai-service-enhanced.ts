@@ -9,17 +9,17 @@ const openai = new OpenAI({
 // Enhanced schema for better structure
 const EnhancedLedgerSchema = z.object({
   isLedgerEntry: z.boolean(),
-  date: z.string().optional(),
-  description: z.string().optional(),
-  amount: z.number().optional(),
+  date: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  amount: z.number().nullable().optional(),
   confidence: z.number().min(0).max(1),
   metadata: z.object({
-    vendor: z.string().optional(),
-    invoiceNumber: z.string().optional(),
-    paymentMethod: z.string().optional(),
-    documentType: z.string().optional(),
-    currency: z.string().optional(),
-  }).optional(),
+    vendor: z.string().nullable().optional(),
+    invoiceNumber: z.string().nullable().optional(),
+    paymentMethod: z.string().nullable().optional(),
+    documentType: z.string().nullable().optional(),
+    currency: z.string().nullable().optional(),
+  }).nullable().optional(),
 });
 
 export type EnhancedLedgerExtraction = z.infer<typeof EnhancedLedgerSchema>;
@@ -216,8 +216,18 @@ ${enhancedText}`
       vendor: parsedData.description,
     });
 
+    // Ensure required fields have default values
+    const dataWithDefaults = {
+      isLedgerEntry: parsedData.isLedgerEntry || false,
+      date: parsedData.date || undefined,
+      description: parsedData.description || undefined,
+      amount: parsedData.amount || undefined,
+      confidence: parsedData.confidence || 0.5,
+      metadata: parsedData.metadata || undefined,
+    };
+
     // Validate and enhance the result
-    const validated = EnhancedLedgerSchema.parse(parsedData);
+    const validated = EnhancedLedgerSchema.parse(dataWithDefaults);
     
     // If extraction failed but we have partial data, retry with hints
     if (!validated.isLedgerEntry && (validated.amount || validated.description)) {

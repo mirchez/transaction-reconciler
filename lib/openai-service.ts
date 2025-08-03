@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { z } from "zod";
-import { parseReceiptRobust, type ParsingResult } from "./receipt-parser-strategy";
+import { simpleExtractWithAI } from "./simple-pdf-parser";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -111,38 +111,28 @@ Respond with JSON:
 }`;
 
 export async function extractLedgerDataWithOpenAI(pdfText: string, filename?: string): Promise<LedgerExtraction> {
-  // First try the new robust parsing strategy
+  // Try simple AI extraction first
   try {
-    console.log("🚀 Using robust multi-strategy parser");
-    const robustResult = await parseReceiptRobust(pdfText, {
-      filename,
-      useAI: true,
-      maxRetries: 3,
-      acceptPartialData: false,
-    });
-
-    if (robustResult.success && robustResult.data) {
-      console.log("✅ Robust parser succeeded:", {
-        method: robustResult.method,
-        confidence: robustResult.confidence,
-        amount: robustResult.data.amount,
-        vendor: robustResult.data.vendor,
+    console.log("🤖 Using simple AI extraction");
+    const simpleResult = await simpleExtractWithAI(pdfText);
+    
+    if (simpleResult.isLedgerEntry) {
+      console.log("✅ Simple extraction succeeded:", {
+        amount: simpleResult.amount,
+        description: simpleResult.description,
+        confidence: simpleResult.confidence
       });
-
+      
       return {
         isLedgerEntry: true,
-        date: robustResult.data.date,
-        description: robustResult.data.description,
-        amount: robustResult.data.amount,
-        confidence: robustResult.confidence,
+        date: simpleResult.date || new Date().toISOString().split('T')[0],
+        description: simpleResult.description || "Unknown",
+        amount: simpleResult.amount || 0,
+        confidence: simpleResult.confidence
       };
     }
-
-    console.log("⚠️ Robust parser found partial data, falling back to original method");
-    // If robust parser fails, continue with original implementation
-  } catch (robustError) {
-    console.error("❌ Robust parser error:", robustError);
-    // Continue with original implementation
+  } catch (error) {
+    console.error("⚠️ Simple extraction error:", error);
   }
 
   // Original implementation as fallback
