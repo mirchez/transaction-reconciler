@@ -63,8 +63,6 @@ export async function GET(request: NextRequest) {
         ledgerEntryId: entry.id,
         bankTransactionId: matchData?.bankId,
         matchScore: matchData?.matchScore || (matchData ? 100 : undefined),
-        matchType: matchData?.matchType,
-        matchReason: matchData?.matchReason,
       });
     });
     
@@ -81,8 +79,6 @@ export async function GET(request: NextRequest) {
         bankTransactionId: transaction.id,
         ledgerEntryId: matchData?.ledgerId,
         matchScore: matchData?.matchScore || (matchData ? 100 : undefined),
-        matchType: matchData?.matchType,
-        matchReason: matchData?.matchReason,
       });
     });
     
@@ -98,8 +94,6 @@ export async function GET(request: NextRequest) {
         ledgerEntryId: match.ledgerId,
         bankTransactionId: match.bankId,
         matchScore: match.matchScore || 100,
-        matchType: match.matchType || "logic",
-        matchReason: match.matchReason,
         bankDescription: match.bankTransaction,
       });
     });

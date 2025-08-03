@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
               // Check if this pair hasn't been matched before
               const matchPairKey = `${ledger.id}-${bank.id}`;
               if (!existingMatchPairs.has(matchPairKey)) {
-                logicMatches.push({ bank, ledger, matchType: 'logic', matchScore: 100, matchReason: 'Exact amount, date, and description match' });
+                logicMatches.push({ bank, ledger, matchScore: 100 });
                 // Mark both as used so they won't be matched again
                 usedLedgerIds.add(ledger.id);
                 usedBankIds.add(bank.id);
@@ -184,9 +184,7 @@ export async function POST(request: NextRequest) {
                 aiMatches.push({ 
                   bank, 
                   ledger, 
-                  matchType: 'ai',
-                  matchScore: aiMatch.matchScore,
-                  matchReason: aiMatch.matchReason 
+                  matchScore: aiMatch.matchScore
                 });
                 usedLedgerIds.add(ledger.id);
                 usedBankIds.add(bank.id);
@@ -205,7 +203,7 @@ export async function POST(request: NextRequest) {
 
     // Create matched records
     for (const match of allMatches) {
-      const { bank, ledger, matchType, matchScore, matchReason } = match;
+      const { bank, ledger, matchScore } = match;
       
       await prisma.matched.create({
         data: {
@@ -216,9 +214,7 @@ export async function POST(request: NextRequest) {
           description: ledger.description,
           amount: bank.amount,
           date: ledger.date,
-          matchType: matchType,
-          matchScore: matchScore,
-          matchReason: matchReason
+          matchScore: matchScore
         }
       });
     }
@@ -262,9 +258,7 @@ export async function POST(request: NextRequest) {
       matches: allMatches.map(m => ({
         ledgerId: m.ledger.id,
         bankId: m.bank.id,
-        matchType: m.matchType,
         matchScore: m.matchScore,
-        matchReason: m.matchReason,
         ledgerDescription: m.ledger.description,
         bankDescription: m.bank.description,
         amount: Number(m.bank.amount),

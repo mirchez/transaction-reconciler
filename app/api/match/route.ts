@@ -86,8 +86,8 @@ export async function POST(request: NextRequest) {
 
     // Process each AI-suggested match
     for (const match of aiMatches) {
-      // Only create matches with high confidence (60% or higher)
-      if (match.matchScore >= 60) {
+      // Create all AI-suggested matches (AI already filtered for confidence)
+      {
         try {
           // Find the actual bank transaction and ledger entry
           const bankTransaction = bankTransactions.find(bt => bt.id === match.bankTransactionId);

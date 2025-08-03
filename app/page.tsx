@@ -987,8 +987,8 @@ export default function HomePage() {
                                       <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-right px-4 py-3 w-28">
                                         Amount
                                       </TableHead>
-                                      <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-left px-4 py-3 w-32">
-                                        Match Score
+                                      <TableHead className="font-medium bg-green-500/10 dark:bg-green-500/20 text-center px-4 py-3 w-24">
+                                        Match
                                       </TableHead>
                                     </TableRow>
                                   </TableHeader>
@@ -1039,11 +1039,17 @@ export default function HomePage() {
                                           <TableCell className="text-right px-4 py-3">
                                             {formatAmount(transaction.amount)}
                                           </TableCell>
-                                          <TableCell className="px-4 py-3">
-                                            <div className="flex items-center gap-2">
+                                          <TableCell className="text-center px-4 py-3">
+                                            <div className="flex justify-center">
                                               <Badge
                                                 variant="outline"
-                                                className="rounded-lg"
+                                                className={`rounded-lg font-semibold min-w-[65px] justify-center text-sm ${
+                                                  !transaction.matchScore || transaction.matchScore >= 95
+                                                    ? "bg-green-500/10 text-green-700 border-green-500/30 dark:bg-green-500/20 dark:text-green-400 dark:border-green-500/40"
+                                                    : transaction.matchScore >= 80
+                                                    ? "bg-blue-500/10 text-blue-700 border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/40"
+                                                    : "bg-orange-500/10 text-orange-700 border-orange-500/30 dark:bg-orange-500/20 dark:text-orange-400 dark:border-orange-500/40"
+                                                }`}
                                               >
                                                 {transaction.matchScore
                                                   ? `${Math.round(
@@ -1051,35 +1057,6 @@ export default function HomePage() {
                                                     )}%`
                                                   : "100%"}
                                               </Badge>
-                                              {transaction.matchType && (
-                                                <Tooltip>
-                                                  <TooltipTrigger>
-                                                    <Badge
-                                                      variant={
-                                                        transaction.matchType ===
-                                                        "ai"
-                                                          ? "secondary"
-                                                          : "default"
-                                                      }
-                                                      className="rounded-lg text-xs"
-                                                    >
-                                                      {transaction.matchType ===
-                                                      "ai"
-                                                        ? "AI"
-                                                        : "Logic"}
-                                                    </Badge>
-                                                  </TooltipTrigger>
-                                                  <TooltipContent>
-                                                    <p className="text-xs">
-                                                      {transaction.matchReason ||
-                                                        (transaction.matchType ===
-                                                        "ai"
-                                                          ? "Matched using AI analysis"
-                                                          : "Matched using exact rules")}
-                                                    </p>
-                                                  </TooltipContent>
-                                                </Tooltip>
-                                              )}
                                             </div>
                                           </TableCell>
                                         </TableRow>
