@@ -83,3 +83,6 @@ public/example-*.txt
 public/example-*.csv
 
 /credentials/
+
+# Project documentation (keep locally)
+CLAUDE.md
