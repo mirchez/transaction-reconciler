@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test CSV Preview Implementation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .summary { background-color: #f9f9f9; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>CSV Preview Implementation Test</h1>
+    
+    <div class="summary">
+        <h2>Changes Made:</h2>
+        <ul>
+            <li>✅ Added <code>RawCSVRow</code> type to support dynamic columns</li>
+            <li>✅ Modified <code>upload-csv-modal.tsx</code> to preserve and display all columns</li>
+            <li>✅ Updated CSV parsing to maintain raw data structure</li>
+            <li>✅ Enhanced Process Statement button to send raw unprocessed data</li>
+            <li>✅ Applied sharp edges (rounded-none) throughout components</li>
+        </ul>
+    </div>
+
+    <h2>Key Changes in Upload CSV Modal:</h2>
+    
+    <h3>1. New State Variables</h3>
+    <pre><code>
+const [rawCsvData, setRawCsvData] = useState&lt;RawCSVRow[]&gt;([]);
+const [csvHeaders, setCsvHeaders] = useState&lt;string[]&gt;([]);
+    </code></pre>
+
+    <h3>2. Enhanced CSV Parsing</h3>
+    <ul>
+        <li>Preserves original column headers (with trimming but no case transformation)</li>
+        <li>Stores raw data exactly as uploaded</li>
+        <li>Maintains backward compatibility with legacy 3-column format</li>
+    </ul>
+
+    <h3>3. Dynamic Preview Table</h3>
+    <ul>
+        <li>Shows ALL columns from CSV file</li>
+        <li>Horizontal scroll for wide tables</li>
+        <li>Responsive design with proper mobile handling</li>
+        <li>Truncated cell content with tooltips for full values</li>
+    </ul>
+
+    <h3>4. Raw Data Transmission</h3>
+    <ul>
+        <li>Process Statement button now sends both file and parsed raw data</li>
+        <li>Includes headers, data, and metadata in JSON format</li>
+        <li>Ready for future OpenAI processing</li>
+    </ul>
+
+    <h2>Sample CSV Data Structure</h2>
+    <p>The implementation now handles CSV files with any structure like:</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Transaction ID</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Category</th>
+                <th>Account</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>2024-01-15</td>
+                <td>TXN123456</td>
+                <td>STARBUCKS COFFEE</td>
+                <td>-45.67</td>
+                <td>Food & Drink</td>
+                <td>Checking</td>
+                <td>Posted</td>
+            </tr>
+            <tr>
+                <td>2024-01-14</td>
+                <td>TXN123457</td>
+                <td>AMAZON PURCHASE</td>
+                <td>-123.45</td>
+                <td>Shopping</td>
+                <td>Credit Card</td>
+                <td>Posted</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p><strong>Previous Behavior:</strong> Only showed Date, Amount, Description columns</p>
+    <p><strong>New Behavior:</strong> Shows ALL 7 columns exactly as uploaded</p>
+
+    <h2>Technical Implementation Details</h2>
+    <ul>
+        <li><strong>Type Safety:</strong> Added <code>RawCSVRow</code> type using <code>z.record(z.string(), z.string())</code></li>
+        <li><strong>Data Preservation:</strong> Raw data stored separately from processed data</li>
+        <li><strong>UI Components:</strong> Sharp edges applied throughout (rounded-none)</li>
+        <li><strong>Responsive Design:</strong> Horizontal scroll, truncated content, mobile-first approach</li>
+        <li><strong>Error Handling:</strong> Maintains existing validation and error reporting</li>
+    </ul>
+
+    <div class="summary">
+        <h2>Testing Instructions:</h2>
+        <ol>
+            <li>Upload a CSV file with multiple columns (more than just date, amount, description)</li>
+            <li>Verify that ALL columns from the CSV are shown in the preview table</li>
+            <li>Check that column headers match exactly what was in the CSV file</li>
+            <li>Confirm that the Process Statement button is enabled when data is present</li>
+            <li>Inspect network requests to see that raw data is being sent to the API</li>
+        </ol>
+    </div>
+</body>
+</html>

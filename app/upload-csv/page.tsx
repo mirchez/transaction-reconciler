@@ -86,7 +86,7 @@ export default function CSVUploadPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground rounded-none"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
@@ -103,7 +103,7 @@ export default function CSVUploadPage() {
           </div>
 
           {/* Upload Zone */}
-          <Card className="bg-card border-muted mb-8">
+          <Card className="bg-card border-muted mb-8 rounded-none">
             <CardContent className="p-8 sm:p-12">
               <div className="border-2 border-dashed border-muted rounded-none p-8 sm:p-16 text-center hover:border-primary/50 transition-colors bg-background/50">
                 <div className="mb-6">
@@ -124,6 +124,7 @@ export default function CSVUploadPage() {
                   <Button
                     variant="outline"
                     asChild
+                    className="rounded-none"
                   >
                     <span>
                       <Upload className="w-4 h-4 mr-2" />
@@ -137,7 +138,7 @@ export default function CSVUploadPage() {
 
           {/* Preview Table */}
           {csvData.length > 0 && (
-            <Card className="bg-card border-muted mb-8">
+            <Card className="bg-card border-muted mb-8 rounded-none">
               <CardContent className="p-6 sm:p-8">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-medium text-foreground">Preview</h3>
@@ -186,7 +187,7 @@ export default function CSVUploadPage() {
           {/* Submit */}
           {csvData.length > 0 && (
             <div className="text-center">
-              <Button size="lg" className="px-8">
+              <Button size="lg" className="px-8 rounded-none">
                 Continue
               </Button>
             </div>

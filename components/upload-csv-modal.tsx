@@ -25,6 +25,7 @@ import {
   MAX_FILE_SIZE,
   ALLOWED_CSV_TYPES,
   type CSVRow,
+  type RawCSVRow,
 } from "@/lib/types/transactions";
 import Papa from "papaparse";
 import { useGmailStatus } from "@/hooks/use-gmail";
@@ -46,6 +47,8 @@ export function UploadCsvModal({
   onFileUpload,
 }: UploadCsvModalProps) {
   const [csvData, setCsvData] = useState<CSVRow[]>([]);
+  const [rawCsvData, setRawCsvData] = useState<RawCSVRow[]>([]);
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
   const [fileName, setFileName] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
@@ -61,6 +64,8 @@ export function UploadCsvModal({
   const processFile = async (file: File) => {
     // Reset state
     setCsvData([]);
+    setRawCsvData([]);
+    setCsvHeaders([]);
     setParseError(null);
 
     // Validate file
@@ -98,7 +103,7 @@ export function UploadCsvModal({
       Papa.parse(text, {
         header: true,
         skipEmptyLines: true,
-        transformHeader: (header) => header.trim().toLowerCase(),
+        transformHeader: (header) => header.trim(),
         complete: (results) => {
           if (results.errors.length > 0) {
             setParseError(results.errors[0].message);
@@ -107,58 +112,74 @@ export function UploadCsvModal({
             return;
           }
 
-          // Transform data to display format
-          const transformedData: CSVRow[] = results.data
+          // Store raw data exactly as uploaded
+          const rawData: RawCSVRow[] = results.data
+            .filter((row: any) => {
+              // Filter out completely empty rows
+              return Object.values(row).some(value => value && value.toString().trim() !== '');
+            })
             .map((row: any) => {
+              // Convert all values to strings and trim whitespace
+              const cleanRow: RawCSVRow = {};
+              for (const [key, value] of Object.entries(row)) {
+                cleanRow[key] = value ? value.toString().trim() : '';
+              }
+              return cleanRow;
+            });
+
+          if (rawData.length === 0) {
+            setParseError("No valid data found in CSV file");
+            toast.error("No valid data found in CSV file");
+            setIsParsing(false);
+            return;
+          }
+
+          // Get headers from the first row
+          const headers = Object.keys(rawData[0]);
+          setCsvHeaders(headers);
+
+          // Store raw data for preview (limit to first 10 rows)
+          setRawCsvData(rawData.slice(0, 10));
+
+          // Also create the legacy transformed data for backward compatibility
+          const transformedData: CSVRow[] = rawData
+            .map((row: RawCSVRow) => {
               // Try to find date, amount, and description columns
-              let date =
-                row.date ||
-                row.Date ||
-                row.transaction_date ||
-                row["transaction date"] ||
-                "";
-              let amount =
-                row.amount ||
-                row.Amount ||
-                row.debit ||
-                row.credit ||
-                row.Debit ||
-                row.Credit ||
-                "";
-              let description =
-                row.description ||
-                row.Description ||
-                row.merchant ||
-                row.Merchant ||
-                row.details ||
-                row.Details ||
-                "";
+              let date = '';
+              let amount = '';
+              let description = '';
+
+              // Search for date columns
+              for (const [key, value] of Object.entries(row)) {
+                const lowerKey = key.toLowerCase();
+                if (lowerKey.includes('date') && !date) {
+                  date = value;
+                } else if ((lowerKey.includes('amount') || lowerKey.includes('debit') || lowerKey.includes('credit')) && !amount) {
+                  amount = value;
+                } else if ((lowerKey.includes('description') || lowerKey.includes('merchant') || lowerKey.includes('details')) && !description) {
+                  description = value;
+                }
+              }
 
               // If columns not found, try by index
               if (!date && !amount && !description) {
                 const values = Object.values(row);
                 if (values.length >= 3) {
-                  date = values[0] as string;
-                  description = values[1] as string;
-                  amount = values[2] as string;
+                  date = values[0];
+                  description = values[1];
+                  amount = values[2];
                 }
               }
 
               return {
-                date: date.toString(),
-                amount: amount.toString(),
-                description: description.toString(),
+                date: date,
+                amount: amount,
+                description: description,
               };
-            })
-            .filter((row) => row.date || row.amount || row.description); // Filter out empty rows
+            });
 
-          if (transformedData.length === 0) {
-            setParseError("No valid data found in CSV file");
-            toast.error("No valid data found in CSV file");
-          } else {
-            setCsvData(transformedData.slice(0, 10)); // Show first 10 rows as preview
-            toast.success("CSV uploaded successfully");
-          }
+          setCsvData(transformedData.slice(0, 10));
+          toast.success("CSV uploaded successfully");
           setIsParsing(false);
         },
         error: (error: any) => {
@@ -208,8 +229,8 @@ export function UploadCsvModal({
   };
 
   const processStatement = async () => {
-    if (!selectedFile) {
-      toast.error("No file selected");
+    if (!selectedFile || rawCsvData.length === 0) {
+      toast.error("No file selected or no data parsed");
       return;
     }
 
@@ -228,6 +249,36 @@ export function UploadCsvModal({
       const formData = new FormData();
       formData.append("file", selectedFile);
       formData.append("email", gmailStatus?.email || "");
+      
+      // Also include ALL the raw parsed data for future OpenAI processing
+      // We need to re-parse the file to get ALL rows, not just the preview
+      const fullText = await selectedFile.text();
+      const fullParseResult = await new Promise<any>((resolve) => {
+        Papa.parse(fullText, {
+          header: true,
+          skipEmptyLines: true,
+          transformHeader: (header) => header.trim(),
+          complete: resolve
+        });
+      });
+
+      const allRawData = fullParseResult.data
+        .filter((row: any) => {
+          return Object.values(row).some(value => value && value.toString().trim() !== '');
+        })
+        .map((row: any) => {
+          const cleanRow: RawCSVRow = {};
+          for (const [key, value] of Object.entries(row)) {
+            cleanRow[key] = value ? value.toString().trim() : '';
+          }
+          return cleanRow;
+        });
+
+      formData.append("rawData", JSON.stringify({
+        headers: csvHeaders,
+        data: allRawData,
+        totalRows: allRawData.length
+      }));
 
       const response = await fetch("/api/upload/csv", {
         method: "POST",
@@ -276,6 +327,8 @@ export function UploadCsvModal({
   const handleClose = () => {
     if (!isProcessing && !isParsing) {
       setCsvData([]);
+      setRawCsvData([]);
+      setCsvHeaders([]);
       setFileName("");
       setSelectedFile(null);
       setParseError(null);
@@ -304,7 +357,7 @@ export function UploadCsvModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose} modal={true}>
-      <DialogContent className="max-w-[95vw] sm:max-w-[700px] bg-white dark:bg-popover border-border rounded-lg">
+      <DialogContent className="max-w-[95vw] sm:max-w-[700px] bg-white dark:bg-popover border-border rounded-none">
         <DialogHeader className="pb-4 sm:pb-6">
           <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">
             Upload Bank Statement
@@ -316,7 +369,7 @@ export function UploadCsvModal({
 
         <div className="space-y-4 sm:space-y-6">
           {/* Example Download Section */}
-          <div className="bg-muted/50 p-3 sm:p-4 rounded-lg border border-border">
+          <div className="bg-muted/50 p-3 sm:p-4 rounded-none border border-border">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
               <div>
                 <p className="text-xs sm:text-sm font-medium text-foreground">
@@ -330,7 +383,7 @@ export function UploadCsvModal({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto rounded-none"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   <span className="text-xs sm:text-sm">Example CSV</span>
@@ -341,7 +394,7 @@ export function UploadCsvModal({
 
           {/* Upload Zone */}
           <div
-            className={`border-2 border-dashed rounded-lg p-3 sm:p-4 text-center transition-colors ${
+            className={`border-2 border-dashed rounded-none p-3 sm:p-4 text-center transition-colors ${
               isDragging
                 ? "border-primary bg-accent/10"
                 : "border-border hover:border-muted-foreground bg-muted/30"
@@ -372,7 +425,7 @@ export function UploadCsvModal({
               <Button
                 variant="outline"
                 asChild
-                className="border-gray-300 dark:border-border text-xs sm:text-sm px-3 sm:px-4"
+                className="border-gray-300 dark:border-border text-xs sm:text-sm px-3 sm:px-4 rounded-none"
               >
                 <span>
                   <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
@@ -384,7 +437,7 @@ export function UploadCsvModal({
 
           {/* Error Message */}
           {parseError && (
-            <div className="flex items-center gap-2 p-3 sm:p-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive-foreground">
+            <div className="flex items-center gap-2 p-3 sm:p-4 bg-destructive/10 border border-destructive/30 rounded-none text-destructive-foreground">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <p className="text-xs sm:text-sm">{parseError}</p>
             </div>
@@ -399,55 +452,48 @@ export function UploadCsvModal({
               </span>
             </div>
           ) : (
-            csvData.length > 0 && (
+            rawCsvData.length > 0 && (
               <div className="space-y-3 sm:space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
                   <h3 className="text-xs sm:text-sm font-medium text-foreground">
-                    Preview
+                    Preview - All Columns
                   </h3>
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    Showing {csvData.length} of {selectedFile ? "many" : "0"}{" "}
-                    transactions
+                    Showing {rawCsvData.length} of many rows with {csvHeaders.length} columns
                   </p>
                 </div>
-                <div className="border border-border rounded-lg overflow-hidden bg-card">
-                  <div className="w-full bg-muted/30 border-b border-border">
-                    <div className="flex text-xs sm:text-sm font-medium text-foreground">
-                      <div className="px-3 sm:px-6 py-2 sm:py-3 w-[100px] sm:w-[140px]">
-                        Date
-                      </div>
-                      <div className="px-3 sm:px-6 py-2 sm:py-3 w-[80px] sm:w-[120px] text-right">
-                        Amount
-                      </div>
-                      <div className="px-3 sm:px-6 py-2 sm:py-3 flex-1">
-                        Description
-                      </div>
-                    </div>
-                  </div>
-                  <div className="max-h-[110px] sm:max-h-[110px] overflow-y-auto">
+                <div className="border border-border rounded-none overflow-hidden bg-card">
+                  <div className="w-full overflow-x-auto">
                     <Table>
-                      <TableHeader className="sr-only">
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Description</TableHead>
+                      <TableHeader>
+                        <TableRow className="bg-muted/30 border-b border-border">
+                          {csvHeaders.map((header, index) => (
+                            <TableHead 
+                              key={index} 
+                              className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-foreground whitespace-nowrap min-w-[120px]"
+                            >
+                              {header}
+                            </TableHead>
+                          ))}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {csvData.map((row, index) => (
+                        {rawCsvData.map((row, rowIndex) => (
                           <TableRow
-                            key={index}
-                            className="border-b border-border"
+                            key={rowIndex}
+                            className="border-b border-border hover:bg-muted/20"
                           >
-                            <TableCell className="font-medium px-3 sm:px-6 py-2 sm:py-3 w-[100px] sm:w-[140px] text-xs sm:text-sm">
-                              {row.date}
-                            </TableCell>
-                            <TableCell className="text-right px-3 sm:px-6 py-2 sm:py-3 w-[80px] sm:w-[120px] text-xs sm:text-sm">
-                              {formatAmount(row.amount)}
-                            </TableCell>
-                            <TableCell className="text-muted-foreground px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm">
-                              {row.description}
-                            </TableCell>
+                            {csvHeaders.map((header, colIndex) => (
+                              <TableCell 
+                                key={colIndex}
+                                className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-foreground whitespace-nowrap"
+                                title={row[header] || ''}
+                              >
+                                <div className="max-w-[200px] truncate">
+                                  {row[header] || ''}
+                                </div>
+                              </TableCell>
+                            ))}
                           </TableRow>
                         ))}
                       </TableBody>
@@ -464,19 +510,19 @@ export function UploadCsvModal({
               variant="outline"
               onClick={handleClose}
               disabled={isProcessing || isParsing}
-              className="border-gray-300 dark:border-gray-700 text-xs sm:text-sm order-2 sm:order-1"
+              className="border-gray-300 dark:border-gray-700 text-xs sm:text-sm order-2 sm:order-1 rounded-none"
             >
               Cancel
             </Button>
             <Button
               onClick={processStatement}
               disabled={
-                csvData.length === 0 ||
+                rawCsvData.length === 0 ||
                 isProcessing ||
                 isParsing ||
                 !!parseError
               }
-              className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm order-1 sm:order-2"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm order-1 sm:order-2 rounded-none"
             >
               {isProcessing ? (
                 <>

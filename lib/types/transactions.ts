@@ -20,10 +20,14 @@ export const CSVRowSchema = z.object({
   description: z.string(),
 });
 
+// Raw CSV row type for displaying all columns as uploaded
+export const RawCSVRowSchema = z.record(z.string(), z.string());
+
 // Types
 export type LedgerEntry = z.infer<typeof LedgerEntrySchema>;
 export type BankTransaction = z.infer<typeof BankTransactionSchema>;
 export type CSVRow = z.infer<typeof CSVRowSchema>;
+export type RawCSVRow = z.infer<typeof RawCSVRowSchema>;
 
 // API Response types
 export interface UploadResponse {

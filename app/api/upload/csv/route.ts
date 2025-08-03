@@ -207,6 +207,21 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const userEmail = formData.get("email") as string;
+    const rawDataString = formData.get("rawData") as string;
+
+    // Log raw data for debugging (when present)
+    if (rawDataString) {
+      try {
+        const rawDataInfo = JSON.parse(rawDataString);
+        console.log("📊 Raw CSV Data Received:", {
+          headers: rawDataInfo.headers,
+          totalRows: rawDataInfo.totalRows,
+          sampleData: rawDataInfo.data?.slice(0, 2) // Log first 2 rows
+        });
+      } catch (e) {
+        console.log("⚠️ Could not parse raw data:", e);
+      }
+    }
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
