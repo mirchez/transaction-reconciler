@@ -69,20 +69,23 @@ export function useGmailCheck(email: string) {
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorData.message || errorMessage;
-          
+
           // Handle specific error codes
           if (response.status === 401) {
-            errorMessage = "Gmail authentication failed. Please reconnect your account.";
+            errorMessage =
+              "Gmail authentication failed. Please reconnect your account.";
           } else if (response.status === 403) {
-            errorMessage = "Gmail permissions denied. Please reconnect with proper permissions.";
+            errorMessage =
+              "Gmail permissions denied. Please reconnect with proper permissions.";
           } else if (response.status === 503) {
-            errorMessage = "Gmail service temporarily unavailable. Please try again later.";
+            errorMessage =
+              "Gmail service temporarily unavailable. Please try again later.";
           }
         } catch (e) {
           // If response is not JSON, use status text
           errorMessage = response.statusText || errorMessage;
         }
-        
+
         console.error("Gmail check error:", response.status, errorMessage);
         throw new Error(errorMessage);
       }
@@ -123,12 +126,12 @@ export function useGmailCheck(email: string) {
         queryClient.invalidateQueries({ queryKey: ["ledger"] });
         queryClient.invalidateQueries({ queryKey: ["bank"] });
       }
-      
+
       // Mostrar información sobre PDFs fallidos
       if (data.failedPdfs && data.failedPdfs.length > 0) {
         data.failedPdfs.forEach((pdf) => {
           if (pdf.reason === "Not a receipt") {
-            toast.warning(`${pdf.filename}: Not a receipt`);
+            toast.warning(`Not a receipt!`);
           } else if (pdf.reason === "Invalid receipt") {
             toast.error(`${pdf.filename}: ${pdf.message}`);
           } else {
@@ -136,28 +139,33 @@ export function useGmailCheck(email: string) {
           }
         });
       }
-      
+
       // Mostrar mensaje personalizado si viene del servidor
-      if (data.message && !data.processed && (!data.failedPdfs || data.failedPdfs.length === 0)) {
+      if (
+        data.message &&
+        !data.processed &&
+        (!data.failedPdfs || data.failedPdfs.length === 0)
+      ) {
         toast.info(data.message);
       }
     },
     onError: (error: Error) => {
       console.error("Error checking Gmail:", error);
-      
+
       // Show specific error message to user
       const errorMessage = error.message || "Failed to check Gmail";
-      
+
       if (errorMessage.includes("authentication failed")) {
         toast.error(errorMessage, {
           action: {
             label: "Reconnect",
-            onClick: () => window.location.href = "/",
+            onClick: () => (window.location.href = "/"),
           },
         });
       } else if (errorMessage.includes("permissions denied")) {
         toast.error(errorMessage, {
-          description: "Please reconnect your Gmail account with the required permissions",
+          description:
+            "Please reconnect your Gmail account with the required permissions",
         });
       } else {
         toast.error(errorMessage, {
@@ -171,7 +179,7 @@ export function useGmailCheck(email: string) {
 // Hook to disconnect Gmail
 export function useGmailDisconnect() {
   const queryClient = useQueryClient();
-  
+
   return useMutation<void, Error, { email: string }>({
     mutationFn: async ({ email }) => {
       if (!email) {
@@ -210,7 +218,7 @@ export function useGmailDisconnect() {
 // Hook to force disconnect Gmail (bypassing errors)
 export function useGmailForceDisconnect() {
   const queryClient = useQueryClient();
-  
+
   return useMutation<void, Error, { email: string }>({
     mutationFn: async ({ email }) => {
       if (!email) {

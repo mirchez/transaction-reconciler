@@ -47,19 +47,13 @@ export async function DELETE(req: Request) {
       );
     }
 
-    // Delete all related data in the correct order
-    // First delete matched entries (they reference both ledger and bank)
+    // Delete matched entries that reference ledger transactions
     await prisma.matched.deleteMany({
       where: { userEmail }
     });
 
-    // Then delete ledger entries
+    // Delete ledger entries
     await prisma.ledger.deleteMany({
-      where: { userEmail }
-    });
-
-    // Also delete bank transactions for complete reset
-    await prisma.bank.deleteMany({
       where: { userEmail }
     });
 
@@ -69,13 +63,13 @@ export async function DELETE(req: Request) {
     });
 
     return NextResponse.json(
-      { success: true, message: "All data deleted successfully" },
+      { success: true, message: "Ledger data deleted successfully" },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error deleting data:", error);
+    console.error("Error deleting ledger data:", error);
     return NextResponse.json(
-      { error: "Failed to delete data" },
+      { error: "Failed to delete ledger data" },
       { status: 500 }
     );
   }

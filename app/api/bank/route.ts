@@ -35,3 +35,39 @@ export async function POST(req: Request) {
 
   return NextResponse.json(tx, { status: 201 });
 }
+
+export async function DELETE(req: Request) {
+  try {
+    // Get user email from query params
+    const { searchParams } = new URL(req.url);
+    const userEmail = searchParams.get("email");
+
+    if (!userEmail) {
+      return NextResponse.json(
+        { error: "Email parameter is required" },
+        { status: 400 }
+      );
+    }
+
+    // Delete matched entries that reference bank transactions
+    await prisma.matched.deleteMany({
+      where: { userEmail }
+    });
+
+    // Delete bank transactions only
+    await prisma.bank.deleteMany({
+      where: { userEmail }
+    });
+
+    return NextResponse.json(
+      { success: true, message: "Bank/CSV data deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting bank data:", error);
+    return NextResponse.json(
+      { error: "Failed to delete bank data" },
+      { status: 500 }
+    );
+  }
+}
