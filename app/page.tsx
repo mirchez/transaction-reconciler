@@ -10,6 +10,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import {
   Table,
   TableBody,
@@ -864,17 +865,27 @@ export default function HomePage() {
                                             {formatDate(transaction.date)}
                                           </TableCell>
                                           <TableCell className="px-4 py-3">
-                                            {transaction.description}
+                                            <TruncatedText 
+                                              text={transaction.description}
+                                              maxLength={40}
+                                              mobileMaxLength={20}
+                                              className="text-foreground"
+                                            />
                                           </TableCell>
                                           <TableCell className="text-muted-foreground px-4 py-3">
-                                            {transaction.bankDescription
-                                              ? transaction.bankDescription
-                                                  .replace(/^From: /, "")
-                                                  .replace(
-                                                    / \$[\d,.-]+ on [\d-]+$/,
-                                                    ""
-                                                  )
-                                              : "N/A"}
+                                            <TruncatedText 
+                                              text={transaction.bankDescription
+                                                ? transaction.bankDescription
+                                                    .replace(/^From: /, "")
+                                                    .replace(
+                                                      / \$[\d,.-]+ on [\d-]+$/,
+                                                      ""
+                                                    )
+                                                : "N/A"}
+                                              maxLength={40}
+                                              mobileMaxLength={18}
+                                              className="text-muted-foreground"
+                                            />
                                           </TableCell>
                                           <TableCell className="text-right px-4 py-3">
                                             {formatAmount(transaction.amount)}
@@ -1003,7 +1014,12 @@ export default function HomePage() {
                                             {formatDate(transaction.date)}
                                           </TableCell>
                                           <TableCell className="px-4 py-3">
-                                            {transaction.description}
+                                            <TruncatedText 
+                                              text={transaction.description}
+                                              maxLength={45}
+                                              mobileMaxLength={22}
+                                              className="text-foreground"
+                                            />
                                           </TableCell>
                                           <TableCell className="px-4 py-3">
                                             <Badge

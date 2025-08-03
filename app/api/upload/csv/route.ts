@@ -12,6 +12,74 @@ interface CSVRow {
   [key: string]: string;
 }
 
+async function enhanceDescriptionsWithAI(transactions: {
+  date: string;
+  description: string;
+  amount: number;
+}[]): Promise<{
+  date: string;
+  description: string;
+  amount: number;
+}[]> {
+  try {
+    const descriptions = transactions.map(t => t.description);
+    
+    const enhancementPrompt = `You are an expert at converting bank transaction codes and abbreviations into clear, descriptive transaction descriptions. 
+
+Transform these bank transaction descriptions to be more detailed and user-friendly (minimum 5 words each):
+
+Input descriptions: ${JSON.stringify(descriptions)}
+
+Rules for enhancement:
+- Convert abbreviations to full words: "AMZ" → "Amazon", "WMT" → "Walmart", "SBUX" → "Starbucks"
+- Add context when possible: "ATM" → "ATM Cash Withdrawal", "DEP" → "Direct Deposit Payment"
+- Keep merchant names recognizable: "STARBUCKS #1234" → "Starbucks Coffee Purchase Location 1234"
+- Make payment types clear: "ACH" → "ACH Electronic Transfer", "WIRE" → "Wire Transfer Payment"
+- For unclear codes, add "Transaction" or "Payment" to meet minimum word count
+- Maintain the essential information while making it more readable
+- Each description must be at least 5 words long
+
+Examples:
+- "AMZ PMNT" → "Amazon Payment Transaction"
+- "UBER TRIP" → "Uber Transportation Service Trip"
+- "DEPOSIT ACH" → "ACH Direct Deposit Payment"
+- "WMT SUPERCENTER #1234" → "Walmart Supercenter Store Purchase Transaction"
+- "ATM WITHDRAWAL FEE" → "ATM Cash Withdrawal Fee Transaction"
+
+Return a JSON object with a "descriptions" array containing enhanced descriptions in the same order:
+{
+  "descriptions": ["Enhanced description 1", "Enhanced description 2", ...]
+}`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a bank transaction description enhancer. Make descriptions clear, detailed, and user-friendly while maintaining accuracy."
+        },
+        { role: "user", content: enhancementPrompt }
+      ],
+      temperature: 0.3,
+      response_format: { type: "json_object" }
+    });
+
+    const response = JSON.parse(completion.choices[0]?.message?.content || "{}");
+    const enhancedDescriptions = response.descriptions || descriptions;
+
+    // Apply enhanced descriptions to transactions
+    return transactions.map((transaction, index) => ({
+      ...transaction,
+      description: enhancedDescriptions[index] || transaction.description
+    }));
+
+  } catch (error) {
+    console.error("Description enhancement error:", error);
+    // Return original transactions if enhancement fails
+    return transactions;
+  }
+}
+
 async function extractBankDataWithAI(csvData: CSVRow[]): Promise<
   {
     date: string;
@@ -32,6 +100,15 @@ async function extractBankDataWithAI(csvData: CSVRow[]): Promise<
 2. Transaction description
 3. Transaction amount (could be debit/credit or single amount column)
 
+IMPORTANT: When processing descriptions, enhance them to be more detailed and descriptive (minimum 5 words).
+Transform short codes or abbreviations into meaningful descriptions:
+- "AMZ PMNT" → "Amazon Payment Transaction"
+- "STARBUCKS #1234" → "Starbucks Coffee Purchase Location 1234"
+- "WMT SUPERCENTER" → "Walmart Supercenter Store Purchase"
+- "UBER TRIP 123" → "Uber Transportation Trip Service"
+- "ATM WITHDRAWAL" → "ATM Cash Withdrawal Transaction"
+- "DEPOSIT ACH" → "ACH Direct Deposit Payment"
+
 Headers: ${headers.join(", ")}
 Sample data: ${JSON.stringify(sampleRows, null, 2)}
 
@@ -42,7 +119,8 @@ Return a JSON object with this format:
   "amountColumn": "column_name",
   "isDebitCreditSeparate": true/false,
   "debitColumn": "column_name" (if separate),
-  "creditColumn": "column_name" (if separate)
+  "creditColumn": "column_name" (if separate),
+  "enhanceDescriptions": true
 }`;
 
     const completion = await openai.chat.completions.create({
@@ -61,7 +139,7 @@ Return a JSON object with this format:
 
     const mapping = JSON.parse(completion.choices[0]?.message?.content || "{}");
 
-    return csvData.map((row) => {
+    const transactions = csvData.map((row) => {
       let amount = 0;
       if (mapping.isDebitCreditSeparate) {
         const debit = parseFloat(row[mapping.debitColumn] || "0");
@@ -81,6 +159,13 @@ Return a JSON object with this format:
         amount: Math.abs(amount), // Store as positive
       };
     });
+
+    // Enhance descriptions if requested
+    if (mapping.enhanceDescriptions && transactions.length > 0) {
+      return await enhanceDescriptionsWithAI(transactions);
+    }
+
+    return transactions;
   } catch (error) {
     console.error("AI CSV parsing error:", error);
     return extractBankDataFallback(csvData);
